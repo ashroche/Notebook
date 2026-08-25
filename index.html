@@ -33,6 +33,10 @@ body{
 .bar button:hover:not(:disabled){background:#ffffff1c}
 .bar button:disabled{opacity:.3;cursor:default}
 .bar button:focus-visible,.bar input:focus-visible{outline:2px solid #b9d0ff;outline-offset:2px}
+.bar select{font:inherit;font-size:13px;color:#ded9d0;background:#ffffff0d;
+  border:1px solid #ffffff1a;border-radius:7px;padding:6px 8px;cursor:pointer;color-scheme:dark}
+.bar select:hover{background:#ffffff1c}
+.bar option{background:#26241f;color:#ded9d0}
 .nav{padding:6px 10px !important;font-size:15px !important}
 .datewrap{display:flex;align-items:center;gap:8px;padding:5px 10px;position:relative;cursor:pointer}
 .datewrap input{font:inherit;font-size:13px;color:#f2eee6;background:transparent;border:0;padding:0;
@@ -83,6 +87,18 @@ body{
 .cover{position:absolute;left:18px;top:-7px;width:812px;height:1139px;border-radius:3px 7px 7px 3px;
   background:linear-gradient(160deg,#413a30,#26211b);
   box-shadow:0 30px 60px rgba(0,0,0,.55), 0 6px 14px rgba(0,0,0,.4)}
+/* cover materials */
+.cover.cover-kraft{background:linear-gradient(160deg,#4a4132,#2a231a)}
+.cover.cover-black{background:linear-gradient(150deg,#2a2c2f,#111214);
+  box-shadow:0 30px 60px rgba(0,0,0,.6), 0 6px 14px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.05)}
+.cover.cover-black::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background-image:radial-gradient(rgba(255,255,255,.018) 1px, transparent 1.1px);
+  background-size:3px 3px}
+.cover.cover-navy{background:linear-gradient(150deg,#26344a,#141b28)}
+.cover.cover-red{background:linear-gradient(150deg,#5a2b28,#331715)}
+.cover.cover-forest{background:linear-gradient(150deg,#2c4232,#16241a)}
+.cover.cover-grey{background:linear-gradient(150deg,#54565b,#303236)}
 .sheet{position:absolute;width:794px;height:1123px;border-radius:1px 3px 3px 1px}
 .s1{left:35px;top:12px;background:#c8c2b3}
 .s2{left:32px;top:8px;background:#ded9cc}
@@ -106,25 +122,25 @@ body{
 .wireshade{fill:none;stroke:rgba(0,0,0,.17);stroke-width:7.4;stroke-linecap:round}
 
 /* ---------- page turn ---------- */
+/* A single opaque leaf lifts off the spine and swings away, revealing the
+   destination page painted on the base #page underneath. No double-sided 3D,
+   so an image can never appear mirrored on a back face. */
 .flipzone{position:absolute;left:26px;top:0;width:794px;height:1123px;
-  perspective:2200px;perspective-origin:0% 50%;pointer-events:none;z-index:6;display:none}
+  perspective:2400px;perspective-origin:0% 50%;pointer-events:none;z-index:6;display:none}
 .flipzone.on{display:block}
-/* soft shadow cast into the spine as the leaf lifts */
-.spineshadow{position:absolute;left:0;top:0;width:120px;height:100%;opacity:0;
-  background:linear-gradient(90deg, rgba(0,0,0,.30), rgba(0,0,0,0));border-radius:2px}
-.leaf{position:absolute;inset:0;transform-origin:left center;transform-style:preserve-3d;
-  will-change:transform}
-.lf{position:absolute;inset:0;backface-visibility:hidden;overflow:hidden;background:var(--paper);
-  border-radius:1px 3px 3px 1px;box-shadow:2px 4px 18px rgba(0,0,0,.28)}
-.lf-back{transform:rotateY(180deg)}
+.spineshadow{position:absolute;left:0;top:0;width:150px;height:100%;opacity:0;
+  background:linear-gradient(90deg, rgba(0,0,0,.34), rgba(0,0,0,0));border-radius:2px;z-index:1}
+.leaf{position:absolute;inset:0;transform-origin:left center;will-change:transform;z-index:2}
+.lf{position:absolute;inset:0;overflow:hidden;background:var(--paper);
+  border-radius:1px 3px 3px 1px;box-shadow:2px 6px 22px rgba(0,0,0,.30)}
 .lfclone{position:absolute;inset:0;overflow:hidden}
-/* the sheen: a highlight+shadow band that rides across the leaf as it turns */
+/* shading that deepens as the leaf tilts, giving it dimension */
 .lf .sheen{position:absolute;inset:0;pointer-events:none;opacity:0;
-  background:linear-gradient(105deg, rgba(0,0,0,.16) 0%, rgba(0,0,0,.05) 22%,
-    rgba(255,255,255,.14) 48%, rgba(0,0,0,.04) 74%, rgba(0,0,0,.14) 100%)}
+  background:linear-gradient(100deg, rgba(0,0,0,.28) 0%, rgba(0,0,0,.10) 30%,
+    rgba(0,0,0,0) 55%)}
 
 /* ---------- writing area ---------- */
-.canvas{position:absolute;left:100px;top:34px;right:32px;bottom:32px;z-index:4}
+.canvas{position:absolute;left:80px;top:30px;right:26px;bottom:28px;z-index:4}
 .hint{position:absolute;left:6px;top:8px;font-family:'Caveat',cursive;font-size:27px;
   color:rgba(0,0,0,.17);pointer-events:none;user-select:none;line-height:1.35}
 
@@ -137,11 +153,13 @@ body{
 .tick svg{width:100%;height:100%;overflow:visible;display:block}
 .tick path{fill:none;stroke:var(--pen-red);stroke-linecap:round;stroke-linejoin:round;
   stroke-dashoffset:0}
-/* unticked rows show a faint preview on hover; ticked rows show the full mark */
-.row:not(.done) .tick{opacity:0;transition:opacity .1s}
-.row:not(.done) .tick:hover{opacity:.5}
+/* Every unstruck line shows a faint tick at rest so you can see it's clickable;
+   it darkens on hover, and a struck line shows the full red mark. */
+.row:not(.done) .tick{opacity:.16;transition:opacity .12s}
+.row:not(.done) .tick:hover{opacity:.55}
 .row.done .tick{opacity:1}
-.block:focus-within .row:not(.done) .tick{pointer-events:none;opacity:0}
+.block:focus-within .row:not(.done) .tick{opacity:.16}
+.block:focus-within .row:not(.done) .tick:hover{opacity:.55}
 
 .bul{position:absolute;pointer-events:none}
 .bul svg{display:block;overflow:visible}
@@ -234,6 +252,15 @@ body{
   <span class="sep"></span>
   <button id="carry" title="Bring unfinished items forward from your last written day">Carry forward</button>
   <span class="spacer"></span>
+  <select id="coverSel" title="Notebook cover" aria-label="Notebook cover">
+    <option value="cardboard">Cardboard cover</option>
+    <option value="kraft">Kraft cover</option>
+    <option value="black">Black cover</option>
+    <option value="navy">Navy cover</option>
+    <option value="red">Red cover</option>
+    <option value="forest">Forest cover</option>
+    <option value="grey">Grey cover</option>
+  </select>
   <button id="zoomBtn" title="Fit to window, or true A4 size">Fit</button>
   <button id="syncBtn" title="Cloud sync"><span class="sdot" id="sdot"></span><span id="slabel">Sync off</span></button>
   <span class="sep"></span>
@@ -243,20 +270,19 @@ body{
 
 <div class="stage" id="stage">
   <div class="notebook" id="notebook">
-    <div class="cover"></div>
+    <div class="cover" id="cover"></div>
     <div class="sheet s1"></div><div class="sheet s2"></div><div class="sheet s3"></div>
     <div class="page" id="page">
       <div class="gutter"></div>
       <div class="topfade"></div>
       <div class="grain"></div>
       <div class="holes" id="holes"></div>
-      <div class="canvas" id="canvas"><div class="hint" id="hint">double-click anywhere to write<br>paste an image straight onto the page</div></div>
+      <div class="canvas" id="canvas"><div class="hint" id="hint">double-click anywhere to write</div></div>
     </div>
     <div class="flipzone" id="flipzone">
       <div class="spineshadow" id="spineShadow"></div>
       <div class="leaf" id="leaf">
-        <div class="lf lf-front" id="lfFront"><div class="lfclone" id="lfFrontClone"></div><div class="sheen"></div></div>
-        <div class="lf lf-back" id="lfBack"><div class="lfclone" id="lfBackClone"></div><div class="sheen"></div></div>
+        <div class="lf" id="lfFront"><div class="lfclone" id="lfFrontClone"></div><div class="sheen"></div></div>
       </div>
     </div>
     <svg class="spiral" id="spiral" viewBox="0 0 818 1123" aria-hidden="true"></svg>
@@ -319,7 +345,7 @@ var DEF_SIZE=17, MIN_SIZE=11, MAX_SIZE=40;
 var MIN_W=90, MIN_H=26, DEF_W=300;
 var KEY='notebook-v1-pages';
 var K_APIKEY='checklist-apikey';   /* shared with the checklist apps on this origin */
-var K_BIN='notebook-binid', K_ZOOM='notebook-zoom', K_PAPER='notebook-paper';
+var K_BIN='notebook-binid', K_ZOOM='notebook-zoom', K_PAPER='notebook-paper', K_COVER='notebook-cover';
 var API='https://api.jsonbin.io/v3/b';
 var IMG_MAX=900, IMG_Q=0.72;
 var SIZE_WARN=700*1024, SIZE_STOP=980*1024;   /* JSONBin caps a standard bin at 1MB */
@@ -508,6 +534,12 @@ function buildFurniture(){
 function paperColor(id){
   for(var i=0;i<PAPERS.length;i++) if(PAPERS[i].id===id) return PAPERS[i].c;
   return PAPERS[0].c;
+}
+var cover='cardboard';
+function applyCover(){
+  var el=document.getElementById('cover');
+  el.className='cover'+(cover==='cardboard'?'':' cover-'+cover);
+  var sel=document.getElementById('coverSel'); if(sel) sel.value=cover;
 }
 function curPaper(){ var s=sheet(); return s.paper||'cream'; }
 function applyPaper(){
@@ -1352,7 +1384,7 @@ function snapshotInto(faceEl,cloneEl,sh){
   faceEl.style.background=paperColor(sh&&sh.paper||'cream');
   cloneEl.innerHTML='';
   var pad=document.createElement('div');
-  pad.style.cssText='position:absolute;left:100px;top:34px;right:32px;bottom:32px';
+  pad.style.cssText='position:absolute;left:80px;top:30px;right:26px;bottom:28px';
   var bl=(sh&&sh.blocks)||[];
   for(var i=0;i<bl.length;i++){
     var node=renderBlock(bl[i]);
@@ -1386,54 +1418,51 @@ function snapshotInto(faceEl,cloneEl,sh){
   }
 }
 
-var DUR=620, turnTimer=null;
+var DUR=520, turnTimer=null;
 function turnTo(dir,commit){
   if(turning) return;
-  if(reduced()||!document.getElementById('leaf').animate){ commit(); afterNav(); return; }
-  var zone=document.getElementById('flipzone'), leaf=document.getElementById('leaf');
-  var lfFront=document.getElementById('lfFront'), lfBack=document.getElementById('lfBack');
-  var frontClone=document.getElementById('lfFrontClone'), backClone=document.getElementById('lfBackClone');
+  var leaf=document.getElementById('leaf');
+  if(reduced()||!leaf.animate){ commit(); afterNav(); return; }
+  var zone=document.getElementById('flipzone');
+  var lfFront=document.getElementById('lfFront');
+  var frontClone=document.getElementById('lfFrontClone');
   var spine=document.getElementById('spineShadow');
-  var frontSheen=lfFront.querySelector('.sheen'), backSheen=lfBack.querySelector('.sheen');
+  var sheen=lfFront.querySelector('.sheen');
 
   var fromSheet=sheet();
   turning=true;
   commit();
   var toSheet=sheet();
+  /* base page immediately shows the destination; the leaf carries the other page
+     and lifts/drops over it. Single opaque face, so no mirrored back can appear. */
+  afterNav();
 
-  /* front face carries the page you leave, back face the one you land on
-     (mirrored, revealed as the leaf passes vertical) */
   var startDeg,endDeg;
   if(dir>0){
+    /* leaving this page: leaf shows the OLD page, lifts up off the spine and away,
+       revealing the NEW page (already on the base) underneath */
     snapshotInto(lfFront,frontClone,fromSheet);
-    snapshotInto(lfBack,backClone,toSheet);
-    startDeg=0; endDeg=-180;
+    startDeg=0; endDeg=-105;
   } else {
+    /* going back: the previous page drops down from lifted onto the base */
     snapshotInto(lfFront,frontClone,toSheet);
-    snapshotInto(lfBack,backClone,fromSheet);
-    startDeg=-180; endDeg=0;
+    startDeg=-105; endDeg=0;
   }
-  afterNav();
   zone.classList.add('on');
 
-  /* a small Z lift at the midpoint sells the paper curling off the spine rather
-     than a flat hinge swing. Driven by WAAPI so the frames can't be coalesced. */
-  var mid=(startDeg+endDeg)/2;
   var leafAnim=leaf.animate([
-    {transform:'rotateY('+startDeg+'deg) translateZ(0px)'},
-    {transform:'rotateY('+mid+'deg) translateZ(30px)', offset:0.5},
-    {transform:'rotateY('+endDeg+'deg) translateZ(0px)'}
-  ],{duration:DUR, easing:'cubic-bezier(.42,.04,.30,1)', fill:'forwards'});
+    {transform:'rotateY('+startDeg+'deg)'},
+    {transform:'rotateY('+endDeg+'deg)'}
+  ],{duration:DUR, easing:'cubic-bezier(.37,.02,.28,1)', fill:'forwards'});
 
-  frontSheen.animate([{opacity:0},{opacity:0.85,offset:0.5},{opacity:0}],
-    {duration:DUR, easing:'ease-in-out', fill:'forwards'});
-  backSheen.animate([{opacity:0},{opacity:0.55,offset:0.5},{opacity:0}],
-    {duration:DUR, easing:'ease-in-out', fill:'forwards'});
-  spine.animate([{opacity:0},{opacity:0.5,offset:0.5},{opacity:0}],
-    {duration:DUR, easing:'ease-in-out', fill:'forwards'});
+  /* the lifting face darkens along its inner edge as it tilts */
+  if(dir>0) sheen.animate([{opacity:0},{opacity:0.9}],{duration:DUR,easing:'ease-in',fill:'forwards'});
+  else      sheen.animate([{opacity:0.9},{opacity:0}],{duration:DUR,easing:'ease-out',fill:'forwards'});
+  /* shadow pools into the spine while a page stands lifted */
+  spine.animate([{opacity:(dir>0)?0:0.55},{opacity:(dir>0)?0.55:0}],
+    {duration:DUR,easing:'ease-in-out',fill:'forwards'});
 
   leafAnim.onfinish=endTurn;
-  /* safety net if onfinish is dropped (e.g. tab blurred mid-turn) */
   clearTimeout(turnTimer);
   turnTimer=setTimeout(function(){ if(turning) endTurn(); },DUR+140);
 }
@@ -1441,10 +1470,11 @@ function endTurn(){
   clearTimeout(turnTimer);
   document.getElementById('flipzone').classList.remove('on');
   document.getElementById('lfFrontClone').innerHTML='';
-  document.getElementById('lfBackClone').innerHTML='';
   document.getElementById('lfFront').style.background='';
-  document.getElementById('lfBack').style.background='';
   document.getElementById('spineShadow').style.opacity='0';
+  var leaf=document.getElementById('leaf');
+  try{ leaf.getAnimations().forEach(function(a){a.cancel();}); }catch(e){}
+  leaf.style.transform='';
   turning=false;
 }
 function afterNav(){
@@ -1490,11 +1520,15 @@ document.getElementById('addPage').onclick=function(){
 };
 document.getElementById('undoBtn').onclick=undo;
 document.getElementById('redoBtn').onclick=redo;
-document.getElementById('zoomBtn').onclick=function(){
-  zoom=(zoom==='fit')?'full':'fit';
+document.getElementById('zoomBtn').onclick=function(){  zoom=(zoom==='fit')?'full':'fit';
   try{ localStorage.setItem(K_ZOOM,zoom); }catch(e){}
   fit(); if(zoom==='full') stage.scrollTop=0;
 };
+document.getElementById('coverSel').addEventListener('change',function(){
+  cover=this.value;
+  try{ localStorage.setItem(K_COVER,cover); }catch(e){}
+  applyCover();
+});
 
 /* ================= carry forward ================= */
 document.getElementById('carry').onclick=function(){
@@ -1690,6 +1724,8 @@ try{ document.execCommand('styleWithCSS',false,false); }catch(e){}
 buildFurniture(); buildSwatches();
 load();
 try{ zoom=localStorage.getItem(K_ZOOM)==='full'?'full':'fit'; }catch(e){}
+try{ cover=localStorage.getItem(K_COVER)||'cardboard'; }catch(e){}
+applyCover();
 /* one-time: a previous version stored a single paper colour for the whole notebook.
    Seed any colourless sheet with it, then forget the global. */
 try{
