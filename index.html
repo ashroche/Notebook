@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,600;1,400&display=block" rel="stylesheet">
 <style>
 :root{
-  --paper:#faf6ec;
+  --paper:#f7f0dc;
   --ink:#22262e;
   --pen-red:#cf2f27;
   --desk-1:#39342c;
@@ -48,6 +48,7 @@ body{
 .pager button{border:0;background:transparent;padding:4px 7px;font-size:13px}
 .pager .pnum{font-size:12px;color:#bdb7ad;min-width:34px;text-align:center;user-select:none}
 .spacer{flex:1}
+.daycount{font-size:11.5px;color:#8e887d;white-space:nowrap;margin-left:4px}
 .sep{width:1px;height:20px;background:#ffffff1a;margin:0 3px;flex:none}
 
 #syncBtn{display:flex;align-items:center;gap:7px}
@@ -84,7 +85,7 @@ body{
   justify-content:center;align-items:flex-start;padding:12px 0 0}
 .notebook{position:relative;width:818px;height:1123px;flex:none;transform-origin:top center}
 
-.cover{position:absolute;left:18px;top:-7px;width:812px;height:1139px;border-radius:3px 7px 7px 3px;
+.cover{position:absolute;z-index:1;left:18px;top:-7px;width:812px;height:1139px;border-radius:3px 7px 7px 3px;
   background:linear-gradient(160deg,#413a30,#26211b);
   box-shadow:0 30px 60px rgba(0,0,0,.55), 0 6px 14px rgba(0,0,0,.4)}
 /* cover materials */
@@ -99,12 +100,12 @@ body{
 .cover.cover-red{background:linear-gradient(150deg,#5a2b28,#331715)}
 .cover.cover-forest{background:linear-gradient(150deg,#2c4232,#16241a)}
 .cover.cover-grey{background:linear-gradient(150deg,#54565b,#303236)}
-.sheet{position:absolute;width:794px;height:1123px;border-radius:1px 3px 3px 1px}
+.sheet{position:absolute;z-index:2;width:794px;height:1123px;border-radius:1px 3px 3px 1px}
 .s1{left:35px;top:12px;background:#c8c2b3}
 .s2{left:32px;top:8px;background:#ded9cc}
 .s3{left:29px;top:4px;background:#efebe0}
 
-.page{position:absolute;left:26px;top:0;width:794px;height:1123px;background:var(--paper);
+.page{position:absolute;z-index:3;left:26px;top:0;width:794px;height:1123px;background:var(--paper);
   border-radius:1px 3px 3px 1px;box-shadow:0 2px 5px rgba(0,0,0,.35);overflow:hidden}
 .grain{position:absolute;inset:0;pointer-events:none;opacity:.06;mix-blend-mode:multiply;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='180' height='180' filter='url(%23n)'/></svg>")}
@@ -130,9 +131,15 @@ body{
 .flipzone.on{display:block}
 .spineshadow{position:absolute;left:0;top:0;width:150px;height:100%;opacity:0;
   background:linear-gradient(90deg, rgba(0,0,0,.34), rgba(0,0,0,0));border-radius:2px;z-index:1}
-.leaf{position:absolute;inset:0;transform-origin:left center;will-change:transform;z-index:2}
+.leaf{position:absolute;inset:0;transform-origin:left center;will-change:transform;z-index:2;
+  transform-style:preserve-3d}
 .lf{position:absolute;inset:0;overflow:hidden;background:var(--paper);
+  backface-visibility:hidden;
   border-radius:1px 3px 3px 1px;box-shadow:2px 6px 22px rgba(0,0,0,.30)}
+/* blank reverse of the sheet, revealed once the page passes edge-on */
+.lf-back{transform:rotateY(180deg)}
+.lf-back::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(270deg, rgba(0,0,0,.16), rgba(0,0,0,0) 42%)}
 .lfclone{position:absolute;inset:0;overflow:hidden}
 /* shading that deepens as the leaf tilts, giving it dimension */
 .lf .sheen{position:absolute;inset:0;pointer-events:none;opacity:0;
@@ -149,17 +156,18 @@ body{
   box-shadow:0 1px 4px rgba(0,0,0,.22)}
 .row{display:flex;align-items:flex-start;position:relative}
 
-.tick{position:absolute;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.tick{position:absolute;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  padding:0;margin:0;border:0;background:none;font:inherit;color:inherit;-webkit-appearance:none;appearance:none}
+.tick:focus-visible{outline:2px solid #6f9bdd;outline-offset:2px;border-radius:3px}
 .tick svg{width:100%;height:100%;overflow:visible;display:block}
 .tick path{fill:none;stroke:var(--pen-red);stroke-linecap:round;stroke-linejoin:round;
   stroke-dashoffset:0}
-/* Every unstruck line shows a faint tick at rest so you can see it's clickable;
-   it darkens on hover, and a struck line shows the full red mark. */
-.row:not(.done) .tick{opacity:.16;transition:opacity .12s}
-.row:not(.done) .tick:hover{opacity:.55}
+/* Clean page at rest. Moving the mouse anywhere over a line reveals its tick,
+   which darkens when you are actually on it. A struck line always shows its mark. */
+.row:not(.done) .tick{opacity:0;transition:opacity .13s}
+.row:not(.done):hover .tick{opacity:.30}
+.row:not(.done) .tick:hover{opacity:.65}
 .row.done .tick{opacity:1}
-.block:focus-within .row:not(.done) .tick{opacity:.16}
-.block:focus-within .row:not(.done) .tick:hover{opacity:.55}
 
 .bul{position:absolute;pointer-events:none}
 .bul svg{display:block;overflow:visible}
@@ -179,7 +187,10 @@ body{
   pointer-events:none;display:none}
 .block:hover .frame,.block.sel .frame{display:block}
 .block.sel .frame{border-color:rgba(0,0,0,.42)}
-.block.blocksel .frame{border-color:rgba(45,95,200,.7);background:rgba(70,120,220,.10)}
+/* Word-style: the TEXT is highlighted so it's obvious typing will replace it */
+.block.blocksel .frame{border-color:rgba(45,95,200,.55)}
+.block.blocksel .tx{background:rgba(70,120,220,.22);border-radius:2px}
+.block.blocksel .bul path{fill:var(--ink)}
 .mv{position:absolute;display:none;cursor:move}
 .block:hover .mv,.block.sel .mv{display:block}
 .mv-t{left:-9px;right:-9px;top:-15px;height:14px}
@@ -217,11 +228,47 @@ body{
 .card button.primary{background:#3d6b46;border-color:#4c8257;color:#eaf5ec}
 .card button.quiet{background:transparent;border-color:transparent;color:#8e887d}
 .card .note{font-size:11.5px;color:#8e887d;margin-top:12px;line-height:1.5}
+.card .mdiv{height:1px;background:#ffffff14;margin:20px 0 16px}
+.meterwrap{margin-top:14px}
+.meter{height:6px;border-radius:3px;background:#ffffff14;overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:#57a866;transition:width .3s,background .3s}
+.meter i.warn{background:#d8a13c}
+.meter i.full{background:#cf4a3f}
 
 .toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:var(--chrome);
   border:1px solid #ffffff20;color:#e6e1d8;padding:9px 16px;border-radius:22px;font-size:13px;
   z-index:300;opacity:0;pointer-events:none;transition:opacity .18s;max-width:70vw;text-align:center}
 .toast.on{opacity:1}
+/* unmissable, stays until resolved: used when saving has actually stopped working */
+.banner{position:fixed;left:0;right:0;top:0;z-index:500;display:none;
+  background:#7d2b24;color:#ffe9e7;font-size:13px;line-height:1.45;
+  padding:10px 16px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.45)}
+.banner.on{display:block}
+.banner b{color:#fff}
+.banner button{font:inherit;font-size:12px;margin-left:10px;color:#ffe9e7;
+  background:#ffffff22;border:1px solid #ffffff33;border-radius:6px;padding:4px 10px;cursor:pointer}
+.banner button:hover{background:#ffffff33}
+body.hasbanner .bar.top{top:38px}
+body.hasbanner .stage{top:86px}
+
+@media print{
+  /* print the page as paper: no desk, no chrome, no selection furniture */
+  @page{ size:A4; margin:12mm; }
+  body{background:#fff !important;overflow:visible}
+  .bar,.dock,.toast,.modal,.banner,.flipzone,.cover,.sheet,.holes,.spiral,.hint{display:none !important}
+  .stage{position:static;inset:auto;overflow:visible;padding:0;display:block}
+  .notebook{transform:none !important;margin:0 !important;width:auto;height:auto}
+  .page{position:static;width:auto;height:auto;box-shadow:none;border-radius:0;
+        background:#fff !important;overflow:visible}
+  .gutter,.topfade,.grain{display:none !important}
+  .canvas{position:relative;left:auto;top:auto;right:auto;bottom:auto;
+          width:100%;min-height:240mm}
+  .frame,.mv,.hd{display:none !important}
+  .tick{opacity:0 !important}
+  .row.done .tick{opacity:1 !important}
+  .strike path,.tick path{stroke:#c0392b !important}
+  .tx{color:#000 !important}
+}
 
 @media (prefers-reduced-motion: reduce){
   .strike path,.tick path{transition:none !important;stroke-dashoffset:0 !important}
@@ -233,6 +280,8 @@ body{
 </head>
 <body>
 
+<div class="banner" id="banner"><span id="bannerText"></span><button id="bannerExport">Export a backup</button></div>
+
 <div class="bar top">
   <button class="nav" id="prevDay" title="Previous day (Alt+Left)">&lsaquo;</button>
   <span class="datewrap">
@@ -242,6 +291,8 @@ body{
   </span>
   <button class="nav" id="nextDay" title="Next day (Alt+Right)">&rsaquo;</button>
   <button id="todayBtn">Today</button>
+  <button class="nav" id="prevWritten" title="Jump to the previous day you wrote on">&laquo;</button>
+  <button class="nav" id="nextWritten" title="Jump to the next day you wrote on">&raquo;</button>
   <span class="sep"></span>
   <span class="pager">
     <button id="prevPage" title="Previous page (Page Up)">&lsaquo;</button>
@@ -251,6 +302,7 @@ body{
   </span>
   <span class="sep"></span>
   <button id="carry" title="Bring unfinished items forward from your last written day">Carry forward</button>
+  <span class="daycount" id="dayCount"></span>
   <span class="spacer"></span>
   <select id="coverSel" title="Notebook cover" aria-label="Notebook cover">
     <option value="cardboard">Cardboard cover</option>
@@ -282,7 +334,8 @@ body{
     <div class="flipzone" id="flipzone">
       <div class="spineshadow" id="spineShadow"></div>
       <div class="leaf" id="leaf">
-        <div class="lf" id="lfFront"><div class="lfclone" id="lfFrontClone"></div><div class="sheen"></div></div>
+        <div class="lf lf-front" id="lfFront"><div class="lfclone" id="lfFrontClone"></div><div class="sheen"></div></div>
+        <div class="lf lf-back" id="lfBack"></div>
       </div>
     </div>
     <svg class="spiral" id="spiral" viewBox="0 0 818 1123" aria-hidden="true"></svg>
@@ -326,6 +379,17 @@ body{
       <button class="primary" id="mSave">Save</button>
     </div>
     <div class="note" id="mNote"></div>
+    <div class="mdiv"></div>
+    <h2 style="margin-top:4px">Backup</h2>
+    <p>Your notebook lives in this browser. Export a copy you can keep, or restore one.</p>
+    <div class="acts" style="margin-top:0">
+      <button id="mExport">Export to file</button>
+      <button id="mImport">Restore from file</button>
+      <span class="spacer"></span>
+    </div>
+    <input type="file" id="mFile" accept="application/json,.json" style="display:none">
+    <div class="meterwrap"><div class="meter"><i id="meterFill"></i></div>
+      <div class="note" id="meterText" style="margin-top:6px"></div></div>
   </div>
 </div>
 
@@ -343,6 +407,7 @@ var FONTS={hand:"'Caveat','Bradley Hand',cursive",sans:"'Inter',system-ui,sans-s
 var FSCALE={hand:1.55,sans:1,serif:1};
 var DEF_SIZE=17, MIN_SIZE=11, MAX_SIZE=40;
 var MIN_W=90, MIN_H=26, DEF_W=300;
+var COIL_W=30;   /* how far a page slides as it wraps over the coil */
 var KEY='notebook-v1-pages';
 var K_APIKEY='checklist-apikey';   /* shared with the checklist apps on this origin */
 var K_BIN='notebook-binid', K_ZOOM='notebook-zoom', K_PAPER='notebook-paper', K_COVER='notebook-cover';
@@ -350,14 +415,17 @@ var API='https://api.jsonbin.io/v3/b';
 var IMG_MAX=900, IMG_Q=0.72;
 var SIZE_WARN=700*1024, SIZE_STOP=980*1024;   /* JSONBin caps a standard bin at 1MB */
 
+/* Deliberately separated tints. The previous set differed by as little as 12 of
+   765, so six of seven read as the same off-white. All keep >12:1 contrast with
+   the ink, so text stays comfortable to read. */
 var PAPERS=[
-  {id:'cream', c:'#faf6ec', label:'Cream'},
-  {id:'white', c:'#fdfdfc', label:'White'},
-  {id:'blue',  c:'#eaf1fa', label:'Light blue'},
-  {id:'yellow',c:'#fbf5dd', label:'Light yellow'},
-  {id:'green', c:'#ebf4ec', label:'Light green'},
-  {id:'pink',  c:'#fbeef1', label:'Light pink'},
-  {id:'grey',  c:'#f1f1ef', label:'Light grey'}
+  {id:'cream', c:'#f7f0dc', label:'Cream'},
+  {id:'white', c:'#fdfdfb', label:'White'},
+  {id:'blue',  c:'#dce9f7', label:'Blue'},
+  {id:'yellow',c:'#faeeb4', label:'Yellow'},
+  {id:'green', c:'#dcefdc', label:'Green'},
+  {id:'pink',  c:'#f8dfe6', label:'Pink'},
+  {id:'grey',  c:'#e6e7e4', label:'Grey'}
 ];
 
 var canvas=document.getElementById('canvas');
@@ -368,9 +436,9 @@ var dock=document.getElementById('dock');
 var toast=document.getElementById('toast');
 var modal=document.getElementById('modal');
 
-var pages={}, cur=todayISO(), si=0;
+var pages={}, tombs={}, cur=todayISO(), si=0;
 var selId=null, zTop=1, scale=1, zoom='fit';
-var undoS=[], redoS=[], typing=false, typingT=null;
+var typing=false, typingT=null, composing=false;
 var lastLine=null, animSet={}, animT=null, lastEdit=0, turning=false;
 var dropPoint={x:40,y:40};
 
@@ -430,20 +498,63 @@ function sanitize(html){
 function lineText(h){ var d=document.createElement('div'); d.innerHTML=h||''; return d.textContent||''; }
 function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-/* ================= storage ================= */
-function docSize(){ try{ return JSON.stringify({v:3,pages:pages}).length; }catch(e){ return 0; } }
+/* ================= storage =================
+   Schema v4. Every block carries `m` (last modified ms) so two devices editing
+   DIFFERENT boxes on the same day both keep their work. Deleted block ids are
+   kept as tombstones so a delete on one device is not undone by a stale copy
+   on the other. `w` is this tab's write counter, used to spot another tab
+   writing underneath us. */
+var SCHEMA=4;
+var writeSeq=0, lastSeenSeq=0, tabId=uid();
+var storageBroken=false, TOMB_DAYS=30;
+
+function docObj(){ return {v:SCHEMA,pages:pages,tomb:tombs,w:writeSeq,t:tabId}; }
+function docSize(){ try{ return JSON.stringify(docObj()).length; }catch(e){ return 0; } }
+
 function writeLocal(){
-  try{ localStorage.setItem(KEY,JSON.stringify({v:3,pages:pages})); }
-  catch(e){ say('Could not save locally. Browser storage is full, most likely from pasted images.'); }
+  writeSeq++;
+  var payload;
+  try{ payload=JSON.stringify(docObj()); }catch(e){ return; }
+  try{
+    localStorage.setItem(KEY,payload);
+    lastSeenSeq=writeSeq;
+    if(storageBroken){ storageBroken=false; hideBanner(); }
+  }catch(e){
+    writeSeq--;
+    storageBroken=true;
+    showBanner('Storage is full, so nothing is being saved. Delete an image or export '+
+               'your notebook to free space.', true);
+  }
 }
+/* Another tab wrote. Take the newer of the two rather than clobbering it. */
+function onExternalWrite(raw){
+  var incoming=null;
+  try{ incoming=JSON.parse(raw); }catch(e){ return; }
+  if(!incoming||incoming.t===tabId) return;
+  if(!incoming.pages) return;
+  var res=mergePages(incoming.pages,incoming.tomb);
+  normalise();
+  if(res.changedCur){
+    invalidateHistory(cur);
+    updateDateUI(); render(false);
+  }
+  say('Updated from another tab.');
+  if(res.localNewer) writeLocal();
+}
+window.addEventListener('storage',function(e){
+  if(e.key!==KEY||!e.newValue) return;
+  onExternalWrite(e.newValue);
+});
+
 function load(){
   var raw=null;
   try{ raw=JSON.parse(localStorage.getItem(KEY)); }catch(e){}
-  if(!raw||typeof raw!=='object'){ pages={}; return; }
-  if(raw.v===3&&raw.pages){ pages=raw.pages; normalise(); return; }
+  if(!raw||typeof raw!=='object'){ pages={}; tombs={}; return; }
+  if(raw.v===SCHEMA&&raw.pages){ pages=raw.pages; tombs=raw.tomb||{}; normalise(); return; }
+  if(raw.v===3&&raw.pages){ pages=raw.pages; tombs={}; normalise(); writeLocal(); return; }
 
   var src = (raw.v===2&&raw.pages)?raw.pages:(raw.pages||raw);
-  pages={};
+  pages={}; tombs={};
   for(var d in src){
     var p=src[d];
     if(!p||!Array.isArray(p.blocks)) continue;
@@ -466,6 +577,7 @@ function load(){
   normalise(); writeLocal();
 }
 function normalise(){
+  var now=Date.now();
   for(var d in pages){
     var p=pages[d];
     if(!p||!Array.isArray(p.sheets)){ delete pages[d]; continue; }
@@ -475,6 +587,7 @@ function normalise(){
       for(var i=0;i<bl.length;i++){
         var b=bl[i];
         if(!b.kind) b.kind='text';
+        if(!b.m) b.m=p.u||now;               /* backfill per-block timestamp */
         if(b.kind==='image'){ if(!b.src){ bl.splice(i--,1);} continue; }
         if(!Array.isArray(b.lines)||!b.lines.length){ bl.splice(i--,1); continue; }
         for(var j=0;j<b.lines.length;j++){
@@ -485,6 +598,76 @@ function normalise(){
       }
     }
   }
+  /* drop tombstones older than TOMB_DAYS so the list cannot grow forever */
+  var cutoff=now-TOMB_DAYS*86400000;
+  for(var td in tombs){
+    for(var bid in tombs[td]) if(tombs[td][bid]<cutoff) delete tombs[td][bid];
+    var any=false; for(var k in tombs[td]){ any=true; break; }
+    if(!any) delete tombs[td];
+  }
+}
+function showBanner(msg,withExport){
+  var b=document.getElementById('banner');
+  document.getElementById('bannerText').innerHTML=msg;
+  document.getElementById('bannerExport').style.display=withExport?'':'none';
+  b.classList.add('on'); document.body.classList.add('hasbanner');
+  fit();
+}
+function hideBanner(){
+  document.getElementById('banner').classList.remove('on');
+  document.body.classList.remove('hasbanner');
+  fit();
+}
+
+/* ---- export / import: the real backstop against any storage or sync loss ---- */
+function exportNotebook(){
+  var payload=JSON.stringify({v:SCHEMA,pages:pages,tomb:tombs,exported:new Date().toISOString()},null,1);
+  var blob=new Blob([payload],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url; a.download='notebook-'+todayISO()+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); },1000);
+  var n=0; for(var d in pages) n++;
+  say('Exported '+n+' day'+(n===1?'':'s')+' to your downloads.');
+}
+function importNotebook(file,replace){
+  var fr=new FileReader();
+  fr.onload=function(){
+    var data=null;
+    try{ data=JSON.parse(fr.result); }catch(e){ say('That file is not a notebook backup.'); return; }
+    if(!data||!data.pages){ say('That file is not a notebook backup.'); return; }
+    if(replace){ pages=data.pages; tombs=data.tomb||{}; }
+    else { mergePages(data.pages,data.tomb); }
+    normalise(); writeLocal();
+    histories={}; histOrder.length=0; refreshUndo();
+    updateDateUI(); render(false);
+    var n=0; for(var d in data.pages) n++;
+    say((replace?'Replaced with ':'Merged in ')+n+' day'+(n===1?'':'s')+' from the backup.');
+    pushSoon();
+  };
+  fr.readAsText(file);
+}
+function tombstone(dateISO,blockId){
+  if(!tombs[dateISO]) tombs[dateISO]={};
+  tombs[dateISO][blockId]=Date.now();
+}
+/* days that actually have content, sorted */
+function writtenDays(){
+  var out=[];
+  for(var d in pages){
+    var ss=pages[d].sheets||[], any=false;
+    for(var i=0;i<ss.length;i++) if((ss[i].blocks||[]).length){ any=true; break; }
+    if(any) out.push(d);
+  }
+  return out.sort();
+}
+/* nearest written day before/after the current one */
+function adjacentWritten(dir){
+  var ds=writtenDays();
+  if(dir<0){ for(var i=ds.length-1;i>=0;i--) if(ds[i]<cur) return ds[i]; return null; }
+  for(var j=0;j<ds.length;j++) if(ds[j]>cur) return ds[j];
+  return null;
 }
 function prune(){
   for(var d in pages){
@@ -496,23 +679,76 @@ function prune(){
     if(empty && !p.u) delete pages[d];
   }
 }
-function save(){
+/* stamp whichever block this save is about, so block-level merge can tell
+   which device edited which box */
+function save(touchId){
+  var id=(touchId!==undefined)?touchId:((lastLine&&lastLine.bid)||selId);
+  if(id){ var tb=findBlock(id); if(tb) tb.m=Date.now(); }
   day().u=Date.now(); lastEdit=Date.now();
-  prune(); writeLocal(); pushSoon();
+  prune(); writeLocal(); pushSoon(); refreshDayIndex();
+}
+/* the written-day count and the jump arrows depend on content, so refresh them
+   whenever content changes rather than only on navigation */
+function refreshDayIndex(){
+  var pw=document.getElementById('prevWritten'), nw=document.getElementById('nextWritten'),
+      dc=document.getElementById('dayCount');
+  if(!pw||!nw||!dc) return;
+  pw.disabled=!adjacentWritten(-1);
+  nw.disabled=!adjacentWritten(1);
+  var n=writtenDays().length;
+  dc.textContent=n?(n+' day'+(n===1?'':'s')+' written'):'';
 }
 
-/* ================= undo ================= */
-function snap(){ return JSON.stringify(blocks()); }
-function pushUndo(){ undoS.push(snap()); if(undoS.length>80) undoS.shift(); redoS.length=0; refreshUndo(); }
-function undo(){ if(!undoS.length) return; redoS.push(snap());
-  sheet().blocks=JSON.parse(undoS.pop()); if(!findBlock(selId)) selId=null;
+/* ================= undo =================
+   One stack per page, so going back to a page and pressing Ctrl+Z undoes the
+   last thing you did ON THAT PAGE. Stacks for the least recently used pages are
+   dropped so history cannot grow without bound. Paper colour is part of a page's
+   history; adding or removing pages is not. */
+var histories={}, histOrder=[], HIST_PAGES=20, HIST_STEPS=80;
+function histKey(){ var sh=sheet(); return cur+'#'+(sh?sh.id:'0'); }
+function hist(){
+  var k=histKey();
+  if(!histories[k]) histories[k]={u:[],r:[]};
+  var at=histOrder.indexOf(k);
+  if(at>=0) histOrder.splice(at,1);
+  histOrder.push(k);
+  while(histOrder.length>HIST_PAGES) delete histories[histOrder.shift()];
+  return histories[k];
+}
+/* a page changed under us (sync or another tab): its snapshots describe a state
+   that no longer exists, so drop just that page's history */
+function invalidateHistory(dateISO){
+  for(var k in histories) if(k.indexOf(dateISO+'#')===0) delete histories[k];
+  var i=histOrder.length;
+  while(i--) if(histOrder[i].indexOf(dateISO+'#')===0) histOrder.splice(i,1);
+  refreshUndo();
+}
+function snap(){
+  var sh=sheet();
+  return JSON.stringify({b:sh.blocks,p:sh.paper||'cream'});
+}
+function restore(json){
+  var st=JSON.parse(json), sh=sheet();
+  sh.blocks=st.b;
+  if(st.p&&st.p!==sh.paper){ sh.paper=st.p; applyPaper(); }
+  if(!findBlock(selId)) selId=null;
+}
+function pushUndo(){
+  var h=hist();
+  h.u.push(snap());
+  if(h.u.length>HIST_STEPS) h.u.shift();
+  h.r.length=0; refreshUndo();
+}
+function undo(){ var h=hist(); if(!h.u.length) return;
+  h.r.push(snap()); restore(h.u.pop());
   save(); render(false); refreshUndo(); }
-function redo(){ if(!redoS.length) return; undoS.push(snap());
-  sheet().blocks=JSON.parse(redoS.pop()); if(!findBlock(selId)) selId=null;
+function redo(){ var h=hist(); if(!h.r.length) return;
+  h.u.push(snap()); restore(h.r.pop());
   save(); render(false); refreshUndo(); }
 function refreshUndo(){
-  document.getElementById('undoBtn').disabled=!undoS.length;
-  document.getElementById('redoBtn').disabled=!redoS.length;
+  var k=histKey(), h=histories[k];
+  document.getElementById('undoBtn').disabled=!(h&&h.u.length);
+  document.getElementById('redoBtn').disabled=!(h&&h.r.length);
 }
 
 /* ================= notebook furniture ================= */
@@ -557,6 +793,7 @@ function buildSwatches(){
   box.innerHTML=h;
   box.addEventListener('click',function(e){
     var b=e.target.closest('.sw'); if(!b) return;
+    pushUndo();
     var s=sheet();
     if(s.paper===b.dataset.p) return;
     s.paper=b.dataset.p;
@@ -579,17 +816,19 @@ function fit(){
 function tickSVG(seed){
   var r=hash(seed);
   function n(i,a){ return ((((r>>(i*4))&15)/15)-0.5)*2*a; }
-  var rot=n(0,5.5), sc=0.92+((r>>3)%20)/100;
-  var cx=(7.8+n(7,0.5)), cy=(18.7+n(1,0.9));
-  var down='M '+(3.2+n(1,0.8)).toFixed(1)+' '+(12.0+n(2,1.0)).toFixed(1)+
-           ' C '+(4.9+n(3,0.6)).toFixed(1)+' '+(13.7+n(4,0.7)).toFixed(1)+
-           ' '+(6.2+n(5,0.6)).toFixed(1)+' '+(15.6+n(6,0.7)).toFixed(1)+
+  var rot=n(0,11), sc=0.86+((r>>3)%26)/100;
+  /* where the two strokes meet, and how long/steep each arm is, all wander */
+  var cx=(7.8+n(7,1.5)), cy=(18.7+n(1,1.7));
+  var armUp=(20.2+n(8,3.4)), armTop=(2.6+n(9,2.6));
+  var down='M '+(3.2+n(1,1.5)).toFixed(1)+' '+(11.6+n(2,2.0)).toFixed(1)+
+           ' C '+(4.9+n(3,1.2)).toFixed(1)+' '+(13.7+n(4,1.3)).toFixed(1)+
+           ' '+(6.2+n(5,1.2)).toFixed(1)+' '+(15.6+n(6,1.3)).toFixed(1)+
            ' '+cx.toFixed(1)+' '+cy.toFixed(1);
   var up='M '+cx.toFixed(1)+' '+cy.toFixed(1)+
-         ' C '+(11.2+n(2,0.9)).toFixed(1)+' '+(12.1+n(3,1.0)).toFixed(1)+
-         ' '+(15.5+n(4,1.0)).toFixed(1)+' '+(6.2+n(5,1.1)).toFixed(1)+
-         ' '+(21.2+n(6,0.9)).toFixed(1)+' '+(1.8+n(7,1.0)).toFixed(1);
-  var w=(2.9+n(0,0.5)).toFixed(2);
+         ' C '+(11.2+n(2,1.8)).toFixed(1)+' '+(12.1+n(3,2.0)).toFixed(1)+
+         ' '+(15.5+n(4,2.0)).toFixed(1)+' '+(6.2+n(5,2.2)).toFixed(1)+
+         ' '+armUp.toFixed(1)+' '+armTop.toFixed(1);
+  var w=(2.9+n(0,0.75)).toFixed(2);
   return '<svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" '+
     'style="transform:rotate('+rot.toFixed(1)+'deg) scale('+sc.toFixed(2)+')">'+
     '<path d="'+down+'" style="stroke-width:'+w+'"/>'+
@@ -610,20 +849,28 @@ function bulletSVG(seed,size){
 function strikePaths(x1,x2,y,seed,fs,ln){
   var r=hash(seed);
   function n(i,a){ return ((((r>>(i*4))&15)/15)-0.5)*2*a; }
-  var w=clamp(fs*0.125,1.7,3.4)+n(7,0.35);
-  var o1=3+((r>>2)&7)*0.6, o2=3+((r>>5)&7)*0.7;
-  var sx=x1-o1, ex=x2+o2, span=ex-sx;
-  var d='M '+sx.toFixed(1)+' '+(y+n(0,1.5)).toFixed(1)+
-        ' C '+(sx+span*0.32).toFixed(1)+' '+(y+n(2,2.1)-0.7).toFixed(1)+
-        ' '+(sx+span*0.68).toFixed(1)+' '+(y+n(3,2.1)+0.7).toFixed(1)+
-        ' '+ex.toFixed(1)+' '+(y+n(1,1.5)).toFixed(1);
+  /* Hand strikes are never level and never the same twice: vary the tilt, how
+     far the pen overshoots each end, the bow of the stroke and its weight. */
+  var w=clamp(fs*0.125,1.7,3.4)+n(7,0.55);
+  var o1=2+((r>>2)&7)*1.15, o2=2+((r>>5)&7)*1.35;      /* overshoot each end */
+  var sx=x1-o1, ex=x2+o2, span=Math.max(6,ex-sx);
+  var tilt=n(8,0.075)*span;                             /* whole-line slope */
+  var y1=y+n(0,1.6)-tilt*0.5, y2=y+n(1,1.6)+tilt*0.5;
+  var bow=n(9,0.055)*span;                              /* bend of the stroke */
+  var c1=y1+n(2,2.0)-bow, c2=y2+n(3,2.0)-bow*0.6;
+  var d='M '+sx.toFixed(1)+' '+y1.toFixed(1)+
+        ' C '+(sx+span*0.32).toFixed(1)+' '+c1.toFixed(1)+
+        ' '+(sx+span*0.68).toFixed(1)+' '+c2.toFixed(1)+
+        ' '+ex.toFixed(1)+' '+y2.toFixed(1);
   var out='<path data-ln="'+ln+'" d="'+d+'" style="stroke-width:'+w.toFixed(2)+'"/>';
+  /* sometimes the pen goes back over it */
   if((((r>>11)&3)===0)&&span>26){
-    var s2=sx+span*0.14, e2=sx+span*0.82;
-    out+='<path data-ln="'+ln+'" d="M '+s2.toFixed(1)+' '+(y+n(4,1.7)).toFixed(1)+
-         ' Q '+((s2+e2)/2).toFixed(1)+' '+(y+n(5,2.3)).toFixed(1)+
-         ' '+e2.toFixed(1)+' '+(y+n(6,1.7)).toFixed(1)+
-         '" style="stroke-width:'+(w*0.78).toFixed(2)+';opacity:.5"/>';
+    var s2=sx+span*(0.08+((r>>13)&3)*0.04), e2=sx+span*(0.78+((r>>15)&3)*0.05);
+    out+='<path data-ln="'+ln+'" d="M '+s2.toFixed(1)+' '+(y1+n(4,2.2)).toFixed(1)+
+         ' Q '+((s2+e2)/2).toFixed(1)+' '+(y+n(5,3.0)-bow*0.8).toFixed(1)+
+         ' '+e2.toFixed(1)+' '+(y2+n(6,2.2)).toFixed(1)+
+         '" style="stroke-width:'+(w*(0.62+((r>>17)&7)*0.04)).toFixed(2)+';opacity:'+
+         (0.38+((r>>19)&7)*0.045).toFixed(2)+'"/>';
   }
   return out;
 }
@@ -689,9 +936,28 @@ function paintAnim(paths,delays,dur){
   }
 }
 var EASE_WIPE='cubic-bezier(.3,.6,.35,1)';
-var EASE_DOWN='cubic-bezier(.42,.08,.5,1)';
-var EASE_UP='cubic-bezier(.25,.55,.4,1)';
 
+/* Shared by the live page and the page-turn snapshot: place a row's tick and
+   draw its strike. Previously duplicated in both, which is how the snapshot
+   drifted out of sync and rendered ticks 8x too large. */
+function placeTick(tick,tx,rs,fs){
+  if(!tick) return;
+  if(!rs.length){ tick.style.display='none'; return; }
+  var last=rs[rs.length-1], box=fs*1.05, ink=box*0.128;
+  tick.style.display='flex';
+  tick.style.width=box+'px'; tick.style.height=box+'px';
+  tick.style.left=(last.x2+spaceWidth(tx)+fs*0.20-ink)+'px';
+  tick.style.top=(last.y+last.h/2-box/2+fs*0.05)+'px';
+}
+function drawStrike(row,rs,fs){
+  var paths='';
+  for(var k=0;k<rs.length;k++)
+    paths+=strikePaths(rs[k].x1,rs[k].x2,rs[k].y+rs[k].h*0.545,row.dataset.lid+'#'+k,fs,k);
+  var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('class','strike'); svg.innerHTML=paths;
+  row.insertBefore(svg,row.firstChild);
+  return svg;
+}
 function layoutMarks(only,settleOnly){
   var rows=only?[only]:canvas.querySelectorAll('.row');
   var rm=reduced();
@@ -709,27 +975,11 @@ function layoutMarks(only,settleOnly){
     var rs=lineRects(tx,base);
     var fs=parseFloat(getComputedStyle(tx).fontSize)||17;
 
-    if(tick){
-      if(!rs.length){ tick.style.display='none'; }
-      else{
-        var last=rs[rs.length-1];
-        var box=fs*1.05, ink=box*0.128;
-        tick.style.display='flex';
-        tick.style.width=box+'px'; tick.style.height=box+'px';
-        tick.style.left=(last.x2+spaceWidth(tx)+fs*0.20-ink)+'px';
-        tick.style.top=(last.y+last.h/2-box/2+fs*0.05)+'px';
-      }
-    }
+    placeTick(tick,tx,rs,fs);
 
     var strikeDur=0;
     if(done&&rs.length){
-      var paths='';
-      for(var k=0;k<rs.length;k++)
-        paths+=strikePaths(rs[k].x1,rs[k].x2,rs[k].y+rs[k].h*0.545,row.dataset.lid+'#'+k,fs,k);
-      var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-      svg.setAttribute('class','strike'); svg.innerHTML=paths;
-      row.insertBefore(svg,row.firstChild);
-      var sp=svg.querySelectorAll('path');
+      var sp=drawStrike(row,rs,fs).querySelectorAll('path');
       strikeDur=0.30+0.085*(rs.length-1);
       if(anim){
         var sd=[],sdur=[];
@@ -752,6 +1002,18 @@ function markAnim(lid){
     var a=canvas.querySelectorAll('.row.anim');
     for(var i=0;i<a.length;i++) a[i].classList.remove('anim');
   },1000);
+}
+/* Rebuild one row in place. Used for per-line changes (bullets, strikes) so a
+   200-line page does not re-parse every tick SVG to change one thing. */
+function replaceRow(b,l,rowEl,caret){
+  var fresh=renderLine(b,l);
+  rowEl.parentNode.replaceChild(fresh,rowEl);
+  layoutMarks(fresh);
+  if(caret!==undefined&&caret!==null){
+    var tx=fresh.querySelector('.tx');
+    if(tx){ tx.focus(); setCaret(tx,caret); }
+  }
+  return fresh;
 }
 var relayoutQueued=false;
 function relayoutSoon(){
@@ -778,8 +1040,13 @@ function renderLine(b,l){
   row.className='row'+(l.done?' done':'')+(animSet[l.id]?' anim':'');
   row.dataset.lid=l.id;
 
-  var tick=document.createElement('div');
+  var tick=document.createElement('button');
   tick.className='tick';
+  tick.type='button';
+  tick.setAttribute('role','checkbox');
+  tick.setAttribute('aria-checked',l.done?'true':'false');
+  tick.setAttribute('aria-label',(l.done?'Done: ':'Not done: ')+(lineText(l.html)||'empty line'));
+  tick.tabIndex=-1;   /* reachable from the line via Ctrl+Enter, not in the tab order */
   tick.title=l.done?'Click to undo':'Click to strike off';
   tick.innerHTML=tickSVG(l.id);
   row.appendChild(tick);
@@ -885,7 +1152,7 @@ function addBlock(x,y){
   pushUndo();
   var b={id:uid(),kind:'text',x:Math.round(clamp(x-6,0,Math.max(0,canvas.clientWidth-DEF_W))),
          y:Math.round(clamp(y-8,0,canvas.clientHeight-40)),w:DEF_W,z:++zTop,
-         font:'hand',size:DEF_SIZE,
+         font:'hand',size:DEF_SIZE,m:Date.now(),
          lines:[{id:uid(),html:'',bul:false,done:false}]};
   blocks().push(b); selId=b.id;
   save(); render(false); focusLine(b.id,b.lines[0].id,0);
@@ -895,7 +1162,7 @@ function addBlock(x,y){
 }
 function deleteBlock(id){
   var bl=blocks();
-  for(var i=0;i<bl.length;i++) if(bl[i].id===id){ bl.splice(i,1); break; }
+  for(var i=0;i<bl.length;i++) if(bl[i].id===id){ bl.splice(i,1); tombstone(cur,id); break; }
   if(selId===id) selId=null;
   save(); render(false);
 }
@@ -927,14 +1194,33 @@ function focusedTx(){
    Because each line is its own contenteditable, a native selection can't span
    them; blockSel is our own "the entire box is selected" state. */
 var blockSel=null;
+var settingBlockSel=false;
 function selectWholeBlock(id){
   var b=findBlock(id); if(!b||b.kind!=='text') return;
+  settingBlockSel=true;
   blockSel=id; selId=id;
-  var tx=focusedTx(); if(tx) tx.blur();
-  var s=window.getSelection(); if(s) s.removeAllRanges();
   var el=canvas.querySelector('.block[data-id="'+id+'"]');
   if(el){ el.classList.add('sel'); el.classList.add('blocksel'); }
+  /* keep the caret in the box so the next keystroke is delivered to us, and
+     leave the last line focused so typing has somewhere to land */
+  if(el){
+    var txs=el.querySelectorAll('.tx');
+    if(txs.length){
+      var lastTx=txs[txs.length-1];
+      lastTx.focus();
+      var r=document.createRange(); r.selectNodeContents(lastTx);
+      var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    }
+  }
+  settingBlockSel=false;
   updateDock();
+}
+/* Replace every line of the selected box with one empty line, keeping the box.
+   Shared by typing-over and Delete. */
+function clearBlockText(b,keepChar){
+  var first={id:uid(),html:keepChar?esc(keepChar):'',bul:b.lines[0]?b.lines[0].bul:false,done:false};
+  b.lines=[first];
+  return first;
 }
 function clearBlockSel(){
   if(!blockSel) return;
@@ -976,14 +1262,15 @@ function stripTag(html,tag){
   })(d);
   return d.innerHTML;
 }
+function toggleAllBullets(b){
+  var all=true;
+  for(var i=0;i<b.lines.length;i++) if(!b.lines[i].bul){ all=false; break; }
+  for(var j=0;j<b.lines.length;j++) b.lines[j].bul=!all;
+}
 function blockFormat(prop){
   var b=findBlock(blockSel||selId); if(!b||b.kind!=='text') return;
   pushUndo();
-  if(prop==='bul'){
-    var all=true;
-    for(var i=0;i<b.lines.length;i++) if(!b.lines[i].bul) all=false;
-    for(var j=0;j<b.lines.length;j++) b.lines[j].bul=!all;
-  } else {
+  if(prop==='bul'){ toggleAllBullets(b); } else {
     var tag=(prop==='b')?'b':(prop==='i')?'i':'u';
     var everyWrapped=true;
     for(var k=0;k<b.lines.length;k++){
@@ -1050,12 +1337,26 @@ canvas.addEventListener('mousedown',function(e){
   var tickEl=e.target.closest('.tick');
   if(tickEl){
     e.preventDefault();
-    var lid=tickEl.closest('.row').dataset.lid;
+    var rowEl=tickEl.closest('.row');
+    var lid=rowEl.dataset.lid;
     var i=lineIndex(b,lid); if(i<0) return;
     pushUndo();
-    b.lines[i].done=!b.lines[i].done;
-    if(b.lines[i].done) markAnim(lid);
-    selId=b.id; save(); render();
+    var nowDone=!b.lines[i].done;
+    b.lines[i].done=nowDone;
+    if(nowDone) markAnim(lid);
+    selId=b.id;
+    /* Striking a line only changes that row. A full render would re-parse every
+       tick SVG on the page (~290ms on a long list) to change one class. */
+    rowEl.classList.toggle('done',nowDone);
+    rowEl.classList.toggle('anim',nowDone&&!reduced());
+    var tkEl=rowEl.querySelector('.tick');
+    if(tkEl){
+      tkEl.setAttribute('aria-checked',nowDone?'true':'false');
+      tkEl.setAttribute('aria-label',(nowDone?'Done: ':'Not done: ')+(lineText(b.lines[i].html)||'empty line'));
+      tkEl.title=nowDone?'Click to undo':'Click to strike off';
+    }
+    layoutMarks(rowEl);
+    save(); updateDock();
     return;
   }
   if(b.kind==='image'){ e.preventDefault(); selectBlock(b.id); startDrag(e,b); return; }
@@ -1066,22 +1367,33 @@ canvas.addEventListener('mousedown',function(e){
     focusLine(b.id,last.id,lineText(last.html).length);
   }
 });
-function startDrag(e,b){
-  var sx=e.clientX,sy=e.clientY,ox=b.x,oy=b.y,moved=false;
-  var el=canvas.querySelector('.block[data-id="'+b.id+'"]');
+/* One pointer-drag loop for both moving and resizing: onMove gets the delta in
+   page units, and the commit only fires if something actually moved. */
+function dragLoop(e,onMove){
+  var sx=e.clientX, sy=e.clientY, moved=false;
   function mv(ev){
     if(!moved){ pushUndo(); moved=true; }
-    b.x=Math.round(clamp(ox+(ev.clientX-sx)/scale,0,Math.max(0,canvas.clientWidth-b.w)));
-    b.y=Math.round(clamp(oy+(ev.clientY-sy)/scale,0,Math.max(0,canvas.clientHeight-24)));
-    el.style.left=b.x+'px'; el.style.top=b.y+'px';
+    onMove((ev.clientX-sx)/scale,(ev.clientY-sy)/scale);
   }
-  function up(){ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up);
-    if(moved){ save(); layoutMarks(); } }
-  document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+  function up(){
+    document.removeEventListener('mousemove',mv);
+    document.removeEventListener('mouseup',up);
+    if(moved){ save(); layoutMarks(); }
+  }
+  document.addEventListener('mousemove',mv);
+  document.addEventListener('mouseup',up);
+}
+function startDrag(e,b){
+  var ox=b.x, oy=b.y;
+  var el=canvas.querySelector('.block[data-id="'+b.id+'"]');
+  dragLoop(e,function(dx,dy){
+    b.x=Math.round(clamp(ox+dx,0,Math.max(0,canvas.clientWidth-b.w)));
+    b.y=Math.round(clamp(oy+dy,0,Math.max(0,canvas.clientHeight-24)));
+    el.style.left=b.x+'px'; el.style.top=b.y+'px';
+  });
 }
 function startResize(e,b,dir){
   var el=canvas.querySelector('.block[data-id="'+b.id+'"]');
-  var sx=e.clientX,sy=e.clientY,moved=false;
   var ox=b.x,oy=b.y,ow=b.w,oh=b.h||Math.round(el.offsetHeight);
   var ratio=ow/Math.max(1,oh), isImg=(b.kind==='image');
   var cw=canvas.clientWidth, ch=canvas.clientHeight;
@@ -1090,9 +1402,7 @@ function startResize(e,b,dir){
   var corner=(west||east)&&(north||south);
   /* the edge that stays put */
   var anchorR=ox+ow, anchorB=oy+oh, anchorX=ox, anchorY=oy;
-  function mv(ev){
-    if(!moved){ pushUndo(); moved=true; }
-    var dx=(ev.clientX-sx)/scale, dy=(ev.clientY-sy)/scale;
+  dragLoop(e,function(dx,dy){
     var w=ow,h=oh;
     if(east)  w=ow+dx;
     if(west)  w=ow-dx;
@@ -1119,16 +1429,13 @@ function startResize(e,b,dir){
     el.style.left=b.x+'px'; el.style.top=b.y+'px'; el.style.width=b.w+'px';
     if(isImg) el.style.height=b.h+'px'; else el.style.minHeight=b.h+'px';
     layoutMarks();
-  }
-  function up(){ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up);
-    if(moved){ save(); layoutMarks(); } }
-  document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+  });
 }
 
 /* ================= editing ================= */
 canvas.addEventListener('focusin',function(e){
   if(!e.target.classList.contains('tx')) return;
-  clearBlockSel();
+  if(!settingBlockSel) clearBlockSel();
   var blk=e.target.closest('.block'), row=e.target.closest('.row');
   lastLine={bid:blk.dataset.id,lid:row.dataset.lid};
   if(selId!==blk.dataset.id) selectBlock(blk.dataset.id); else updateDock();
@@ -1146,17 +1453,37 @@ canvas.addEventListener('focusout',function(e){
   },60);
   setTimeout(updateDock,0);
 });
+canvas.addEventListener('compositionstart',function(e){
+  if(e.target.classList&&e.target.classList.contains('tx')) composing=true;
+});
+canvas.addEventListener('compositionend',function(e){
+  if(!e.target.classList||!e.target.classList.contains('tx')) return;
+  composing=false;
+  /* commit the finished composition in one go */
+  var blk=e.target.closest('.block'), row=e.target.closest('.row');
+  var b=findBlock(blk.dataset.id); if(!b) return;
+  var i=lineIndex(b,row.dataset.lid); if(i<0) return;
+  b.lines[i].html=sanitize(e.target.innerHTML);
+  layoutMarks(row); save(); updateDock();
+});
 canvas.addEventListener('beforeinput',function(e){
   if(!e.target.classList.contains('tx')) return;
+  if(composing) return;
   if(!typing){ pushUndo(); typing=true; }
   clearTimeout(typingT); typingT=setTimeout(function(){typing=false;},900);
 });
 canvas.addEventListener('input',function(e){
   if(!e.target.classList.contains('tx')) return;
+  /* mid-composition the DOM is provisional; compositionend commits it */
+  if(composing) return;
   var blk=e.target.closest('.block'), row=e.target.closest('.row');
   var b=findBlock(blk.dataset.id); if(!b) return;
   var i=lineIndex(b,row.dataset.lid); if(i<0) return;
   b.lines[i].html=sanitize(e.target.innerHTML);
+  /* keep the tick's screen-reader label in step with the text it refers to */
+  var tkl=row.querySelector('.tick');
+  if(tkl) tkl.setAttribute('aria-label',
+    (b.lines[i].done?'Done: ':'Not done: ')+(lineText(b.lines[i].html)||'empty line'));
   layoutMarks(row); save(); updateDock();
 });
 document.addEventListener('selectionchange',function(){
@@ -1166,16 +1493,53 @@ document.addEventListener('selectionchange',function(){
 canvas.addEventListener('keydown',function(e){
   var tx=e.target;
   if(!tx.classList||!tx.classList.contains('tx')) return;
+  /* keyCode 229 and isComposing both mean the IME is mid-word: leave it alone */
+  if(composing||e.isComposing||e.keyCode===229) return;
   var blk=tx.closest('.block'), row=tx.closest('.row');
   var b=findBlock(blk.dataset.id); if(!b) return;
   var idx=lineIndex(b,row.dataset.lid); if(idx<0) return;
   var l=b.lines[idx], pos=caretPos(tx), txt=lineText(l.html);
   var mod=e.ctrlKey||e.metaKey;
 
+  /* Whole box selected (Ctrl+A). Word rules: a printable key replaces
+     everything, Delete/Backspace clears the text but keeps the box. */
+  if(blockSel===b.id){
+    if(e.key==='Delete'||e.key==='Backspace'){
+      e.preventDefault(); e.stopPropagation(); pushUndo();
+      var only=clearBlockText(b);
+      clearBlockSel(); save(); render(false);
+      focusLine(b.id,only.id,0); return;
+    }
+    if(e.key.length===1&&!mod&&!e.altKey){
+      e.preventDefault(); e.stopPropagation(); pushUndo();
+      var ln=clearBlockText(b,e.key);
+      clearBlockSel(); save(); render(false);
+      focusLine(b.id,ln.id,1);
+      typing=true; clearTimeout(typingT); typingT=setTimeout(function(){typing=false;},900);
+      return;
+    }
+    if(e.key==='Enter'&&!mod){
+      e.preventDefault(); pushUndo();
+      var el2=clearBlockText(b);
+      clearBlockSel(); save(); render(false);
+      focusLine(b.id,el2.id,0); return;
+    }
+    /* arrows collapse the selection like Word does */
+    if(e.key.indexOf('Arrow')===0){ clearBlockSel(); updateDock(); }
+  }
+
   if(e.key==='Enter'&&mod){
-    e.preventDefault(); pushUndo(); l.done=!l.done;
+    e.preventDefault(); pushUndo();
+    l.done=!l.done;
     if(l.done) markAnim(l.id);
-    save(); render(); return;
+    row.classList.toggle('done',l.done);
+    row.classList.toggle('anim',l.done&&!reduced());
+    var tk2=row.querySelector('.tick');
+    if(tk2){
+      tk2.setAttribute('aria-checked',l.done?'true':'false');
+      tk2.setAttribute('aria-label',(l.done?'Done: ':'Not done: ')+(lineText(l.html)||'empty line'));
+    }
+    layoutMarks(row); save(); updateDock(); return;
   }
   if(e.key==='Enter'){
     e.preventDefault(); pushUndo(); typing=false;
@@ -1193,7 +1557,8 @@ canvas.addEventListener('keydown',function(e){
     save(); render(false); focusLine(b.id,nl.id,0); return;
   }
   if(e.key==='Backspace'&&pos===0&&collapsed()){
-    if(l.bul&&idx>=0){ e.preventDefault(); pushUndo(); l.bul=false; save(); render(); return; }
+    if(l.bul&&idx>=0){ e.preventDefault(); pushUndo(); l.bul=false;
+      replaceRow(b,l,row,0); save(); return; }
     if(idx===0){
       if(b.lines.length===1&&txt===''){ e.preventDefault(); pushUndo(); deleteBlock(b.id); }
       return;
@@ -1217,26 +1582,21 @@ canvas.addEventListener('keydown',function(e){
     e.preventDefault(); focusLine(b.id,b.lines[idx+1].id,0); return;
   }
   if(mod&&e.key.toLowerCase()==='a'){
-    e.preventDefault();
-    var full=lineText(l.html);
-    /* first Ctrl+A selects the line; a second (line already fully selected, or a
-       multi-line block) selects the whole box */
-    if(b.lines.length>1 || (blockSel!==b.id && isLineFullySelected(tx))){
-      selectWholeBlock(b.id);
-    } else {
-      var rr=document.createRange(); rr.selectNodeContents(tx);
-      var ss=window.getSelection(); ss.removeAllRanges(); ss.addRange(rr);
-      updateDock();
-    }
+    /* Word behaviour: one press selects everything in the box. Typing replaces
+       it, Delete clears it, and the box itself stays. Triple-click still
+       selects a single line natively. */
+    e.preventDefault(); e.stopPropagation();
+    selectWholeBlock(b.id);
     return;
   }
   if(mod&&e.shiftKey&&(e.key==='*'||e.key==='8')){
-    e.preventDefault(); pushUndo(); l.bul=!l.bul; save(); render(); return;
+    e.preventDefault(); e.stopPropagation(); pushUndo(); l.bul=!l.bul;
+    replaceRow(b,l,row,pos); save(); return;
   }
   if(mod&&!e.altKey&&!e.shiftKey){
     var k=e.key.toLowerCase();
     if(k==='b'||k==='i'||k==='u'){
-      e.preventDefault();
+      e.preventDefault(); e.stopPropagation();
       applyFmt(k==='b'?'bold':(k==='i'?'italic':'underline'));
       return;
     }
@@ -1281,6 +1641,17 @@ document.addEventListener('paste',function(e){
   var b=findBlock(blk.dataset.id); if(!b) return;
   var idx=lineIndex(b,row.dataset.lid); if(idx<0) return;
   pushUndo();
+  /* pasting over a whole-box selection replaces the lot, as in Word */
+  if(blockSel===b.id){
+    b.lines=[];
+    for(var pp=0;pp<parts.length;pp++)
+      b.lines.push({id:uid(),html:esc(parts[pp]),bul:false,done:false});
+    if(!b.lines.length) b.lines=[{id:uid(),html:'',bul:false,done:false}];
+    var lastL=b.lines[b.lines.length-1];
+    clearBlockSel(); save(); render(false);
+    focusLine(b.id,lastL.id,lineText(lastL.html).length);
+    return;
+  }
   var l=b.lines[idx];
   var sel=window.getSelection();
   if(sel&&sel.rangeCount) sel.getRangeAt(0).deleteContents();
@@ -1319,10 +1690,25 @@ function takeImage(file){
       var cw=Math.max(1,Math.round(img.width*s)), ch=Math.max(1,Math.round(img.height*s));
       var c=document.createElement('canvas'); c.width=cw; c.height=ch;
       var g=c.getContext('2d');
-      g.fillStyle='#ffffff'; g.fillRect(0,0,cw,ch);
       g.drawImage(img,0,0,cw,ch);
+      /* A cut-out PNG must stay cut out. Forcing JPEG paints a white box behind
+         it, so only use JPEG when the image is genuinely opaque. */
+      var hasAlpha=false;
+      try{
+        var px=g.getImageData(0,0,cw,ch).data;
+        for(var a=3;a<px.length;a+=4){ if(px[a]<250){ hasAlpha=true; break; } }
+      }catch(err){ hasAlpha=true; }   /* tainted canvas: keep PNG to be safe */
       var url;
-      try{ url=c.toDataURL('image/jpeg',IMG_Q); }catch(err){ say('That image could not be read.'); return; }
+      try{
+        if(hasAlpha) url=c.toDataURL('image/png');
+        else {
+          var c2=document.createElement('canvas'); c2.width=cw; c2.height=ch;
+          var g2=c2.getContext('2d');
+          g2.fillStyle='#ffffff'; g2.fillRect(0,0,cw,ch);
+          g2.drawImage(img,0,0,cw,ch);
+          url=c2.toDataURL('image/jpeg',IMG_Q);
+        }
+      }catch(err){ say('That image could not be read.'); return; }
       if(docSize()+url.length>SIZE_STOP){
         say('No room for that image. The notebook is near the 1MB sync limit, so delete an image first.');
         return;
@@ -1330,7 +1716,7 @@ function takeImage(file){
       var maxW=Math.min(380,canvas.clientWidth);
       var dw=Math.min(maxW,cw), dh=Math.round(dw*ch/cw);
       pushUndo();
-      var b={id:uid(),kind:'image',src:url,
+      var b={id:uid(),kind:'image',src:url,m:Date.now(),
              x:Math.round(clamp(dropPoint.x,0,Math.max(0,canvas.clientWidth-dw))),
              y:Math.round(clamp(dropPoint.y,0,Math.max(0,canvas.clientHeight-dh))),
              w:dw,h:dh,z:++zTop};
@@ -1366,11 +1752,7 @@ document.getElementById('tbL').onclick=function(){
   pushUndo();
   var l=currentLine();
   if(l&&lastLine&&lastLine.bid===b.id) l.bul=!l.bul;
-  else{
-    var all=true;
-    for(var i=0;i<b.lines.length;i++) if(!b.lines[i].bul) all=false;
-    for(var j=0;j<b.lines.length;j++) b.lines[j].bul=!all;
-  }
+  else toggleAllBullets(b);
   save(); render(); updateDock();
 };
 document.getElementById('tbDel').onclick=function(){
@@ -1381,7 +1763,7 @@ document.getElementById('tbDel').onclick=function(){
 /* Paints a static, non-interactive snapshot of a sheet into a leaf face:
    its paper colour on the face, its blocks and marks inside the clone layer. */
 function snapshotInto(faceEl,cloneEl,sh){
-  faceEl.style.background=paperColor(sh&&sh.paper||'cream');
+  faceEl.style.background=paperColor((sh&&sh.paper)||'cream');
   cloneEl.innerHTML='';
   var pad=document.createElement('div');
   pad.style.cssText='position:absolute;left:80px;top:30px;right:26px;bottom:28px';
@@ -1398,27 +1780,19 @@ function snapshotInto(faceEl,cloneEl,sh){
   cloneEl.appendChild(pad);
   var rows=pad.querySelectorAll('.row');
   for(var r=0;r<rows.length;r++){
-    var row=rows[r]; if(!row.classList.contains('done')) continue;
+    var row=rows[r];
     var txe=row.querySelector('.tx'), base=row.getBoundingClientRect();
-    var rs=lineRects(txe,base); if(!rs.length) continue;
-    var fs=parseFloat(getComputedStyle(txe).fontSize)||17, paths='';
-    for(var k=0;k<rs.length;k++)
-      paths+=strikePaths(rs[k].x1,rs[k].x2,rs[k].y+rs[k].h*0.545,row.dataset.lid+'#'+k,fs,k);
-    var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-    svg.setAttribute('class','strike'); svg.innerHTML=paths;
-    row.insertBefore(svg,row.firstChild);
-    paintNow(svg.querySelectorAll('path'));
+    var rs=lineRects(txe,base);
+    var fs=parseFloat(getComputedStyle(txe).fontSize)||17;
     var tk=row.querySelector('.tick');
-    if(tk){ var last=rs[rs.length-1], boxs=fs*1.05, ink=boxs*0.128;
-      tk.style.display='flex'; tk.style.width=boxs+'px'; tk.style.height=boxs+'px'; tk.style.opacity='1';
-      tk.style.left=(last.x2+spaceWidth(txe)+fs*0.20-ink)+'px';
-      tk.style.top=(last.y+last.h/2-boxs/2+fs*0.05)+'px';
-      paintNow(tk.querySelectorAll('path'));
-    }
+    placeTick(tk,txe,rs,fs);
+    if(tk&&rs.length) paintNow(tk.querySelectorAll('path'));
+    if(!row.classList.contains('done')||!rs.length) continue;
+    paintNow(drawStrike(row,rs,fs).querySelectorAll('path'));
   }
 }
 
-var DUR=520, turnTimer=null;
+var DUR=760, turnTimer=null, zFlipTimer=null;
 function turnTo(dir,commit){
   if(turning) return;
   var leaf=document.getElementById('leaf');
@@ -1428,49 +1802,74 @@ function turnTo(dir,commit){
   var frontClone=document.getElementById('lfFrontClone');
   var spine=document.getElementById('spineShadow');
   var sheen=lfFront.querySelector('.sheen');
+  var backEl=document.getElementById('lfBack');
 
   var fromSheet=sheet();
   turning=true;
   commit();
   var toSheet=sheet();
-  /* base page immediately shows the destination; the leaf carries the other page
-     and lifts/drops over it. Single opaque face, so no mirrored back can appear. */
+  /* base page shows the destination straight away; the leaf carries the other
+     page over the coil and tucks it behind the pad */
   afterNav();
 
-  var startDeg,endDeg;
-  if(dir>0){
-    /* leaving this page: leaf shows the OLD page, lifts up off the spine and away,
-       revealing the NEW page (already on the base) underneath */
-    snapshotInto(lfFront,frontClone,fromSheet);
-    startDeg=0; endDeg=-105;
-  } else {
-    /* going back: the previous page drops down from lifted onto the base */
-    snapshotInto(lfFront,frontClone,toSheet);
-    startDeg=-105; endDeg=0;
-  }
+  var leaving=(dir>0)?fromSheet:toSheet;
+  snapshotInto(lfFront,frontClone,leaving);
+  /* the reverse of a real sheet is blank paper in that page's colour, never a
+     copy of the content, so nothing can appear mirrored */
+  backEl.style.background=paperColor((leaving&&leaving.paper)||'cream');
+
   zone.classList.add('on');
 
-  var leafAnim=leaf.animate([
-    {transform:'rotateY('+startDeg+'deg)'},
-    {transform:'rotateY('+endDeg+'deg)'}
-  ],{duration:DUR, easing:'cubic-bezier(.37,.02,.28,1)', fill:'forwards'});
+  /* The leaf pivots on its own left edge, so a plain 180 would land it mirrored
+     out on the desk to the LEFT of the pad. Slide it right by its own width as
+     it turns so it comes to rest on the pad's own footprint, tucked behind. */
+  var frames=[], N=20, LW=794;
+  for(var i=0;i<=N;i++){
+    var t=i/N;
+    var ang=(dir>0)?(-180*t):(-180*(1-t));
+    var a=Math.abs(ang)/180;
+    /* ease the slide so it trails the rotation rather than moving in lockstep */
+    var k=a*a*(3-2*a);
+    var slide=(LW+COIL_W)*k;                  /* carry it back over the pad */
+    var lift=Math.sin(a*Math.PI)*22;          /* arc up off the paper */
+    frames.push({transform:'translateX('+slide.toFixed(1)+'px) translateZ('+lift.toFixed(1)+'px) '+
+                           'rotateY('+ang.toFixed(1)+'deg)',
+                 offset:t});
+  }
+  var leafAnim=leaf.animate(frames,
+    {duration:DUR, easing:'cubic-bezier(.38,.02,.28,1)', fill:'forwards'});
 
-  /* the lifting face darkens along its inner edge as it tilts */
-  if(dir>0) sheen.animate([{opacity:0},{opacity:0.9}],{duration:DUR,easing:'ease-in',fill:'forwards'});
-  else      sheen.animate([{opacity:0.9},{opacity:0}],{duration:DUR,easing:'ease-out',fill:'forwards'});
-  /* shadow pools into the spine while a page stands lifted */
-  spine.animate([{opacity:(dir>0)?0:0.55},{opacity:(dir>0)?0.55:0}],
+  /* Once the page is past edge-on it belongs BEHIND the pad, not floating in
+     front of it. Swap the whole flip layer under the notebook at the halfway
+     point so the turned page tucks away like a real sheet. */
+  zone.style.zIndex=(dir>0)?6:0;
+  clearTimeout(zFlipTimer);
+  zFlipTimer=setTimeout(function(){
+    zone.style.zIndex=(dir>0)?0:6;
+  },DUR*0.5);
+
+  /* front face is lit until it passes edge-on, then we are looking at the back */
+  var half=0.5;
+  sheen.animate(
+    (dir>0)?[{opacity:0},{opacity:.55,offset:half},{opacity:.15}]
+           :[{opacity:.15},{opacity:.55,offset:half},{opacity:0}],
+    {duration:DUR,easing:'ease-in-out',fill:'forwards'});
+  spine.animate(
+    (dir>0)?[{opacity:0},{opacity:.55,offset:half},{opacity:0}]
+           :[{opacity:0},{opacity:.55,offset:half},{opacity:0}],
     {duration:DUR,easing:'ease-in-out',fill:'forwards'});
 
   leafAnim.onfinish=endTurn;
   clearTimeout(turnTimer);
-  turnTimer=setTimeout(function(){ if(turning) endTurn(); },DUR+140);
+  turnTimer=setTimeout(function(){ if(turning) endTurn(); },DUR+160);
 }
 function endTurn(){
-  clearTimeout(turnTimer);
-  document.getElementById('flipzone').classList.remove('on');
+  clearTimeout(turnTimer); clearTimeout(zFlipTimer);
+  var z=document.getElementById('flipzone');
+  z.style.zIndex=''; z.classList.remove('on');
   document.getElementById('lfFrontClone').innerHTML='';
   document.getElementById('lfFront').style.background='';
+  document.getElementById('lfBack').style.background='';
   document.getElementById('spineShadow').style.opacity='0';
   var leaf=document.getElementById('leaf');
   try{ leaf.getAnimations().forEach(function(a){a.cancel();}); }catch(e){}
@@ -1478,7 +1877,7 @@ function endTurn(){
   turning=false;
 }
 function afterNav(){
-  selId=null; lastLine=null; undoS.length=0; redoS.length=0;
+  selId=null; lastLine=null; clearBlockSel();
   refreshUndo(); updateDateUI(); render(false);
 }
 function goDate(iso){
@@ -1502,10 +1901,18 @@ function updateDateUI(){
   document.getElementById('pnum').textContent=(si+1)+' / '+s.length;
   document.getElementById('prevPage').disabled=(si===0);
   document.getElementById('nextPage').disabled=(si>=s.length-1);
+  document.getElementById('prevWritten').disabled=!adjacentWritten(-1);
+  document.getElementById('nextWritten').disabled=!adjacentWritten(1);
+  var n=writtenDays().length;
+  document.getElementById('dayCount').textContent=n?(n+' day'+(n===1?'':'s')+' written'):'';
 }
 document.getElementById('prevDay').onclick=function(){ goDate(shiftISO(cur,-1)); };
 document.getElementById('nextDay').onclick=function(){ goDate(shiftISO(cur,1)); };
 document.getElementById('todayBtn').onclick=function(){ if(cur!==todayISO()) goDate(todayISO()); };
+document.getElementById('prevWritten').onclick=function(){
+  var d=adjacentWritten(-1); if(d) goDate(d); else say('Nothing written before this day.'); };
+document.getElementById('nextWritten').onclick=function(){
+  var d=adjacentWritten(1); if(d) goDate(d); else say('Nothing written after this day.'); };
 document.getElementById('dateinput').addEventListener('change',function(){
   if(this.value&&this.value!==cur) goDate(this.value);
 });
@@ -1554,7 +1961,7 @@ document.getElementById('carry').onclick=function(){
           keep.push({id:uid(),html:l.html,bul:l.bul,done:false}); count++;
         }
       }
-      if(keep.length) carried.push({id:uid(),kind:'text',x:b.x,y:b.y,w:b.w,h:b.h,
+      if(keep.length) carried.push({id:uid(),kind:'text',m:Date.now(),x:b.x,y:b.y,w:b.w,h:b.h,
                                     font:b.font,size:b.size,z:++zTop,lines:keep});
     }
   }
@@ -1563,10 +1970,23 @@ document.getElementById('carry').onclick=function(){
   if(bl.length){
     if(!confirm('Add '+count+' unfinished item'+(count===1?'':'s')+' from '+fmtShort(src)+' to this page?\n\n'+
                 'This page already has '+bl.length+' box'+(bl.length===1?'':'es')+' on it.')) return;
-    for(var k=0;k<carried.length;k++){
-      carried[k].x=clamp(carried[k].x+26,0,Math.max(0,canvas.clientWidth-carried[k].w));
-      carried[k].y=clamp(carried[k].y+26,0,Math.max(0,canvas.clientHeight-24));
-    }
+  }
+  /* Lay carried boxes out from the top of the page rather than reusing the old
+     coordinates, which dropped them wherever they happened to sit yesterday. */
+  var startY=0;
+  for(var q=0;q<bl.length;q++){
+    var el=canvas.querySelector('.block[data-id="'+bl[q].id+'"]');
+    var bot=bl[q].y+(el?el.offsetHeight:(bl[q].h||40));
+    if(bot>startY) startY=bot;
+  }
+  if(bl.length) startY+=26;
+  var cy=startY;
+  for(var k=0;k<carried.length;k++){
+    carried[k].x=0;
+    carried[k].y=Math.round(clamp(cy,0,Math.max(0,canvas.clientHeight-30)));
+    carried[k].w=Math.min(carried[k].w,canvas.clientWidth);
+    var lineH=(carried[k].size*(FSCALE[carried[k].font]||1))*1.3;
+    cy+=Math.max(carried[k].h||0,carried[k].lines.length*lineH)+22;
   }
   pushUndo();
   sheet().blocks=bl.concat(carried);
@@ -1591,26 +2011,99 @@ function push(){
   var c=cfg(); if(!c.key||!c.bin) return;
   if(pulling){ clearTimeout(pushT); pushT=setTimeout(push,800); return; }
   setStatus('busy','Saving');
-  fetch(API+'/'+c.bin,{method:'PUT',
-    headers:{'Content-Type':'application/json','X-Master-Key':c.key,'X-Bin-Versioning':'false'},
-    body:JSON.stringify({v:3,pages:pages})})
-  .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status);
+  /* Read-modify-write. Pushing blind would wipe out whatever the other device
+     wrote since our last pull, which is exactly the silent loss we are trying
+     to avoid. Fetch, merge, then write the union. */
+  fetch(API+'/'+c.bin+'/latest',{headers:{'X-Master-Key':c.key,'X-Bin-Meta':'false'}})
+  .then(function(r){ return r.ok?r.json():null; })
+  .catch(function(){ return null; })
+  .then(function(data){
+    if(data){
+      var rec=(data&&data.record)?data.record:data;
+      if(rec&&rec.pages){
+        var res=mergePages(rec.pages,rec.tomb);
+        normalise();
+        if(res.changedCur&&!turning){ updateDateUI(); render(false); }
+        writeLocal();
+      }
+    }
+    return fetch(API+'/'+c.bin,{method:'PUT',
+      headers:{'Content-Type':'application/json','X-Master-Key':c.key,'X-Bin-Versioning':'false'},
+      body:JSON.stringify({v:SCHEMA,pages:pages,tomb:tombs})});
+  })
+  .then(function(r){ if(!r||!r.ok) throw new Error('HTTP '+(r?r.status:'?'));
+    lastPull=Date.now();
     setStatus('ok','Synced','Last saved to the cloud just now'); })
   .catch(function(err){
     setStatus('err','Sync error','Could not save: '+err.message+'. Click to check your settings.');
   });
 }
-function mergePages(remote){
-  var changedCur=false,localNewer=false;
+/* Merge remote into local at BLOCK level. Two devices that touched different
+   boxes on the same day both keep their work; only the same box edited in two
+   places has to pick a winner (newest wins). Tombstones stop a deleted block
+   being resurrected by a stale copy. */
+function mergePages(remote,remoteTombs){
+  var changedCur=false, localNewer=false;
+
+  /* fold in remote tombstones first so deletes win over stale blocks */
+  if(remoteTombs){
+    for(var rd in remoteTombs){
+      if(!tombs[rd]) tombs[rd]={};
+      for(var rb in remoteTombs[rd])
+        if(!tombs[rd][rb]||remoteTombs[rd][rb]>tombs[rd][rb]) tombs[rd][rb]=remoteTombs[rd][rb];
+    }
+  }
+
   for(var d in remote){
     var rp=remote[d];
     if(!rp||!Array.isArray(rp.sheets)) continue;
     var lp=pages[d];
-    if(!lp||(rp.u||0)>(lp.u||0)){ pages[d]=rp; if(d===cur) changedCur=true; }
-    else if((lp.u||0)>(rp.u||0)) localNewer=true;
+    if(!lp){
+      /* whole day is new here, minus anything we deleted */
+      pages[d]=stripTombed(d,rp);
+      if(d===cur) changedCur=true;
+      continue;
+    }
+    if(mergeDay(d,lp,rp)&&d===cur) changedCur=true;
+    if((lp.u||0)>(rp.u||0)) localNewer=true;
   }
   for(var e in pages) if(!remote[e]) localNewer=true;
   return {changedCur:changedCur,localNewer:localNewer};
+}
+function stripTombed(d,p){
+  var t=tombs[d]; if(!t) return p;
+  for(var s=0;s<p.sheets.length;s++){
+    var bl=p.sheets[s].blocks||[];
+    for(var i=0;i<bl.length;i++)
+      if(t[bl[i].id] && t[bl[i].id]>=(bl[i].m||0)){ bl.splice(i--,1); }
+  }
+  return p;
+}
+function mergeDay(d,lp,rp){
+  var changed=false, t=tombs[d]||{};
+  var maxSheets=Math.max(lp.sheets.length,rp.sheets.length);
+  for(var s=0;s<maxSheets;s++){
+    if(!lp.sheets[s]){ lp.sheets[s]={id:uid(),blocks:[],paper:(rp.sheets[s]||{}).paper}; changed=true; }
+    var ls=lp.sheets[s], rs=rp.sheets[s];
+    if(!rs) continue;
+    if(rs.paper&&rs.paper!==ls.paper&&(rp.u||0)>(lp.u||0)){ ls.paper=rs.paper; changed=true; }
+    var byId={};
+    for(var i=0;i<ls.blocks.length;i++) byId[ls.blocks[i].id]=i;
+    for(var j=0;j<(rs.blocks||[]).length;j++){
+      var rb=rs.blocks[j];
+      if(t[rb.id] && t[rb.id]>=(rb.m||0)) continue;      /* deleted here, stay deleted */
+      var at=byId[rb.id];
+      if(at===undefined){ ls.blocks.push(rb); changed=true; }
+      else if((rb.m||0)>(ls.blocks[at].m||0)){ ls.blocks[at]=rb; changed=true; }
+    }
+    /* drop local blocks the remote tombstoned */
+    for(var k=0;k<ls.blocks.length;k++){
+      var tb=t[ls.blocks[k].id];
+      if(tb&&tb>=(ls.blocks[k].m||0)){ ls.blocks.splice(k--,1); changed=true; }
+    }
+  }
+  lp.u=Math.max(lp.u||0,rp.u||0);
+  return changed;
 }
 function pull(quiet){
   var c=cfg();
@@ -1624,11 +2117,11 @@ function pull(quiet){
     var rp=(rec&&rec.pages)?rec.pages:null;
     pulling=false; lastPull=Date.now();
     if(!rp){ setStatus('ok','Synced'); pushSoon(); return; }
-    var res=mergePages(rp);
+    var res=mergePages(rp,rec&&rec.tomb);
     normalise(); writeLocal();
     setStatus('ok','Synced','In sync with the cloud');
     if(res.changedCur&&!turning){
-      undoS.length=0; redoS.length=0; refreshUndo(); updateDateUI(); render(false);
+      invalidateHistory(cur); updateDateUI(); render(false);
       if(!quiet) say('Updated from your other device.');
     }
     if(res.localNewer) pushSoon();
@@ -1642,12 +2135,37 @@ function maybePull(){ if(Date.now()-lastPull>4000&&Date.now()-lastEdit>2500) pul
 window.addEventListener('focus',maybePull);
 document.addEventListener('visibilitychange',function(){ if(!document.hidden) maybePull(); });
 
+function updateMeter(){
+  var used=docSize(), pct=Math.min(100,Math.round(used/SIZE_STOP*100));
+  var f=document.getElementById('meterFill'); if(!f) return;
+  f.style.width=pct+'%';
+  f.className=(used>SIZE_WARN?(used>SIZE_STOP*0.95?'full':'warn'):'');
+  var imgs=0;
+  for(var d in pages){ var ss=pages[d].sheets||[];
+    for(var s=0;s<ss.length;s++){ var bl=ss[s].blocks||[];
+      for(var i=0;i<bl.length;i++) if(bl[i].kind==='image') imgs++; } }
+  document.getElementById('meterText').textContent=
+    Math.round(used/1024)+' KB of the 1 MB sync limit used'+
+    (imgs?(', '+imgs+' image'+(imgs===1?'':'s')):'')+'.';
+}
+document.getElementById('mExport').onclick=exportNotebook;
+document.getElementById('bannerExport').onclick=exportNotebook;
+document.getElementById('mImport').onclick=function(){ document.getElementById('mFile').click(); };
+document.getElementById('mFile').addEventListener('change',function(){
+  var f=this.files&&this.files[0]; if(!f) return;
+  var replace=confirm('Replace everything with this backup?\n\nOK replaces your current notebook.\n'+
+                      'Cancel merges the backup into what you already have.');
+  importNotebook(f,replace);
+  this.value='';
+  closeModal();
+});
 function openModal(){
   var c=cfg();
   document.getElementById('mkey').value=c.key;
   document.getElementById('mbin').value=c.bin;
   document.getElementById('mNote').textContent=(c.key&&!c.bin)
     ? 'A key is already saved in this browser from your checklist app.':'';
+  updateMeter();
   modal.classList.add('on');
   document.getElementById(c.key?'mbin':'mkey').focus();
 }
@@ -1674,7 +2192,7 @@ document.getElementById('mkbin').onclick=function(){
   note.textContent='Creating a bin...';
   fetch(API,{method:'POST',
     headers:{'Content-Type':'application/json','X-Master-Key':k,'X-Bin-Name':'notebook','X-Bin-Private':'true'},
-    body:JSON.stringify({v:3,pages:pages})})
+    body:JSON.stringify({v:SCHEMA,pages:pages,tomb:tombs})})
   .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
   .then(function(d){
     var id=d&&d.metadata&&d.metadata.id;
@@ -1716,6 +2234,16 @@ document.addEventListener('keydown',function(e){
     e.preventDefault(); pushUndo(); deleteBlock(selId);
   }
 });
+/* 'cur' is captured at load, so a notebook left open overnight would keep
+   writing on yesterday's page. Watch for the date changing under us. */
+var lastKnownDay=todayISO();
+setInterval(function(){
+  var t=todayISO();
+  if(t===lastKnownDay) return;
+  lastKnownDay=t;
+  updateDateUI();
+  if(!turning) say('It is a new day. Press Today to start a fresh page.');
+},30000);
 window.addEventListener('resize',fit);
 window.addEventListener('beforeunload',function(){ prune(); writeLocal(); });
 
