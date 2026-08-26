@@ -44,7 +44,8 @@ body{
 .datewrap{display:flex;align-items:center;gap:8px;padding:5px 10px;position:relative;cursor:pointer}
 .datewrap input{font:inherit;font-size:13px;color:#f2eee6;background:transparent;border:0;padding:0;
   color-scheme:dark;cursor:pointer}
-.datelabel{font-size:13px;color:#f2eee6;white-space:nowrap}
+.datelabel{font-size:13px;color:#f2eee6;white-space:nowrap;
+  display:inline-block;width:212px;text-align:center;overflow:hidden;text-overflow:ellipsis}
 .today-dot{width:6px;height:6px;border-radius:50%;background:var(--pen-red);flex:none}
 .hidden-date{position:absolute;inset:0;opacity:0;cursor:pointer}
 .pager{display:flex;align-items:center;gap:2px;padding:3px 4px;cursor:default}
@@ -147,6 +148,45 @@ body{
 .stage.shrinking{transition:transform .3s ease,opacity .3s ease;transform:scale(.82);opacity:0;pointer-events:none}
 .stage.growing{animation:nbgrow .3s ease}
 @keyframes nbgrow{from{transform:scale(.86);opacity:.3}to{transform:none;opacity:1}}
+
+/* the front cover: a real surface that sits over the page when the notebook is
+   closed and swings open on the spine to reveal the last page written on */
+.frontcover{position:absolute;z-index:5;left:18px;top:-7px;width:812px;height:1139px;
+  border-radius:3px 9px 9px 3px;cursor:pointer;transform-origin:left center;backface-visibility:hidden;
+  background:linear-gradient(150deg,#4a4234,#2b241c);
+  box-shadow:0 20px 50px rgba(0,0,0,.5),inset 0 0 60px rgba(0,0,0,.28),inset 3px 0 0 rgba(0,0,0,.35);
+  display:none;align-items:center;justify-content:center}
+.frontcover.cover-kraft{background:linear-gradient(150deg,#4a4132,#2a231a)}
+.frontcover.cover-black{background:linear-gradient(145deg,#2c2e31,#111214)}
+.frontcover.cover-navy{background:linear-gradient(145deg,#28374f,#141b28)}
+.frontcover.cover-red{background:linear-gradient(145deg,#5f2d29,#331715)}
+.frontcover.cover-forest{background:linear-gradient(145deg,#2f4636,#16241a)}
+.frontcover.cover-grey{background:linear-gradient(145deg,#585a5f,#303236)}
+.frontcover::after{content:'';position:absolute;left:20px;top:0;bottom:0;width:2px;
+  background:repeating-linear-gradient(rgba(0,0,0,.35) 0 4px,transparent 4px 20px)}
+.fc-inner{display:flex;flex-direction:column;align-items:center;gap:22px;padding:0 60px;text-align:center}
+.fc-title{font-family:'Caveat',cursive;font-size:64px;line-height:1.15;color:#f3ead2;font-weight:700;
+  outline:none;min-width:60px;max-width:640px;text-shadow:0 1px 4px rgba(0,0,0,.35);
+  border-radius:8px;padding:4px 14px;cursor:text}
+.fc-title.font-hand{font-family:'Caveat',cursive}
+.fc-title.font-sans{font-family:'Inter',sans-serif;font-size:52px;font-weight:600}
+.fc-title.font-serif{font-family:'Lora',serif;font-size:54px}
+.fc-title:focus{background:rgba(255,255,255,.08)}
+.fc-hint{font-family:'Inter',sans-serif;font-size:13px;letter-spacing:.5px;color:#ffffff66;
+  text-transform:uppercase}
+.frontcover.opening .fc-hint,.frontcover.editing .fc-hint{opacity:0}
+.fc-bar{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);display:none;gap:5px;
+  align-items:center;padding:7px 9px;background:#1c1a17ee;border:1px solid #ffffff1f;border-radius:12px;
+  box-shadow:0 10px 26px rgba(0,0,0,.5)}
+.frontcover.editing .fc-bar{display:flex}
+.fcfont{width:34px;height:30px;font-size:16px;color:#e9e3d7;background:#ffffff10;border:1px solid #ffffff1a;
+  border-radius:7px;cursor:pointer;line-height:1}
+.fcfont:hover{background:#ffffff22}
+.fcfont.on{background:#ffffff2e;border-color:#ffffff55}
+.fc-sep{width:1px;height:20px;background:#ffffff26;margin:0 3px}
+.fccol{width:22px;height:22px;border-radius:50%;border:2px solid #ffffff33;cursor:pointer;padding:0}
+.fccol:hover{transform:scale(1.12)}
+.fccol.on{border-color:#fff}
 .sheet{position:absolute;z-index:2;width:794px;height:1123px;border-radius:1px 3px 3px 1px}
 .s1{left:35px;top:12px;background:#c8c2b3}
 .s2{left:32px;top:8px;background:#ded9cc}
@@ -225,6 +265,23 @@ body{
 .tx b{font-weight:700}
 .tx i{font-style:italic}
 .tx u{text-decoration:underline}
+.tx span[data-c="r"],span[data-c="r"]{color:#c0392b}
+.tx span[data-c="b"],span[data-c="b"]{color:#2b6cb0}
+.tx span[data-c="g"],span[data-c="g"]{color:#2f7a4e}
+.tx span[data-c="o"],span[data-c="o"]{color:#c0631d}
+.tx span[data-c="p"],span[data-c="p"]{color:#7a45c2}
+.tx span[data-c="k"],span[data-c="k"]{color:#111417}
+.inkwrap{position:relative;display:inline-flex}
+#tbInk{display:inline-flex;align-items:center;justify-content:center}
+.inkdot{width:15px;height:15px;border-radius:50%;background:#c0392b;
+  box-shadow:inset 0 0 0 1.5px #ffffff33}
+.inkpop{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  display:none;gap:3px;padding:6px;background:var(--chrome);border:1px solid #ffffff22;
+  border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,.45);z-index:120}
+.inkpop.on{display:flex}
+.inkopt{font-size:19px;line-height:1;width:30px;height:30px;padding:0;border-radius:7px;
+  display:inline-flex;align-items:center;justify-content:center;background:none;border:0;cursor:pointer}
+.inkopt:hover{background:#ffffff1c}
 
 .strike{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 .strike path{fill:none;stroke:var(--pen-red);stroke-linecap:round;opacity:.93}
@@ -353,7 +410,7 @@ body.hasbanner .stage{top:86px}
     <button id="addPage" title="Add a page to this day">+</button>
   </span>
   <span class="sep"></span>
-  <button id="carry" title="Bring unfinished items forward from your last written day">Carry forward</button>
+  <button id="carry" title="Bring unfinished items forward from your last written day">Carry Forward</button>
   <span class="daycount" id="dayCount"></span>
   <span class="spacer"></span>
   <select id="coverSel" title="Notebook cover" aria-label="Notebook cover">
@@ -390,6 +447,24 @@ body.hasbanner .stage{top:86px}
         <div class="lf lf-back" id="lfBack"></div>
       </div>
     </div>
+    <div class="frontcover" id="frontCover" aria-hidden="true" role="button" tabindex="0" title="Open notebook">
+      <div class="fc-inner">
+        <div class="fc-title" id="fcTitle" contenteditable="true" spellcheck="false" aria-label="Notebook title"></div>
+        <div class="fc-hint" id="fcHint">Click to open</div>
+      </div>
+      <div class="fc-bar" id="fcBar">
+        <button data-f="hand" class="fcfont" title="Handwriting" style="font-family:Caveat,cursive">Aa</button>
+        <button data-f="sans" class="fcfont" title="Sans" style="font-family:Inter,sans-serif">Aa</button>
+        <button data-f="serif" class="fcfont" title="Serif" style="font-family:Lora,serif">Aa</button>
+        <span class="fc-sep"></span>
+        <button class="fccol" data-col="#f3ead2" title="Cream" style="background:#f3ead2"></button>
+        <button class="fccol" data-col="#e2c15a" title="Gold" style="background:#e2c15a"></button>
+        <button class="fccol" data-col="#ffffff" title="White" style="background:#ffffff"></button>
+        <button class="fccol" data-col="#1b1b1b" title="Charcoal" style="background:#1b1b1b"></button>
+        <button class="fccol" data-col="#c0392b" title="Red" style="background:#c0392b"></button>
+        <button class="fccol" data-col="#2b6cb0" title="Blue" style="background:#2b6cb0"></button>
+      </div>
+    </div>
     <svg class="spiral" id="spiral" viewBox="0 0 818 1123" aria-hidden="true"></svg>
   </div>
 </div>
@@ -409,10 +484,21 @@ body.hasbanner .stage{top:86px}
   <button id="tbI" title="Italic (Ctrl+I)"><i>I</i></button>
   <button id="tbU" title="Underline (Ctrl+U)"><u>U</u></button>
   <button id="tbL" title="Bullet (Ctrl+Shift+8)">&bull;</button>
+  <span class="inkwrap">
+    <button id="tbInk" title="Text colour" aria-label="Text colour"><span class="inkdot" id="inkDot"></span></button>
+    <span class="inkpop" id="inkPop">
+      <button class="inkopt" data-c="k" title="Ink" style="color:#111417">&#9679;</button>
+      <button class="inkopt" data-c="r" title="Red" style="color:#c0392b">&#9679;</button>
+      <button class="inkopt" data-c="o" title="Orange" style="color:#c0631d">&#9679;</button>
+      <button class="inkopt" data-c="g" title="Green" style="color:#2f7a4e">&#9679;</button>
+      <button class="inkopt" data-c="b" title="Blue" style="color:#2b6cb0">&#9679;</button>
+      <button class="inkopt" data-c="p" title="Purple" style="color:#7a45c2">&#9679;</button>
+    </span>
+  </span>
   <span class="sep"></span>
   <span class="swatches" id="swatches"></span>
   <span class="sep"></span>
-  <button id="tbDel" class="danger" title="Delete the selected box (Delete)">Delete box</button>
+  <button id="tbDel" class="danger" title="Delete the selected box (Delete)">Delete Box</button>
 </div>
 
 <div class="modal" id="modal">
@@ -531,7 +617,10 @@ function lineIndex(b,lid){ for(var i=0;i<b.lines.length;i++) if(b.lines[i].id===
 function px(b){ return b.size*(FSCALE[b.font]||1); }
 
 /* ---- inline markup: only b / i / u survive ---- */
-var ALLOW={B:1,I:1,U:1};
+var ALLOW={B:1,I:1,U:1,SPAN:1};
+/* fixed ink palette. Colours live as <span data-c="KEY">; only these keys are
+   ever allowed through the sanitizer, so no arbitrary style or markup can enter. */
+var INK={r:'#c0392b',b:'#2b6cb0',g:'#2f7a4e',o:'#c0631d',p:'#7a45c2',k:'#111417'};
 function scrub(node){
   var kids=[].slice.call(node.childNodes);
   for(var i=0;i<kids.length;i++){
@@ -544,11 +633,21 @@ function scrub(node){
     var keep=tag;
     if(tag==='STRONG') keep='B';
     if(tag==='EM') keep='I';
+    var ink=null;
+    if(keep==='SPAN'){
+      var c=n.getAttribute&&n.getAttribute('data-c');
+      if(c&&INK[c]) ink=c;
+      if(!ink){ /* a span with no valid colour is just wrapping: unwrap it */
+        while(n.firstChild) node.insertBefore(n.firstChild,n);
+        node.removeChild(n); continue;
+      }
+    }
     if(!ALLOW[keep]){
       while(n.firstChild) node.insertBefore(n.firstChild,n);
       node.removeChild(n);
-    } else if(keep!==tag || n.attributes.length){
+    } else if(keep!==tag || n.attributes.length>(ink?1:0)){
       var r=document.createElement(keep);
+      if(ink) r.setAttribute('data-c',ink);
       while(n.firstChild) r.appendChild(n.firstChild);
       node.replaceChild(r,n);
     }
@@ -575,7 +674,7 @@ function activeNB(){ return NB.notebooks[NB.active]; }
 function bindActive(){
   var nb=activeNB();
   if(!nb){ NB.active=NB.order[0]||''; nb=activeNB(); }
-  if(!nb){ createNotebook('My notebook','cardboard'); nb=activeNB(); }
+  if(!nb){ createNotebook('My Notebook','cardboard'); nb=activeNB(); }
   pages=nb.pages; tombs=nb.tomb; cover=nb.cover||'cardboard';
 }
 function docObj(){
@@ -651,7 +750,7 @@ function asV5(raw){
   var legacyCover='cardboard';
   try{ legacyCover=localStorage.getItem(K_COVER)||'cardboard'; }catch(e){}
   var doc={v:5,notebooks:{},order:[id],active:id,nbTomb:{}};
-  doc.notebooks[id]={title:'My notebook',cover:legacyCover,pages:pages4||{},tomb:tomb4,u:Date.now()};
+  doc.notebooks[id]={title:'My Notebook',cover:legacyCover,pages:pages4||{},tomb:tomb4,u:Date.now()};
   return doc;
 }
 function load(){
@@ -661,7 +760,7 @@ function load(){
   if(fresh){
     var id='default';
     NB={v:5,notebooks:{},order:[id],active:id,nbTomb:{}};
-    NB.notebooks[id]={title:'My notebook',cover:'cardboard',pages:{},tomb:{},u:Date.now()};
+    NB.notebooks[id]={title:'My Notebook',cover:'cardboard',pages:{},tomb:{},u:Date.now()};
     bindActive(); return;
   }
   var wasOld=(raw.v!==5);
@@ -734,7 +833,7 @@ function deleteNotebook(id){
   var i=NB.order.indexOf(id); if(i>=0) NB.order.splice(i,1);
   NB.nbTomb[id]=Date.now();
   if(NB.active===id){
-    if(!NB.order.length) createNotebook('My notebook','cardboard');
+    if(!NB.order.length) createNotebook('My Notebook','cardboard');
     NB.active=NB.order[0];
     bindActive();
     cur=todayISO(); si=0; selId=null; lastLine=null; clearBlockSel();
@@ -930,6 +1029,92 @@ function monogram(title){
   var t=(title||'').trim();
   return t?t.charAt(0).toUpperCase():'?';
 }
+
+/* ================= front cover ================= */
+var coverClosed=false;
+var _skipCover=false; try{ _skipCover=/[?&]nocover=1/.test(location.search); }catch(e){}
+function paintFrontCover(){
+  var nb=activeNB(), fc=document.getElementById('frontCover');
+  if(!nb||!fc) return;
+  fc.className='frontcover'+((nb.cover&&nb.cover!=='cardboard')?(' cover-'+nb.cover):'');
+  var t=document.getElementById('fcTitle');
+  t.textContent=nb.title||'My Notebook';
+  t.className='fc-title font-'+(nb.titleFont||'hand');
+  t.style.color=nb.titleColor||'#f3ead2';
+}
+function showCover(){
+  coverClosed=true;
+  var fc=document.getElementById('frontCover');
+  /* the open flip uses fill:forwards, so its final rotate persists. Cancel it or
+     the re-shown cover stays rotated off to the left. */
+  try{ fc.getAnimations().forEach(function(a){ a.cancel(); }); }catch(e){}
+  paintFrontCover();
+  fc.style.display='flex'; fc.style.transform=''; fc.classList.remove('opening','editing');
+  fc.setAttribute('aria-hidden','false');
+}
+function openCover(){
+  if(!coverClosed) return;
+  var fc=document.getElementById('frontCover');
+  document.getElementById('fcTitle').blur();
+  /* reveal the last day written on (behind the cover) before it swings open */
+  var ds=writtenDays();
+  cur=ds.length?ds[ds.length-1]:todayISO(); si=0;
+  updateDateUI(); render(false);
+  function done(){ coverClosed=false; fc.style.display='none'; fc.classList.remove('opening'); fc.style.transform=''; }
+  if(reduced()||!fc.animate){ done(); return; }
+  fc.classList.add('opening');
+  var a=fc.animate([{transform:'rotateY(0deg)'},{transform:'rotateY(-168deg)'}],
+    {duration:720,easing:'cubic-bezier(.4,0,.28,1)',fill:'forwards'});
+  a.onfinish=done;
+}
+function setupCover(){
+  var fc=document.getElementById('frontCover'), t=document.getElementById('fcTitle');
+  fc.addEventListener('mousedown',function(e){
+    if(e.target.closest('.fc-bar')||e.target===t) return;   /* editing or toolbar: don't open */
+    e.preventDefault(); openCover();
+  });
+  fc.addEventListener('keydown',function(e){
+    if((e.key==='Enter'||e.key===' ')&&e.target===fc){ e.preventDefault(); openCover(); }
+  });
+  /* title editing */
+  t.addEventListener('focus',function(){ fc.classList.add('editing'); syncCoverBar(); });
+  t.addEventListener('input',function(){ commitTitle(); });
+  t.addEventListener('blur',function(){ fc.classList.remove('editing'); commitTitle(true); });
+  t.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){ e.preventDefault(); t.blur(); }
+    e.stopPropagation();
+  });
+  var bar=document.getElementById('fcBar');
+  bar.querySelectorAll('.fcfont').forEach(function(btn){
+    btn.addEventListener('mousedown',function(e){
+      e.preventDefault();
+      var nb=activeNB(); if(!nb) return;
+      nb.titleFont=this.dataset.f; nb.u=Date.now();
+      t.className='fc-title font-'+nb.titleFont; writeLocal(); syncCoverBar();
+    });
+  });
+  bar.querySelectorAll('.fccol').forEach(function(btn){
+    btn.addEventListener('mousedown',function(e){
+      e.preventDefault();
+      var nb=activeNB(); if(!nb) return;
+      nb.titleColor=this.dataset.col; nb.u=Date.now();
+      t.style.color=nb.titleColor; writeLocal(); syncCoverBar();
+    });
+  });
+}
+function syncCoverBar(){
+  var nb=activeNB(); if(!nb) return;
+  var f=nb.titleFont||'hand', c=nb.titleColor||'#f3ead2';
+  document.querySelectorAll('.fcfont').forEach(function(b){ b.classList.toggle('on',b.dataset.f===f); });
+  document.querySelectorAll('.fccol').forEach(function(b){ b.classList.toggle('on',b.dataset.col.toLowerCase()===c.toLowerCase()); });
+}
+function commitTitle(finalize){
+  var nb=activeNB(), t=document.getElementById('fcTitle'); if(!nb) return;
+  var name=(t.textContent||'').replace(/\s+/g,' ').trim().slice(0,60);
+  if(finalize&&!name){ name='My Notebook'; t.textContent=name; }
+  nb.title=name||'My Notebook'; nb.u=Date.now();
+  writeLocal(); applyCover(); refreshShelf();
+}
 var shelfOpen=false;
 function buildShelf(){
   document.getElementById('shelfBtn').onclick=openShelf;
@@ -958,7 +1143,7 @@ function refreshShelf(){
   if(NB.order.length<NB_MAX){
     h+='<div class="nbtile nbadd" id="nbAddTile" role="button" tabindex="0">'+
          '<div class="nbcover"><span class="nbmono">+</span></div>'+
-         '<div class="nbmeta"><div class="nbtitle">New notebook</div><div class="nbsub">&nbsp;</div></div>'+
+         '<div class="nbmeta"><div class="nbtitle">New Notebook</div><div class="nbsub">&nbsp;</div></div>'+
        '</div>';
   }
   grid.innerHTML=h;
@@ -976,6 +1161,7 @@ function closeShelf(id){
   sh.classList.remove('on'); sh.setAttribute('aria-hidden','true');
   shelfOpen=false;
   if(id&&id!==NB.active) switchNotebook(id);
+  if(!_skipCover) showCover();     /* always land on the notebook's cover */
   st.classList.remove('shrinking');
   st.classList.add('growing');
   setTimeout(function(){ st.classList.remove('growing'); },320);
@@ -998,7 +1184,7 @@ document.addEventListener('click',function(e){
   if(titleEl){ e.stopPropagation(); startRenameTile(titleEl); return; }
   if(e.target.closest&&e.target.closest('#nbAddTile')){
     e.stopPropagation();
-    var newId=createNotebook('New notebook','cardboard');
+    var newId=createNotebook('New Notebook','cardboard');
     writeLocal();
     closeShelf(newId);
     return;
@@ -1602,9 +1788,9 @@ canvas.addEventListener('mousedown',function(e){
   if(blockSel&&blockSel!==b.id) clearBlockSel();
 
   var hd=e.target.closest('.hd');
-  if(hd){ e.preventDefault(); selectBlock(b.id); startResize(e,b,hd.dataset.d); return; }
+  if(hd){ e.preventDefault(); var fxh=focusedTx(); if(fxh) fxh.blur(); selectBlock(b.id); startResize(e,b,hd.dataset.d); return; }
   if(e.target.classList.contains('mv')||e.altKey){
-    e.preventDefault(); selectBlock(b.id); startDrag(e,b); return;
+    e.preventDefault(); var fxm=focusedTx(); if(fxm) fxm.blur(); selectBlock(b.id); startDrag(e,b); return;
   }
   var tickEl=e.target.closest('.tick');
   if(tickEl){
@@ -1897,6 +2083,72 @@ function applyFmt(cmd){
   b.lines[i].html=sanitize(tx.innerHTML);
   layoutMarks(row); save(); updateDock();
 }
+/* strip any existing colour spans inside a fragment (so recolouring is clean) */
+function stripInk(frag){
+  var spans=frag.querySelectorAll?frag.querySelectorAll('span[data-c]'):[];
+  for(var i=0;i<spans.length;i++){ var s=spans[i];
+    while(s.firstChild) s.parentNode.insertBefore(s.firstChild,s); s.parentNode.removeChild(s); }
+}
+function colorLineHtml(html,key){
+  /* wrap the whole line in the ink colour (used for whole-block colouring) */
+  var d=document.createElement('div'); d.innerHTML=html||'';
+  stripInk(d);
+  if(!d.textContent){ return d.innerHTML; }
+  if(key==='k'||!key) return sanitize(d.innerHTML);   /* 'k'/default = plain ink */
+  var span=document.createElement('span'); span.setAttribute('data-c',key);
+  while(d.firstChild) span.appendChild(d.firstChild);
+  d.appendChild(span);
+  return sanitize(d.innerHTML);
+}
+/* pull `node` out of any enclosing colour spans, splitting each into the part
+   before and after, so a recolour replaces rather than nesting */
+function liftInkSpan(node,root){
+  var p=node.parentNode;
+  while(p&&p!==root&&p.nodeType===1&&p.tagName==='SPAN'&&p.getAttribute('data-c')){
+    var grand=p.parentNode, key=p.getAttribute('data-c');
+    var pre=document.createElement('span'); pre.setAttribute('data-c',key);
+    var post=document.createElement('span'); post.setAttribute('data-c',key);
+    while(p.firstChild&&p.firstChild!==node) pre.appendChild(p.firstChild);
+    p.removeChild(node);
+    while(p.firstChild) post.appendChild(p.firstChild);
+    if(pre.childNodes.length) grand.insertBefore(pre,p);
+    grand.insertBefore(node,p);
+    if(post.childNodes.length) grand.insertBefore(post,p);
+    grand.removeChild(p);
+    p=node.parentNode;
+  }
+}
+function applyColor(key){
+  var b=findBlock(blockSel||selId);
+  if(blockSel&&b&&b.kind==='text'){
+    pushUndo();
+    for(var m=0;m<b.lines.length;m++) b.lines[m].html=colorLineHtml(b.lines[m].html,key);
+    save(); render(false);
+    var el=canvas.querySelector('.block[data-id="'+blockSel+'"]');
+    if(el){ el.classList.add('sel'); el.classList.add('blocksel'); }
+    updateDock(); return;
+  }
+  var tx=focusedTx(); if(!tx) return;
+  var sel=window.getSelection();
+  if(!sel||!sel.rangeCount) return;
+  var range=sel.getRangeAt(0);
+  if(range.collapsed) return;                 /* nothing selected: no-op */
+  if(!tx.contains(range.commonAncestorContainer)) return;
+  pushUndo();
+  var frag=range.extractContents();
+  stripInk(frag);
+  var span=document.createElement('span'); span.setAttribute('data-c',key||'k');
+  span.appendChild(frag); range.insertNode(span);
+  liftInkSpan(span,tx);                        /* never nest colour spans */
+  if(key==='k'){ while(span.firstChild) span.parentNode.insertBefore(span.firstChild,span);
+                 span.parentNode.removeChild(span); }   /* default ink = no span */
+  var row=tx.closest('.row'), blk=tx.closest('.block');
+  var bb=findBlock(blk.dataset.id); if(!bb) return;
+  var li=lineIndex(bb,row.dataset.lid); if(li<0) return;
+  bb.lines[li].html=sanitize(tx.innerHTML);
+  sel.removeAllRanges();
+  layoutMarks(row); save(); updateDock();
+}
 
 /* ================= paste: images and text ================= */
 document.addEventListener('paste',function(e){
@@ -2033,6 +2285,25 @@ document.getElementById('tbL').onclick=function(){
 document.getElementById('tbDel').onclick=function(){
   if(!selId) return; pushUndo(); deleteBlock(selId);
 };
+/* ink colour: a small popover of swatches; a mousedown-based apply so the text
+   selection is not lost to a focus change before we read it */
+(function(){
+  var pop=document.getElementById('inkPop'), btn=document.getElementById('tbInk');
+  btn.onclick=function(e){ e.stopPropagation(); pop.classList.toggle('on'); };
+  var opts=pop.querySelectorAll('.inkopt');
+  for(var i=0;i<opts.length;i++){
+    opts[i].addEventListener('mousedown',function(ev){
+      ev.preventDefault(); ev.stopPropagation();
+      applyColor(this.getAttribute('data-c'));
+      pop.classList.remove('on');
+      var dot=document.getElementById('inkDot');
+      if(dot){ var c=this.getAttribute('data-c'); dot.style.background=INK[c]||INK.r; }
+    });
+  }
+  document.addEventListener('mousedown',function(e){
+    if(pop.classList.contains('on')&&!e.target.closest('.inkwrap')) pop.classList.remove('on');
+  });
+})();
 
 /* ================= navigation & page turn ================= */
 /* Paints a static, non-interactive snapshot of a sheet into a leaf face:
@@ -2557,7 +2828,11 @@ try{
   }
 }catch(e){}
 buildShelf();
+setupCover();
 updateDateUI(); refreshUndo(); fit(); render(false);
+/* real users always land on the cover; ?nocover=1 lets the test harness start
+   on the page instead so it can drive the canvas directly */
+if(!_skipCover) showCover();
 setStatus('','Sync off','Click to set up syncing across devices');
 pull(true);
 /* When the webfonts finish loading, text metrics change, so re-render the page and
