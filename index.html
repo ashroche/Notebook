@@ -25,7 +25,10 @@ body{
 }
 
 /* ---------- bars ---------- */
-.bar{position:fixed;left:0;right:0;z-index:100;display:flex;align-items:center;gap:7px;padding:0 13px}
+.bar{position:fixed;left:0;right:0;z-index:100;display:flex;align-items:center;gap:7px;padding:0 13px;
+  overflow-x:auto;scrollbar-width:none}
+.bar::-webkit-scrollbar{display:none}
+.bar>*{flex:0 0 auto}
 .bar.top{top:0;height:48px;background:linear-gradient(#14120fe0,#14120f00)}
 .bar button,.bar .datewrap,.bar .pager{
   font:inherit;font-size:13px;color:#ded9d0;background:#ffffff0d;
@@ -100,6 +103,50 @@ body{
 .cover.cover-red{background:linear-gradient(150deg,#5a2b28,#331715)}
 .cover.cover-forest{background:linear-gradient(150deg,#2c4232,#16241a)}
 .cover.cover-grey{background:linear-gradient(150deg,#54565b,#303236)}
+.shelfbtn{display:inline-flex;align-items:center;gap:7px;color:#ded9d0}
+.shelfbtn svg{opacity:.85}
+#shelfBtnName{max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shelf{position:fixed;inset:0;z-index:400;background:radial-gradient(120% 90% at 50% 0%,#20201d,#141412 70%);
+  display:none;flex-direction:column;opacity:0;transition:opacity .28s ease}
+.shelf.on{display:flex;opacity:1}
+.shelf-head{display:flex;align-items:center;justify-content:space-between;padding:20px 28px 10px;flex:0 0 auto}
+.shelf-head h1{font-family:'Caveat',cursive;font-size:30px;color:#efe9df;font-weight:700;letter-spacing:.5px}
+.shelf-close{font-size:13px;color:#ded9d0;background:#ffffff12;border:1px solid #ffffff22;border-radius:8px;padding:7px 15px;cursor:pointer}
+.shelf-close:hover{background:#ffffff20}
+.shelf-grid{flex:1 1 auto;overflow-y:auto;display:grid;gap:26px 24px;padding:16px 28px 40px;
+  grid-template-columns:repeat(auto-fill,minmax(150px,1fr));align-content:start;justify-items:center}
+.nbtile{width:100%;max-width:184px;cursor:pointer;transition:transform .16s ease}
+.nbtile:hover{transform:translateY(-3px)}
+.nbcover{position:relative;width:100%;aspect-ratio:0.72;border-radius:4px 8px 8px 4px;
+  background:linear-gradient(160deg,#413a30,#26211b);
+  box-shadow:0 12px 26px rgba(0,0,0,.5),0 3px 7px rgba(0,0,0,.4);overflow:hidden;
+  display:flex;align-items:center;justify-content:center}
+.nbcover::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;
+  background:repeating-linear-gradient(#00000055 0 3px,transparent 3px 13px)}
+.nbmono{font-family:'Caveat',cursive;font-size:58px;font-weight:700;color:#fff;opacity:.9;
+  text-shadow:0 1px 3px rgba(0,0,0,.4);user-select:none}
+.nbdel{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;
+  background:#00000055;color:#fff;border:none;cursor:pointer;font-size:14px;line-height:1;
+  display:none;align-items:center;justify-content:center}
+.nbtile:hover .nbdel{display:flex}
+.nbdel:hover{background:#c0392b}
+.nbmeta{margin-top:9px;text-align:center;width:100%}
+.nbtitle{font-size:13.5px;color:#efe9df;font-weight:600;line-height:1.25;
+  overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.nbtitle[contenteditable]:focus{outline:none;background:#ffffff1a;border-radius:4px;padding:1px 4px;-webkit-line-clamp:none}
+.nbsub{font-size:11px;color:#8f897e;margin-top:2px}
+.nbadd .nbcover{background:none;box-shadow:none;border:2px dashed #ffffff2e}
+.nbadd .nbcover::before{display:none}
+.nbadd .nbmono{font-size:44px;color:#ffffff44;font-weight:400}
+.nbcover.cover-kraft{background:linear-gradient(160deg,#4a4132,#2a231a)}
+.nbcover.cover-black{background:linear-gradient(150deg,#2a2c2f,#111214)}
+.nbcover.cover-navy{background:linear-gradient(150deg,#26344a,#141b28)}
+.nbcover.cover-red{background:linear-gradient(150deg,#5a2b28,#331715)}
+.nbcover.cover-forest{background:linear-gradient(150deg,#2c4232,#16241a)}
+.nbcover.cover-grey{background:linear-gradient(150deg,#54565b,#303236)}
+.stage.shrinking{transition:transform .3s ease,opacity .3s ease;transform:scale(.82);opacity:0;pointer-events:none}
+.stage.growing{animation:nbgrow .3s ease}
+@keyframes nbgrow{from{transform:scale(.86);opacity:.3}to{transform:none;opacity:1}}
 .sheet{position:absolute;z-index:2;width:794px;height:1123px;border-radius:1px 3px 3px 1px}
 .s1{left:35px;top:12px;background:#c8c2b3}
 .s2{left:32px;top:8px;background:#ded9cc}
@@ -283,6 +330,11 @@ body.hasbanner .stage{top:86px}
 <div class="banner" id="banner"><span id="bannerText"></span><button id="bannerExport">Export a backup</button></div>
 
 <div class="bar top">
+  <button id="shelfBtn" class="shelfbtn" title="All notebooks">
+    <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><rect x="2.5" y="3" width="4" height="14" rx="1" fill="currentColor"/><rect x="8" y="3" width="4" height="14" rx="1" fill="currentColor" opacity=".7"/><rect x="13.2" y="4.5" width="4" height="12.5" rx="1" fill="currentColor" opacity=".45" transform="rotate(9 15 10)"/></svg>
+    <span id="shelfBtnName">Notebooks</span>
+  </button>
+  <span class="sep"></span>
   <button class="nav" id="prevDay" title="Previous day (Alt+Left)">&lsaquo;</button>
   <span class="datewrap">
     <span class="today-dot" id="dot" style="display:none"></span>
@@ -305,13 +357,13 @@ body.hasbanner .stage{top:86px}
   <span class="daycount" id="dayCount"></span>
   <span class="spacer"></span>
   <select id="coverSel" title="Notebook cover" aria-label="Notebook cover">
-    <option value="cardboard">Cardboard cover</option>
-    <option value="kraft">Kraft cover</option>
-    <option value="black">Black cover</option>
-    <option value="navy">Navy cover</option>
-    <option value="red">Red cover</option>
-    <option value="forest">Forest cover</option>
-    <option value="grey">Grey cover</option>
+    <option value="cardboard">Cardboard</option>
+    <option value="kraft">Kraft</option>
+    <option value="black">Black</option>
+    <option value="navy">Navy</option>
+    <option value="red">Red</option>
+    <option value="forest">Forest</option>
+    <option value="grey">Grey</option>
   </select>
   <button id="zoomBtn" title="Fit to window, or true A4 size">Fit</button>
   <button id="syncBtn" title="Cloud sync"><span class="sdot" id="sdot"></span><span id="slabel">Sync off</span></button>
@@ -393,6 +445,13 @@ body.hasbanner .stage{top:86px}
   </div>
 </div>
 
+<div class="shelf" id="shelf" aria-hidden="true">
+  <div class="shelf-head">
+    <h1>Notebooks</h1>
+    <button class="shelf-close" id="shelfClose" title="Back to notebook">Done</button>
+  </div>
+  <div class="shelf-grid" id="shelfGrid"></div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -407,7 +466,6 @@ var FONTS={hand:"'Caveat','Bradley Hand',cursive",sans:"'Inter',system-ui,sans-s
 var FSCALE={hand:1.55,sans:1,serif:1};
 var DEF_SIZE=17, MIN_SIZE=11, MAX_SIZE=40;
 var MIN_W=90, MIN_H=26, DEF_W=300;
-var COIL_W=30;   /* how far a page slides as it wraps over the coil */
 var KEY='notebook-v1-pages';
 var K_APIKEY='checklist-apikey';   /* shared with the checklist apps on this origin */
 var K_BIN='notebook-binid', K_ZOOM='notebook-zoom', K_PAPER='notebook-paper', K_COVER='notebook-cover';
@@ -436,6 +494,10 @@ var dock=document.getElementById('dock');
 var toast=document.getElementById('toast');
 var modal=document.getElementById('modal');
 
+/* NB holds every notebook in one document. `pages`, `tombs` and `cover` are
+   pointers/mirrors of whichever notebook is open, so all the existing code that
+   reads pages/tombs/cover keeps working on the active notebook unchanged. */
+var NB={v:5,notebooks:{},order:[],active:'',nbTomb:{}};
 var pages={}, tombs={}, cur=todayISO(), si=0;
 var selId=null, zTop=1, scale=1, zoom='fit';
 var typing=false, typingT=null, composing=false;
@@ -504,11 +566,24 @@ function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
    kept as tombstones so a delete on one device is not undone by a stale copy
    on the other. `w` is this tab's write counter, used to spot another tab
    writing underneath us. */
-var SCHEMA=4;
+var SCHEMA=5;
 var writeSeq=0, lastSeenSeq=0, tabId=uid();
 var storageBroken=false, TOMB_DAYS=30;
 
-function docObj(){ return {v:SCHEMA,pages:pages,tomb:tombs,w:writeSeq,t:tabId}; }
+function activeNB(){ return NB.notebooks[NB.active]; }
+/* point pages/tombs/cover at the active notebook after a switch or load */
+function bindActive(){
+  var nb=activeNB();
+  if(!nb){ NB.active=NB.order[0]||''; nb=activeNB(); }
+  if(!nb){ createNotebook('My notebook','cardboard'); nb=activeNB(); }
+  pages=nb.pages; tombs=nb.tomb; cover=nb.cover||'cardboard';
+}
+function docObj(){
+  var nb=activeNB();
+  if(nb){ nb.cover=cover; }         /* cover is a primitive, so mirror it back */
+  NB.v=SCHEMA; NB.w=writeSeq; NB.t=tabId;
+  return NB;
+}
 function docSize(){ try{ return JSON.stringify(docObj()).length; }catch(e){ return 0; } }
 
 function writeLocal(){
@@ -526,18 +601,18 @@ function writeLocal(){
                'your notebook to free space.', true);
   }
 }
-/* Another tab wrote. Take the newer of the two rather than clobbering it. */
+/* Another tab wrote. Merge across all notebooks rather than clobbering. */
 function onExternalWrite(raw){
   var incoming=null;
   try{ incoming=JSON.parse(raw); }catch(e){ return; }
   if(!incoming||incoming.t===tabId) return;
-  if(!incoming.pages) return;
-  var res=mergePages(incoming.pages,incoming.tomb);
-  normalise();
-  if(res.changedCur){
+  var res=mergeDoc(incoming);
+  bindActive(); normalise();
+  if(res.changedActive){
     invalidateHistory(cur);
-    updateDateUI(); render(false);
+    updateDateUI(); applyCover(); render(false);
   }
+  refreshShelf();
   say('Updated from another tab.');
   if(res.localNewer) writeLocal();
 }
@@ -546,48 +621,72 @@ window.addEventListener('storage',function(e){
   onExternalWrite(e.newValue);
 });
 
+/* wrap a bare {pages,tomb} (v2..v4, or an old export) as a single notebook doc */
+function asV5(raw){
+  if(raw&&raw.v===5&&raw.notebooks) return raw;
+  var pages4=null, tomb4={};
+  if(raw&&raw.v===4&&raw.pages){ pages4=raw.pages; tomb4=raw.tomb||{}; }
+  else if(raw&&raw.v===3&&raw.pages){ pages4=raw.pages; }
+  else if(raw){
+    var src=(raw.v===2&&raw.pages)?raw.pages:(raw.pages||raw), out={};
+    for(var d in src){
+      var p=src[d];
+      if(!p||!Array.isArray(p.blocks)) continue;
+      for(var i=0;i<p.blocks.length;i++){
+        var b=p.blocks[i];
+        if(raw.v!==2 && b.font==='hand' && b.size>=20) b.size=Math.round(b.size/FSCALE.hand);
+        b.size=clamp(b.size||DEF_SIZE,MIN_SIZE,MAX_SIZE);
+        b.kind='text';
+        for(var j=0;j<(b.lines||[]).length;j++){
+          var l=b.lines[j], h=esc(l.text||'');
+          if(l.u) h='<u>'+h+'</u>'; if(l.i) h='<i>'+h+'</i>'; if(l.b) h='<b>'+h+'</b>';
+          l.html=h; delete l.text; delete l.b; delete l.i; delete l.u;
+        }
+      }
+      out[d]={u:p.u||Date.now(),sheets:[{id:uid(),blocks:p.blocks}]};
+    }
+    pages4=out;
+  }
+  var id='default';
+  var legacyCover='cardboard';
+  try{ legacyCover=localStorage.getItem(K_COVER)||'cardboard'; }catch(e){}
+  var doc={v:5,notebooks:{},order:[id],active:id,nbTomb:{}};
+  doc.notebooks[id]={title:'My notebook',cover:legacyCover,pages:pages4||{},tomb:tomb4,u:Date.now()};
+  return doc;
+}
 function load(){
   var raw=null;
   try{ raw=JSON.parse(localStorage.getItem(KEY)); }catch(e){}
-  if(!raw||typeof raw!=='object'){ pages={}; tombs={}; return; }
-  if(raw.v===SCHEMA&&raw.pages){ pages=raw.pages; tombs=raw.tomb||{}; normalise(); return; }
-  if(raw.v===3&&raw.pages){ pages=raw.pages; tombs={}; normalise(); writeLocal(); return; }
-
-  var src = (raw.v===2&&raw.pages)?raw.pages:(raw.pages||raw);
-  pages={}; tombs={};
-  for(var d in src){
-    var p=src[d];
-    if(!p||!Array.isArray(p.blocks)) continue;
-    for(var i=0;i<p.blocks.length;i++){
-      var b=p.blocks[i];
-      if(raw.v!==2 && b.font==='hand' && b.size>=20) b.size=Math.round(b.size/FSCALE.hand);
-      b.size=clamp(b.size||DEF_SIZE,MIN_SIZE,MAX_SIZE);
-      b.kind='text';
-      for(var j=0;j<(b.lines||[]).length;j++){
-        var l=b.lines[j];
-        var h=esc(l.text||'');
-        if(l.u) h='<u>'+h+'</u>';
-        if(l.i) h='<i>'+h+'</i>';
-        if(l.b) h='<b>'+h+'</b>';
-        l.html=h; delete l.text; delete l.b; delete l.i; delete l.u;
-      }
-    }
-    pages[d]={u:p.u||Date.now(),sheets:[{id:uid(),blocks:p.blocks}]};
+  var fresh=!raw||typeof raw!=='object';
+  if(fresh){
+    var id='default';
+    NB={v:5,notebooks:{},order:[id],active:id,nbTomb:{}};
+    NB.notebooks[id]={title:'My notebook',cover:'cardboard',pages:{},tomb:{},u:Date.now()};
+    bindActive(); return;
   }
-  normalise(); writeLocal();
+  var wasOld=(raw.v!==5);
+  NB=asV5(raw);
+  if(!NB.notebooks[NB.active]) NB.active=NB.order[0]||Object.keys(NB.notebooks)[0]||'';
+  bindActive(); normaliseAll();
+  if(wasOld) writeLocal();
 }
-function normalise(){
-  var now=Date.now();
-  for(var d in pages){
-    var p=pages[d];
-    if(!p||!Array.isArray(p.sheets)){ delete pages[d]; continue; }
+function normaliseAll(){
+  for(var id in NB.notebooks) normaliseNB(NB.notebooks[id]);
+}
+function normalise(){ normaliseNB(activeNB()); }
+function normaliseNB(nb){
+  if(!nb) return;
+  var now=Date.now(), P=nb.pages, T=nb.tomb||(nb.tomb={});
+  for(var d in P){
+    var p=P[d];
+    if(!p||!Array.isArray(p.sheets)){ delete P[d]; continue; }
     for(var s=0;s<p.sheets.length;s++){
       var bl=p.sheets[s].blocks;
       if(!Array.isArray(bl)){ p.sheets[s].blocks=[]; continue; }
       for(var i=0;i<bl.length;i++){
         var b=bl[i];
         if(!b.kind) b.kind='text';
-        if(!b.m) b.m=p.u||now;               /* backfill per-block timestamp */
+        if(!b.m) b.m=p.u||now;
         if(b.kind==='image'){ if(!b.src){ bl.splice(i--,1);} continue; }
         if(!Array.isArray(b.lines)||!b.lines.length){ bl.splice(i--,1); continue; }
         for(var j=0;j<b.lines.length;j++){
@@ -598,13 +697,57 @@ function normalise(){
       }
     }
   }
-  /* drop tombstones older than TOMB_DAYS so the list cannot grow forever */
   var cutoff=now-TOMB_DAYS*86400000;
-  for(var td in tombs){
-    for(var bid in tombs[td]) if(tombs[td][bid]<cutoff) delete tombs[td][bid];
-    var any=false; for(var k in tombs[td]){ any=true; break; }
-    if(!any) delete tombs[td];
+  for(var td in T){
+    for(var bid in T[td]) if(T[td][bid]<cutoff) delete T[td][bid];
+    var any=false; for(var k in T[td]){ any=true; break; }
+    if(!any) delete T[td];
   }
+}
+
+/* ================= notebooks ================= */
+var NB_MAX=12;
+function createNotebook(title,cov){
+  var id=uid();
+  NB.notebooks[id]={title:title||'Untitled',cover:cov||'cardboard',pages:{},tomb:{},u:Date.now()};
+  NB.order.push(id);
+  return id;
+}
+function switchNotebook(id){
+  if(!NB.notebooks[id]||id===NB.active) return;
+  writeLocal();
+  NB.active=id;
+  bindActive();
+  cur=todayISO(); si=0; selId=null; lastLine=null;
+  clearBlockSel();
+  histories={}; histOrder.length=0;
+  writeLocal();
+  applyCover(); refreshUndo(); updateDateUI(); render(false);
+}
+function renameNotebook(id,title){
+  var nb=NB.notebooks[id]; if(!nb) return;
+  nb.title=title||'Untitled'; nb.u=Date.now(); writeLocal(); refreshShelf();
+}
+function deleteNotebook(id){
+  if(!NB.notebooks[id]) return;
+  delete NB.notebooks[id];
+  var i=NB.order.indexOf(id); if(i>=0) NB.order.splice(i,1);
+  NB.nbTomb[id]=Date.now();
+  if(NB.active===id){
+    if(!NB.order.length) createNotebook('My notebook','cardboard');
+    NB.active=NB.order[0];
+    bindActive();
+    cur=todayISO(); si=0; selId=null; lastLine=null; clearBlockSel();
+    histories={}; histOrder.length=0;
+    applyCover(); refreshUndo(); updateDateUI(); render(false);
+  }
+  writeLocal(); refreshShelf();
+}
+function nbDayCount(nb){
+  var n=0;
+  for(var d in nb.pages){ var ss=nb.pages[d].sheets||[];
+    for(var s=0;s<ss.length;s++) if((ss[s].blocks||[]).length){ n++; break; } }
+  return n;
 }
 function showBanner(msg,withExport){
   var b=document.getElementById('banner');
@@ -621,29 +764,32 @@ function hideBanner(){
 
 /* ---- export / import: the real backstop against any storage or sync loss ---- */
 function exportNotebook(){
-  var payload=JSON.stringify({v:SCHEMA,pages:pages,tomb:tombs,exported:new Date().toISOString()},null,1);
+  var out=docObj();
+  var payload=JSON.stringify({v:SCHEMA,notebooks:out.notebooks,order:out.order,
+    active:out.active,nbTomb:out.nbTomb,exported:new Date().toISOString()},null,1);
   var blob=new Blob([payload],{type:'application/json'});
   var url=URL.createObjectURL(blob);
   var a=document.createElement('a');
-  a.href=url; a.download='notebook-'+todayISO()+'.json';
+  a.href=url; a.download='notebooks-'+todayISO()+'.json';
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function(){ URL.revokeObjectURL(url); },1000);
-  var n=0; for(var d in pages) n++;
-  say('Exported '+n+' day'+(n===1?'':'s')+' to your downloads.');
+  var n=0; for(var k in out.notebooks) n++;
+  say('Exported '+n+' notebook'+(n===1?'':'s')+' to your downloads.');
 }
 function importNotebook(file,replace){
   var fr=new FileReader();
   fr.onload=function(){
     var data=null;
     try{ data=JSON.parse(fr.result); }catch(e){ say('That file is not a notebook backup.'); return; }
-    if(!data||!data.pages){ say('That file is not a notebook backup.'); return; }
-    if(replace){ pages=data.pages; tombs=data.tomb||{}; }
-    else { mergePages(data.pages,data.tomb); }
-    normalise(); writeLocal();
+    if(!data||(!data.notebooks&&!data.pages)){ say('That file is not a notebook backup.'); return; }
+    if(replace){ NB=asV5(data); if(!NB.notebooks[NB.active]) NB.active=NB.order[0]||''; }
+    else { mergeDoc(data); }
+    bindActive(); normaliseAll(); writeLocal();
     histories={}; histOrder.length=0; refreshUndo();
-    updateDateUI(); render(false);
-    var n=0; for(var d in data.pages) n++;
-    say((replace?'Replaced with ':'Merged in ')+n+' day'+(n===1?'':'s')+' from the backup.');
+    cur=todayISO(); si=0;
+    updateDateUI(); applyCover(); render(false); refreshShelf();
+    var n=0; for(var k in NB.notebooks) n++;
+    say((replace?'Replaced with ':'Merged in ')+n+' notebook'+(n===1?'':'s')+' from the backup.');
     pushSoon();
   };
   fr.readAsText(file);
@@ -705,7 +851,7 @@ function refreshDayIndex(){
    dropped so history cannot grow without bound. Paper colour is part of a page's
    history; adding or removing pages is not. */
 var histories={}, histOrder=[], HIST_PAGES=20, HIST_STEPS=80;
-function histKey(){ var sh=sheet(); return cur+'#'+(sh?sh.id:'0'); }
+function histKey(){ var sh=sheet(); return NB.active+'#'+cur+'#'+(sh?sh.id:'0'); }
 function hist(){
   var k=histKey();
   if(!histories[k]) histories[k]={u:[],r:[]};
@@ -716,11 +862,12 @@ function hist(){
   return histories[k];
 }
 /* a page changed under us (sync or another tab): its snapshots describe a state
-   that no longer exists, so drop just that page's history */
+   that no longer exists, so drop just that page's history (active notebook) */
 function invalidateHistory(dateISO){
-  for(var k in histories) if(k.indexOf(dateISO+'#')===0) delete histories[k];
+  var pref=NB.active+'#'+dateISO+'#';
+  for(var k in histories) if(k.indexOf(pref)===0) delete histories[k];
   var i=histOrder.length;
-  while(i--) if(histOrder[i].indexOf(dateISO+'#')===0) histOrder.splice(i,1);
+  while(i--) if(histOrder[i].indexOf(pref)===0) histOrder.splice(i,1);
   refreshUndo();
 }
 function snap(){
@@ -776,6 +923,105 @@ function applyCover(){
   var el=document.getElementById('cover');
   el.className='cover'+(cover==='cardboard'?'':' cover-'+cover);
   var sel=document.getElementById('coverSel'); if(sel) sel.value=cover;
+  var bn=document.getElementById('shelfBtnName');
+  if(bn){ var nb=activeNB(); bn.textContent=(nb&&nb.title)||'Notebooks'; }
+}
+function monogram(title){
+  var t=(title||'').trim();
+  return t?t.charAt(0).toUpperCase():'?';
+}
+var shelfOpen=false;
+function buildShelf(){
+  document.getElementById('shelfBtn').onclick=openShelf;
+  document.getElementById('shelfClose').onclick=function(){ closeShelf(NB.active); };
+  refreshShelf();
+}
+function refreshShelf(){
+  var grid=document.getElementById('shelfGrid'); if(!grid) return;
+  var h='';
+  for(var i=0;i<NB.order.length;i++){
+    var id=NB.order[i], nb=NB.notebooks[id]; if(!nb) continue;
+    var days=nbDayCount(nb);
+    var cc=(nb.cover&&nb.cover!=='cardboard')?(' cover-'+nb.cover):'';
+    h+='<div class="nbtile" data-id="'+id+'" role="button" tabindex="0">'+
+         '<div class="nbcover'+cc+'">'+
+           '<span class="nbmono">'+esc(monogram(nb.title))+'</span>'+
+           (NB.order.length>1?'<button class="nbdel" data-del="'+id+'" title="Delete notebook">&times;</button>':'')+
+         '</div>'+
+         '<div class="nbmeta">'+
+           '<div class="nbtitle" data-title="'+id+'">'+esc(nb.title||'Untitled')+'</div>'+
+           '<div class="nbsub">'+(days?days+' day'+(days===1?'':'s'):'empty')+
+             (id===NB.active?' &middot; open':'')+'</div>'+
+         '</div>'+
+       '</div>';
+  }
+  if(NB.order.length<NB_MAX){
+    h+='<div class="nbtile nbadd" id="nbAddTile" role="button" tabindex="0">'+
+         '<div class="nbcover"><span class="nbmono">+</span></div>'+
+         '<div class="nbmeta"><div class="nbtitle">New notebook</div><div class="nbsub">&nbsp;</div></div>'+
+       '</div>';
+  }
+  grid.innerHTML=h;
+}
+function openShelf(){
+  if(shelfOpen) return;
+  shelfOpen=true;
+  refreshShelf();
+  var sh=document.getElementById('shelf'), st=document.getElementById('stage');
+  st.classList.add('shrinking');
+  sh.classList.add('on'); sh.setAttribute('aria-hidden','false');
+}
+function closeShelf(id){
+  var sh=document.getElementById('shelf'), st=document.getElementById('stage');
+  sh.classList.remove('on'); sh.setAttribute('aria-hidden','true');
+  shelfOpen=false;
+  if(id&&id!==NB.active) switchNotebook(id);
+  st.classList.remove('shrinking');
+  st.classList.add('growing');
+  setTimeout(function(){ st.classList.remove('growing'); },320);
+}
+/* shelf interactions */
+document.addEventListener('click',function(e){
+  if(!shelfOpen) return;
+  var del=e.target.closest?e.target.closest('.nbdel'):null;
+  if(del){
+    e.stopPropagation();
+    var did=del.dataset.del, nb=NB.notebooks[did];
+    var days=nb?nbDayCount(nb):0;
+    var msg=days? ('Delete "'+(nb.title||'Untitled')+'"? It has '+days+' day'+(days===1?'':'s')+
+                   ' of notes. This cannot be undone.')
+                : ('Delete "'+(nb?nb.title:'')+'"?');
+    if(confirm(msg)) deleteNotebook(did);
+    return;
+  }
+  var titleEl=e.target.closest?e.target.closest('.nbtitle[data-title]'):null;
+  if(titleEl){ e.stopPropagation(); startRenameTile(titleEl); return; }
+  if(e.target.closest&&e.target.closest('#nbAddTile')){
+    e.stopPropagation();
+    var newId=createNotebook('New notebook','cardboard');
+    writeLocal();
+    closeShelf(newId);
+    return;
+  }
+  var tile=e.target.closest?e.target.closest('.nbtile[data-id]'):null;
+  if(tile){ closeShelf(tile.dataset.id); }
+});
+function startRenameTile(el){
+  el.setAttribute('contenteditable','true');
+  el.focus();
+  var r=document.createRange(); r.selectNodeContents(el);
+  var s=window.getSelection(); s.removeAllRanges(); s.addRange(r);
+  function finish(){
+    el.removeAttribute('contenteditable');
+    el.removeEventListener('blur',finish); el.removeEventListener('keydown',key);
+    var id=el.dataset.title, name=(el.textContent||'').trim().slice(0,60)||'Untitled';
+    renameNotebook(id,name);
+  }
+  function key(ev){
+    if(ev.key==='Enter'){ ev.preventDefault(); el.blur(); }
+    if(ev.key==='Escape'){ ev.preventDefault(); el.textContent=(NB.notebooks[el.dataset.title]||{}).title||''; el.blur(); }
+  }
+  el.addEventListener('blur',finish); el.addEventListener('keydown',key);
 }
 function curPaper(){ var s=sheet(); return s.paper||'cream'; }
 function applyPaper(){
@@ -1174,6 +1420,21 @@ function selectBlock(id){
   if(b&&el){ b.z=++zTop; el.style.zIndex=b.z; el.classList.add('sel'); save(); }
   updateDock();
 }
+/* nearest block whose rect, expanded by pad px, contains the point (canvas
+   coords). Lets a click in a box's halo select it rather than missing. */
+function nearestBlock(x,y,pad){
+  var bl=blocks(), best=null, bestD=Infinity;
+  for(var i=0;i<bl.length;i++){
+    var el=canvas.querySelector('.block[data-id="'+bl[i].id+'"]'); if(!el) continue;
+    var L=el.offsetLeft, T=el.offsetTop, R=L+el.offsetWidth, B=T+el.offsetHeight;
+    if(x>=L-pad&&x<=R+pad&&y>=T-pad&&y<=B+pad){
+      var cx=Math.max(L,Math.min(x,R)), cy=Math.max(T,Math.min(y,B));
+      var d=(x-cx)*(x-cx)+(y-cy)*(y-cy);
+      if(d<bestD){ bestD=d; best=bl[i]; }
+    }
+  }
+  return best;
+}
 function deselect(){
   clearBlockSel();
   var prev=canvas.querySelector('.block.sel'); if(prev) prev.classList.remove('sel');
@@ -1323,7 +1584,18 @@ canvas.addEventListener('dblclick',function(e){
   }
 });
 canvas.addEventListener('mousedown',function(e){
-  if(e.target===canvas){ dropPoint={x:e.offsetX,y:e.offsetY}; deselect(); return; }
+  if(e.target===canvas){
+    /* A click in the halo just outside a box should SELECT that box (so it can be
+       moved or deleted), not deselect everything. Only a click well clear of any
+       box deselects. This is what makes "click the box, press Delete" reliable. */
+    var near=nearestBlock(e.offsetX,e.offsetY,12);
+    if(near){
+      e.preventDefault(); e.stopPropagation();
+      var fx=focusedTx(); if(fx) fx.blur();   /* clean frame-select, so Delete removes the box */
+      selectBlock(near.id); return;
+    }
+    dropPoint={x:e.offsetX,y:e.offsetY}; deselect(); return;
+  }
   var blk=e.target.closest?e.target.closest('.block'):null;
   if(!blk) return;
   var b=findBlock(blk.dataset.id); if(!b) return;
@@ -1601,15 +1873,18 @@ canvas.addEventListener('keydown',function(e){
       return;
     }
   }
-  if(e.key==='Escape'){ tx.blur(); deselect(); }
+  /* Escape leaves text editing and selects the whole box (like Word), so the
+     next Delete removes the box. A second Escape deselects entirely. */
+  if(e.key==='Escape'){
+    e.preventDefault(); e.stopPropagation();
+    if(blockSel) clearBlockSel();
+    var bid=blk.dataset.id;
+    tx.blur();
+    selectBlock(bid);
+    return;
+  }
 });
 
-function isLineFullySelected(tx){
-  var s=window.getSelection();
-  if(!s||!s.rangeCount||s.isCollapsed) return false;
-  var r=s.getRangeAt(0);
-  return r.toString().length>=(tx.textContent||'').length && (tx.textContent||'').length>0;
-}
 function applyFmt(cmd){
   /* if the whole block is selected, apply to every line */
   if(blockSel){ blockFormat(cmd==='bold'?'b':cmd==='italic'?'i':'u'); return; }
@@ -1792,7 +2067,7 @@ function snapshotInto(faceEl,cloneEl,sh){
   }
 }
 
-var DUR=760, turnTimer=null, zFlipTimer=null;
+var DUR=820, turnTimer=null;
 function turnTo(dir,commit){
   if(turning) return;
   var leaf=document.getElementById('leaf');
@@ -1808,55 +2083,35 @@ function turnTo(dir,commit){
   turning=true;
   commit();
   var toSheet=sheet();
-  /* base page shows the destination straight away; the leaf carries the other
-     page over the coil and tucks it behind the pad */
   afterNav();
 
-  var leaving=(dir>0)?fromSheet:toSheet;
-  snapshotInto(lfFront,frontClone,leaving);
-  /* the reverse of a real sheet is blank paper in that page's colour, never a
-     copy of the content, so nothing can appear mirrored */
-  backEl.style.background=paperColor((leaving&&leaving.paper)||'cream');
-
+  /* The page you SEE turning is the leaving page (forward) or the arriving page
+     (backward). It hinges on the spine (left edge) and swings a full 180 while
+     staying on screen, so you actually watch it lift, go edge-on, and flop over.
+     Front face carries the content; the back is blank paper in that page's
+     colour, so nothing can appear mirrored. */
+  var shown=(dir>0)?fromSheet:toSheet;
+  snapshotInto(lfFront,frontClone,shown);
+  backEl.style.background=paperColor((shown&&shown.paper)||'cream');
   zone.classList.add('on');
 
-  /* The leaf pivots on its own left edge, so a plain 180 would land it mirrored
-     out on the desk to the LEFT of the pad. Slide it right by its own width as
-     it turns so it comes to rest on the pad's own footprint, tucked behind. */
-  var frames=[], N=20, LW=794;
+  var from=(dir>0)?0:-180, to=(dir>0)?-180:0;
+  var frames=[], N=24;
   for(var i=0;i<=N;i++){
-    var t=i/N;
-    var ang=(dir>0)?(-180*t):(-180*(1-t));
-    var a=Math.abs(ang)/180;
-    /* ease the slide so it trails the rotation rather than moving in lockstep */
-    var k=a*a*(3-2*a);
-    var slide=(LW+COIL_W)*k;                  /* carry it back over the pad */
-    var lift=Math.sin(a*Math.PI)*22;          /* arc up off the paper */
-    frames.push({transform:'translateX('+slide.toFixed(1)+'px) translateZ('+lift.toFixed(1)+'px) '+
-                           'rotateY('+ang.toFixed(1)+'deg)',
+    var t=i/N, ang=from+(to-from)*t;
+    var a=Math.abs(ang)/180;            /* 0 flat .. 1 flat-on-the-other-side */
+    var lift=Math.sin(a*Math.PI)*26;    /* rises off the pad at the midpoint */
+    frames.push({transform:'translateZ('+lift.toFixed(1)+'px) rotateY('+ang.toFixed(1)+'deg)',
                  offset:t});
   }
-  var leafAnim=leaf.animate(frames,
-    {duration:DUR, easing:'cubic-bezier(.38,.02,.28,1)', fill:'forwards'});
+  var ease=(dir>0)?'cubic-bezier(.42,0,.4,1)':'cubic-bezier(.6,0,.58,1)';
+  var leafAnim=leaf.animate(frames,{duration:DUR,easing:ease,fill:'forwards'});
 
-  /* Once the page is past edge-on it belongs BEHIND the pad, not floating in
-     front of it. Swap the whole flip layer under the notebook at the halfway
-     point so the turned page tucks away like a real sheet. */
-  zone.style.zIndex=(dir>0)?6:0;
-  clearTimeout(zFlipTimer);
-  zFlipTimer=setTimeout(function(){
-    zone.style.zIndex=(dir>0)?0:6;
-  },DUR*0.5);
-
-  /* front face is lit until it passes edge-on, then we are looking at the back */
-  var half=0.5;
-  sheen.animate(
-    (dir>0)?[{opacity:0},{opacity:.55,offset:half},{opacity:.15}]
-           :[{opacity:.15},{opacity:.55,offset:half},{opacity:0}],
+  /* a highlight rides across the face as it tips, and a shadow deepens toward
+     the spine while the page stands up, both peaking at the edge-on midpoint */
+  sheen.animate([{opacity:0},{opacity:.5,offset:.5},{opacity:0}],
     {duration:DUR,easing:'ease-in-out',fill:'forwards'});
-  spine.animate(
-    (dir>0)?[{opacity:0},{opacity:.55,offset:half},{opacity:0}]
-           :[{opacity:0},{opacity:.55,offset:half},{opacity:0}],
+  spine.animate([{opacity:0},{opacity:.4,offset:.5},{opacity:0}],
     {duration:DUR,easing:'ease-in-out',fill:'forwards'});
 
   leafAnim.onfinish=endTurn;
@@ -1864,9 +2119,9 @@ function turnTo(dir,commit){
   turnTimer=setTimeout(function(){ if(turning) endTurn(); },DUR+160);
 }
 function endTurn(){
-  clearTimeout(turnTimer); clearTimeout(zFlipTimer);
+  clearTimeout(turnTimer);
   var z=document.getElementById('flipzone');
-  z.style.zIndex=''; z.classList.remove('on');
+  z.classList.remove('on');
   document.getElementById('lfFrontClone').innerHTML='';
   document.getElementById('lfFront').style.background='';
   document.getElementById('lfBack').style.background='';
@@ -1933,8 +2188,8 @@ document.getElementById('zoomBtn').onclick=function(){  zoom=(zoom==='fit')?'ful
 };
 document.getElementById('coverSel').addEventListener('change',function(){
   cover=this.value;
-  try{ localStorage.setItem(K_COVER,cover); }catch(e){}
-  applyCover();
+  var nb=activeNB(); if(nb){ nb.cover=cover; nb.u=Date.now(); }
+  writeLocal(); applyCover(); refreshShelf();
 });
 
 /* ================= carry forward ================= */
@@ -2020,16 +2275,17 @@ function push(){
   .then(function(data){
     if(data){
       var rec=(data&&data.record)?data.record:data;
-      if(rec&&rec.pages){
-        var res=mergePages(rec.pages,rec.tomb);
-        normalise();
-        if(res.changedCur&&!turning){ updateDateUI(); render(false); }
+      if(rec&&(rec.notebooks||rec.pages)){
+        var res=mergeDoc(rec);
+        bindActive(); normaliseAll();
+        if(res.changedActive&&!turning){ updateDateUI(); applyCover(); render(false); }
+        refreshShelf();
         writeLocal();
       }
     }
     return fetch(API+'/'+c.bin,{method:'PUT',
       headers:{'Content-Type':'application/json','X-Master-Key':c.key,'X-Bin-Versioning':'false'},
-      body:JSON.stringify({v:SCHEMA,pages:pages,tomb:tombs})});
+      body:JSON.stringify(docObj())});
   })
   .then(function(r){ if(!r||!r.ok) throw new Error('HTTP '+(r?r.status:'?'));
     lastPull=Date.now();
@@ -2042,36 +2298,30 @@ function push(){
    boxes on the same day both keep their work; only the same box edited in two
    places has to pick a winner (newest wins). Tombstones stop a deleted block
    being resurrected by a stale copy. */
-function mergePages(remote,remoteTombs){
-  var changedCur=false, localNewer=false;
-
-  /* fold in remote tombstones first so deletes win over stale blocks */
-  if(remoteTombs){
-    for(var rd in remoteTombs){
-      if(!tombs[rd]) tombs[rd]={};
-      for(var rb in remoteTombs[rd])
-        if(!tombs[rd][rb]||remoteTombs[rd][rb]>tombs[rd][rb]) tombs[rd][rb]=remoteTombs[rd][rb];
+/* Merge one notebook's remote pages into local (lp/lt = local pages+tombs,
+   rp/rt = remote). Returns {changed, curTouched}. curTouched flags the active
+   notebook's currently-open day so the caller can re-render. */
+function mergeNotebookPages(lp,lt,rp,rt,isActive){
+  var changed=false, curTouched=false;
+  if(rt){
+    for(var rd in rt){
+      if(!lt[rd]) lt[rd]={};
+      for(var rb in rt[rd])
+        if(!lt[rd][rb]||rt[rd][rb]>lt[rd][rb]) lt[rd][rb]=rt[rd][rb];
     }
   }
-
-  for(var d in remote){
-    var rp=remote[d];
-    if(!rp||!Array.isArray(rp.sheets)) continue;
-    var lp=pages[d];
-    if(!lp){
-      /* whole day is new here, minus anything we deleted */
-      pages[d]=stripTombed(d,rp);
-      if(d===cur) changedCur=true;
-      continue;
-    }
-    if(mergeDay(d,lp,rp)&&d===cur) changedCur=true;
-    if((lp.u||0)>(rp.u||0)) localNewer=true;
+  for(var d in rp){
+    var rpage=rp[d];
+    if(!rpage||!Array.isArray(rpage.sheets)) continue;
+    var lpage=lp[d];
+    if(!lpage){ lp[d]=stripTombedPage(lt[d],rpage); changed=true;
+      if(isActive&&d===cur) curTouched=true; continue; }
+    if(mergeDayPages(lt[d]||{},lpage,rpage)){ changed=true; if(isActive&&d===cur) curTouched=true; }
   }
-  for(var e in pages) if(!remote[e]) localNewer=true;
-  return {changedCur:changedCur,localNewer:localNewer};
+  return {changed:changed,curTouched:curTouched};
 }
-function stripTombed(d,p){
-  var t=tombs[d]; if(!t) return p;
+function stripTombedPage(t,p){
+  if(!t) return p;
   for(var s=0;s<p.sheets.length;s++){
     var bl=p.sheets[s].blocks||[];
     for(var i=0;i<bl.length;i++)
@@ -2079,8 +2329,8 @@ function stripTombed(d,p){
   }
   return p;
 }
-function mergeDay(d,lp,rp){
-  var changed=false, t=tombs[d]||{};
+function mergeDayPages(t,lp,rp){
+  var changed=false;
   var maxSheets=Math.max(lp.sheets.length,rp.sheets.length);
   for(var s=0;s<maxSheets;s++){
     if(!lp.sheets[s]){ lp.sheets[s]={id:uid(),blocks:[],paper:(rp.sheets[s]||{}).paper}; changed=true; }
@@ -2091,12 +2341,11 @@ function mergeDay(d,lp,rp){
     for(var i=0;i<ls.blocks.length;i++) byId[ls.blocks[i].id]=i;
     for(var j=0;j<(rs.blocks||[]).length;j++){
       var rb=rs.blocks[j];
-      if(t[rb.id] && t[rb.id]>=(rb.m||0)) continue;      /* deleted here, stay deleted */
+      if(t[rb.id] && t[rb.id]>=(rb.m||0)) continue;
       var at=byId[rb.id];
       if(at===undefined){ ls.blocks.push(rb); changed=true; }
       else if((rb.m||0)>(ls.blocks[at].m||0)){ ls.blocks[at]=rb; changed=true; }
     }
-    /* drop local blocks the remote tombstoned */
     for(var k=0;k<ls.blocks.length;k++){
       var tb=t[ls.blocks[k].id];
       if(tb&&tb>=(ls.blocks[k].m||0)){ ls.blocks.splice(k--,1); changed=true; }
@@ -2104,6 +2353,47 @@ function mergeDay(d,lp,rp){
   }
   lp.u=Math.max(lp.u||0,rp.u||0);
   return changed;
+}
+/* Merge a whole remote document (all notebooks) into NB. */
+function mergeDoc(remoteRaw){
+  var remote=asV5(remoteRaw);
+  var changedActive=false, localNewer=false;
+
+  if(remote.nbTomb){
+    for(var tid in remote.nbTomb){
+      if(!NB.nbTomb[tid]||remote.nbTomb[tid]>NB.nbTomb[tid]) NB.nbTomb[tid]=remote.nbTomb[tid];
+      var lnbT=NB.notebooks[tid];
+      if(lnbT&&NB.nbTomb[tid]>=(lnbT.u||0)){
+        delete NB.notebooks[tid];
+        var oi=NB.order.indexOf(tid); if(oi>=0) NB.order.splice(oi,1);
+        if(tid===NB.active) changedActive=true;
+      }
+    }
+  }
+  for(var id in remote.notebooks){
+    var rnb=remote.notebooks[id];
+    if(NB.nbTomb[id] && NB.nbTomb[id]>=(rnb.u||0)) continue;  /* deleted here */
+    var lnb=NB.notebooks[id];
+    if(!lnb){
+      NB.notebooks[id]=rnb;
+      if(NB.order.indexOf(id)<0) NB.order.push(id);
+      if(id===NB.active) changedActive=true;
+      continue;
+    }
+    if(!lnb.tomb) lnb.tomb={};
+    var r=mergeNotebookPages(lnb.pages,lnb.tomb,rnb.pages,rnb.tomb||{},id===NB.active);
+    if(r.curTouched) changedActive=true;
+    if((rnb.u||0)>(lnb.u||0)){ lnb.title=rnb.title; lnb.cover=rnb.cover; }
+    if((lnb.u||0)>(rnb.u||0)) localNewer=true;
+    lnb.u=Math.max(lnb.u||0,rnb.u||0);
+  }
+  for(var lid in NB.notebooks) if(!remote.notebooks[lid]) localNewer=true;
+  for(var k2=0;k2<remote.order.length;k2++){
+    var oid=remote.order[k2];
+    if(NB.notebooks[oid]&&NB.order.indexOf(oid)<0) NB.order.push(oid);
+  }
+  if(!NB.notebooks[NB.active]){ NB.active=NB.order[0]||''; changedActive=true; }
+  return {changedActive:changedActive,localNewer:localNewer};
 }
 function pull(quiet){
   var c=cfg();
@@ -2114,14 +2404,14 @@ function pull(quiet){
   .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
   .then(function(data){
     var rec=(data&&data.record)?data.record:data;
-    var rp=(rec&&rec.pages)?rec.pages:null;
     pulling=false; lastPull=Date.now();
-    if(!rp){ setStatus('ok','Synced'); pushSoon(); return; }
-    var res=mergePages(rp,rec&&rec.tomb);
-    normalise(); writeLocal();
+    if(!rec||(!rec.notebooks&&!rec.pages)){ setStatus('ok','Synced'); pushSoon(); return; }
+    var res=mergeDoc(rec);
+    bindActive(); normaliseAll(); writeLocal();
     setStatus('ok','Synced','In sync with the cloud');
-    if(res.changedCur&&!turning){
-      invalidateHistory(cur); updateDateUI(); render(false);
+    refreshShelf();
+    if(res.changedActive&&!turning){
+      invalidateHistory(cur); updateDateUI(); applyCover(); render(false);
       if(!quiet) say('Updated from your other device.');
     }
     if(res.localNewer) pushSoon();
@@ -2192,7 +2482,7 @@ document.getElementById('mkbin').onclick=function(){
   note.textContent='Creating a bin...';
   fetch(API,{method:'POST',
     headers:{'Content-Type':'application/json','X-Master-Key':k,'X-Bin-Name':'notebook','X-Bin-Private':'true'},
-    body:JSON.stringify({v:SCHEMA,pages:pages,tomb:tombs})})
+    body:JSON.stringify(docObj())})
   .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
   .then(function(d){
     var id=d&&d.metadata&&d.metadata.id;
@@ -2233,6 +2523,9 @@ document.addEventListener('keydown',function(e){
   if((e.key==='Delete'||e.key==='Backspace')&&selId&&!focusedTx()&&!modal.classList.contains('on')){
     e.preventDefault(); pushUndo(); deleteBlock(selId);
   }
+  if(e.key==='Escape'&&selId&&!focusedTx()&&!blockSel&&!modal.classList.contains('on')){
+    e.preventDefault(); deselect();
+  }
 });
 /* 'cur' is captured at load, so a notebook left open overnight would keep
    writing on yesterday's page. Watch for the date changing under us. */
@@ -2252,7 +2545,6 @@ try{ document.execCommand('styleWithCSS',false,false); }catch(e){}
 buildFurniture(); buildSwatches();
 load();
 try{ zoom=localStorage.getItem(K_ZOOM)==='full'?'full':'fit'; }catch(e){}
-try{ cover=localStorage.getItem(K_COVER)||'cardboard'; }catch(e){}
 applyCover();
 /* one-time: a previous version stored a single paper colour for the whole notebook.
    Seed any colourless sheet with it, then forget the global. */
@@ -2264,6 +2556,7 @@ try{
     localStorage.removeItem(K_PAPER);
   }
 }catch(e){}
+buildShelf();
 updateDateUI(); refreshUndo(); fit(); render(false);
 setStatus('','Sync off','Click to set up syncing across devices');
 pull(true);
