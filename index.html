@@ -52,7 +52,6 @@ body{
 .pager button{border:0;background:transparent;padding:4px 7px;font-size:13px}
 .pager .pnum{font-size:12px;color:#bdb7ad;min-width:34px;text-align:center;user-select:none}
 .spacer{flex:1}
-.daycount{font-size:11.5px;color:#8e887d;white-space:nowrap;margin-left:4px}
 .sep{width:1px;height:20px;background:#ffffff1a;margin:0 3px;flex:none}
 
 #syncBtn{display:flex;align-items:center;gap:7px}
@@ -112,8 +111,6 @@ body{
 .shelf.on{display:flex;opacity:1}
 .shelf-head{display:flex;align-items:center;justify-content:space-between;padding:20px 28px 10px;flex:0 0 auto}
 .shelf-head h1{font-family:'Caveat',cursive;font-size:30px;color:#efe9df;font-weight:700;letter-spacing:.5px}
-.shelf-close{font-size:13px;color:#ded9d0;background:#ffffff12;border:1px solid #ffffff22;border-radius:8px;padding:7px 15px;cursor:pointer}
-.shelf-close:hover{background:#ffffff20}
 .shelf-grid{flex:1 1 auto;overflow-y:auto;display:grid;gap:26px 24px;padding:16px 28px 40px;
   grid-template-columns:repeat(auto-fill,minmax(150px,1fr));align-content:start;justify-items:center}
 .nbtile{width:100%;max-width:184px;cursor:pointer;transition:transform .16s ease}
@@ -135,7 +132,6 @@ body{
 .nbtitle{font-size:13.5px;color:#efe9df;font-weight:600;line-height:1.25;
   overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .nbtitle[contenteditable]:focus{outline:none;background:#ffffff1a;border-radius:4px;padding:1px 4px;-webkit-line-clamp:none}
-.nbsub{font-size:11px;color:#8f897e;margin-top:2px}
 .nbadd .nbcover{background:none;box-shadow:none;border:2px dashed #ffffff2e}
 .nbadd .nbcover::before{display:none}
 .nbadd .nbmono{font-size:44px;color:#ffffff44;font-weight:400}
@@ -175,10 +171,10 @@ body{
 .fc-hint{font-family:'Inter',sans-serif;font-size:13px;letter-spacing:.5px;color:#ffffff66;
   text-transform:uppercase}
 .frontcover.opening .fc-hint,.frontcover.editing .fc-hint{opacity:0}
-.fc-bar{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);display:none;gap:5px;
+.fc-bar{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);display:none;gap:5px;
   align-items:center;padding:7px 9px;background:#1c1a17ee;border:1px solid #ffffff1f;border-radius:12px;
-  box-shadow:0 10px 26px rgba(0,0,0,.5)}
-.frontcover.editing .fc-bar{display:flex}
+  box-shadow:0 10px 26px rgba(0,0,0,.5);max-width:92%;flex-wrap:wrap;justify-content:center}
+.frontcover .fc-bar{display:flex}
 .fcfont{width:34px;height:30px;font-size:16px;color:#e9e3d7;background:#ffffff10;border:1px solid #ffffff1a;
   border-radius:7px;cursor:pointer;line-height:1}
 .fcfont:hover{background:#ffffff22}
@@ -187,6 +183,9 @@ body{
 .fccol{width:22px;height:22px;border-radius:50%;border:2px solid #ffffff33;cursor:pointer;padding:0}
 .fccol:hover{transform:scale(1.12)}
 .fccol.on{border-color:#fff}
+.fcmat{width:24px;height:24px;border-radius:5px;border:2px solid #ffffff26;cursor:pointer;padding:0}
+.fcmat:hover{transform:scale(1.1)}
+.fcmat.on{border-color:#fff}
 .sheet{position:absolute;z-index:2;width:794px;height:1123px;border-radius:1px 3px 3px 1px}
 .s1{left:35px;top:12px;background:#c8c2b3}
 .s2{left:32px;top:8px;background:#ded9cc}
@@ -194,6 +193,21 @@ body{
 
 .page{position:absolute;z-index:3;left:26px;top:0;width:794px;height:1123px;background:var(--paper);
   border-radius:1px 3px 3px 1px;box-shadow:0 2px 5px rgba(0,0,0,.35);overflow:hidden}
+/* delete-page control: a red X near the page's top-right, under the closed cover */
+.delpage{position:absolute;z-index:4;top:16px;right:30px;width:30px;height:30px;border-radius:50%;
+  background:#c0392b;color:#fff;border:none;font-size:19px;line-height:1;cursor:pointer;opacity:0;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 2px 7px rgba(0,0,0,.35);
+  transition:opacity .18s ease,background .15s ease}
+.notebook:hover .delpage{opacity:.9}
+.delpage:hover{opacity:1;background:#e04a3c}
+.delpage:focus-visible{opacity:1;outline:2px solid #ffd0c8;outline-offset:2px}
+.page.tearing{animation:pagetear .55s cubic-bezier(.4,.05,.6,1) forwards;
+  clip-path:polygon(0 3%,5% 0,10% 4%,15% 1%,20% 5%,26% 1%,32% 4%,38% 0,44% 4%,50% 1%,56% 5%,62% 1%,68% 4%,74% 0,80% 4%,86% 1%,92% 5%,97% 1%,100% 3%,100% 100%,0 100%)}
+@keyframes pagetear{
+  0%{transform:translate(0,0) rotate(0deg);opacity:1}
+  12%{transform:translate(0,-8px) rotate(-1.5deg)}
+  100%{transform:translate(70px,-46px) rotate(7deg);opacity:0}
+}
 .grain{position:absolute;inset:0;pointer-events:none;opacity:.06;mix-blend-mode:multiply;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='180' height='180' filter='url(%23n)'/></svg>")}
 .gutter{position:absolute;left:0;top:0;bottom:0;width:96px;pointer-events:none;
@@ -411,7 +425,6 @@ body.hasbanner .stage{top:86px}
   </span>
   <span class="sep"></span>
   <button id="carry" title="Bring unfinished items forward from your last written day">Carry Forward</button>
-  <span class="daycount" id="dayCount"></span>
   <span class="spacer"></span>
   <select id="coverSel" title="Notebook cover" aria-label="Notebook cover">
     <option value="cardboard">Cardboard</option>
@@ -447,6 +460,7 @@ body.hasbanner .stage{top:86px}
         <div class="lf lf-back" id="lfBack"></div>
       </div>
     </div>
+    <button id="delPage" class="delpage" title="Delete this page" aria-label="Delete this page">&times;</button>
     <div class="frontcover" id="frontCover" aria-hidden="true" role="button" tabindex="0" title="Open notebook">
       <div class="fc-inner">
         <div class="fc-title" id="fcTitle" contenteditable="true" spellcheck="false" aria-label="Notebook title"></div>
@@ -463,6 +477,14 @@ body.hasbanner .stage{top:86px}
         <button class="fccol" data-col="#1b1b1b" title="Charcoal" style="background:#1b1b1b"></button>
         <button class="fccol" data-col="#c0392b" title="Red" style="background:#c0392b"></button>
         <button class="fccol" data-col="#2b6cb0" title="Blue" style="background:#2b6cb0"></button>
+        <span class="fc-sep"></span>
+        <button class="fcmat" data-mat="cardboard" title="Cardboard" style="background:linear-gradient(150deg,#4a4234,#2b241c)"></button>
+        <button class="fcmat" data-mat="kraft" title="Kraft" style="background:linear-gradient(150deg,#4a4132,#2a231a)"></button>
+        <button class="fcmat" data-mat="black" title="Black" style="background:linear-gradient(145deg,#2c2e31,#111214)"></button>
+        <button class="fcmat" data-mat="navy" title="Navy" style="background:linear-gradient(145deg,#28374f,#141b28)"></button>
+        <button class="fcmat" data-mat="red" title="Red" style="background:linear-gradient(145deg,#5f2d29,#331715)"></button>
+        <button class="fcmat" data-mat="forest" title="Forest" style="background:linear-gradient(145deg,#2f4636,#16241a)"></button>
+        <button class="fcmat" data-mat="grey" title="Grey" style="background:linear-gradient(145deg,#585a5f,#303236)"></button>
       </div>
     </div>
     <svg class="spiral" id="spiral" viewBox="0 0 818 1123" aria-hidden="true"></svg>
@@ -534,7 +556,6 @@ body.hasbanner .stage{top:86px}
 <div class="shelf" id="shelf" aria-hidden="true">
   <div class="shelf-head">
     <h1>Notebooks</h1>
-    <button class="shelf-close" id="shelfClose" title="Back to notebook">Done</button>
   </div>
   <div class="shelf-grid" id="shelfGrid"></div>
 </div>
@@ -932,16 +953,12 @@ function save(touchId){
   day().u=Date.now(); lastEdit=Date.now();
   prune(); writeLocal(); pushSoon(); refreshDayIndex();
 }
-/* the written-day count and the jump arrows depend on content, so refresh them
-   whenever content changes rather than only on navigation */
+/* the jump arrows depend on content, so refresh them whenever content changes */
 function refreshDayIndex(){
-  var pw=document.getElementById('prevWritten'), nw=document.getElementById('nextWritten'),
-      dc=document.getElementById('dayCount');
-  if(!pw||!nw||!dc) return;
+  var pw=document.getElementById('prevWritten'), nw=document.getElementById('nextWritten');
+  if(!pw||!nw) return;
   pw.disabled=!adjacentWritten(-1);
   nw.disabled=!adjacentWritten(1);
-  var n=writtenDays().length;
-  dc.textContent=n?(n+' day'+(n===1?'':'s')+' written'):'';
 }
 
 /* ================= undo =================
@@ -1041,6 +1058,7 @@ function paintFrontCover(){
   t.textContent=nb.title||'My Notebook';
   t.className='fc-title font-'+(nb.titleFont||'hand');
   t.style.color=nb.titleColor||'#f3ead2';
+  syncCoverBar();
 }
 function showCover(){
   coverClosed=true;
@@ -1056,9 +1074,11 @@ function openCover(){
   if(!coverClosed) return;
   var fc=document.getElementById('frontCover');
   document.getElementById('fcTitle').blur();
-  /* reveal the last day written on (behind the cover) before it swings open */
+  /* land on the last day written on, and its last page, so you pick up where the
+     most recent note is rather than at the top of that day */
   var ds=writtenDays();
-  cur=ds.length?ds[ds.length-1]:todayISO(); si=0;
+  cur=ds.length?ds[ds.length-1]:todayISO();
+  si=lastWrittenSheet(cur);
   updateDateUI(); render(false);
   function done(){ coverClosed=false; fc.style.display='none'; fc.classList.remove('opening'); fc.style.transform=''; }
   if(reduced()||!fc.animate){ done(); return; }
@@ -1067,10 +1087,19 @@ function openCover(){
     {duration:720,easing:'cubic-bezier(.4,0,.28,1)',fill:'forwards'});
   a.onfinish=done;
 }
+/* index of the last sheet on a day that has content, else the last sheet */
+function lastWrittenSheet(dateISO){
+  var p=pages[dateISO]; if(!p||!p.sheets||!p.sheets.length) return 0;
+  for(var i=p.sheets.length-1;i>=0;i--) if((p.sheets[i].blocks||[]).length) return i;
+  return p.sheets.length-1;
+}
 function setupCover(){
   var fc=document.getElementById('frontCover'), t=document.getElementById('fcTitle');
   fc.addEventListener('mousedown',function(e){
-    if(e.target.closest('.fc-bar')||e.target===t) return;   /* editing or toolbar: don't open */
+    if(e.target.closest('.fc-bar')||e.target===t) return;   /* toolbar or title: leave it */
+    /* if the title is mid-edit, the first click just finishes editing, so you
+       don't accidentally open the notebook while naming it */
+    if(document.activeElement===t){ e.preventDefault(); t.blur(); return; }
     e.preventDefault(); openCover();
   });
   fc.addEventListener('keydown',function(e){
@@ -1101,12 +1130,19 @@ function setupCover(){
       t.style.color=nb.titleColor; writeLocal(); syncCoverBar();
     });
   });
+  bar.querySelectorAll('.fcmat').forEach(function(btn){
+    btn.addEventListener('mousedown',function(e){
+      e.preventDefault();
+      setCover(this.dataset.mat);
+    });
+  });
 }
 function syncCoverBar(){
   var nb=activeNB(); if(!nb) return;
-  var f=nb.titleFont||'hand', c=nb.titleColor||'#f3ead2';
+  var f=nb.titleFont||'hand', c=nb.titleColor||'#f3ead2', mat=nb.cover||'cardboard';
   document.querySelectorAll('.fcfont').forEach(function(b){ b.classList.toggle('on',b.dataset.f===f); });
   document.querySelectorAll('.fccol').forEach(function(b){ b.classList.toggle('on',b.dataset.col.toLowerCase()===c.toLowerCase()); });
+  document.querySelectorAll('.fcmat').forEach(function(b){ b.classList.toggle('on',b.dataset.mat===mat); });
 }
 function commitTitle(finalize){
   var nb=activeNB(), t=document.getElementById('fcTitle'); if(!nb) return;
@@ -1118,7 +1154,6 @@ function commitTitle(finalize){
 var shelfOpen=false;
 function buildShelf(){
   document.getElementById('shelfBtn').onclick=openShelf;
-  document.getElementById('shelfClose').onclick=function(){ closeShelf(NB.active); };
   refreshShelf();
 }
 function refreshShelf(){
@@ -1126,7 +1161,6 @@ function refreshShelf(){
   var h='';
   for(var i=0;i<NB.order.length;i++){
     var id=NB.order[i], nb=NB.notebooks[id]; if(!nb) continue;
-    var days=nbDayCount(nb);
     var cc=(nb.cover&&nb.cover!=='cardboard')?(' cover-'+nb.cover):'';
     h+='<div class="nbtile" data-id="'+id+'" role="button" tabindex="0">'+
          '<div class="nbcover'+cc+'">'+
@@ -1135,15 +1169,13 @@ function refreshShelf(){
          '</div>'+
          '<div class="nbmeta">'+
            '<div class="nbtitle" data-title="'+id+'">'+esc(nb.title||'Untitled')+'</div>'+
-           '<div class="nbsub">'+(days?days+' day'+(days===1?'':'s'):'empty')+
-             (id===NB.active?' &middot; open':'')+'</div>'+
          '</div>'+
        '</div>';
   }
   if(NB.order.length<NB_MAX){
     h+='<div class="nbtile nbadd" id="nbAddTile" role="button" tabindex="0">'+
          '<div class="nbcover"><span class="nbmono">+</span></div>'+
-         '<div class="nbmeta"><div class="nbtitle">New Notebook</div><div class="nbsub">&nbsp;</div></div>'+
+         '<div class="nbmeta"><div class="nbtitle">New Notebook</div></div>'+
        '</div>';
   }
   grid.innerHTML=h;
@@ -1156,12 +1188,20 @@ function openShelf(){
   st.classList.add('shrinking');
   sh.classList.add('on'); sh.setAttribute('aria-hidden','false');
 }
+/* show the shelf as the landing screen, without the shrink-from-notebook effect */
+function landOnShelf(){
+  shelfOpen=true;
+  refreshShelf();
+  var sh=document.getElementById('shelf');
+  sh.classList.add('on'); sh.setAttribute('aria-hidden','false');
+  document.getElementById('stage').classList.add('shrinking');
+}
 function closeShelf(id){
   var sh=document.getElementById('shelf'), st=document.getElementById('stage');
   sh.classList.remove('on'); sh.setAttribute('aria-hidden','true');
   shelfOpen=false;
   if(id&&id!==NB.active) switchNotebook(id);
-  if(!_skipCover) showCover();     /* always land on the notebook's cover */
+  if(!_skipCover) showCover();     /* land on the chosen notebook's cover */
   st.classList.remove('shrinking');
   st.classList.add('growing');
   setTimeout(function(){ st.classList.remove('growing'); },320);
@@ -1233,13 +1273,24 @@ function buildSwatches(){
   });
 }
 function fit(){
-  if(zoom==='full'){ scale=1; }
-  else {
-    var availH=window.innerHeight-48-62-24, availW=window.innerWidth-30;
+  var stageEl=document.getElementById('stage');
+  if(zoom==='full'){
+    scale=1;
+    nb.style.transform='';
+    nb.style.marginBottom='';
+    stageEl.style.overflowY='auto';
+  } else {
+    /* leave room for the bar (48), dock (62), the stage's own top padding and a
+       little breathing space for the cover, which overhangs the page slightly */
+    var availH=window.innerHeight-48-62-34;
+    var availW=window.innerWidth-30;
     scale=clamp(Math.min(availH/NB_H,availW/NB_W),0.30,1);
+    nb.style.transform='scale('+scale+')';
+    /* collapse the layout gap the scale leaves below (origin is top center) */
+    nb.style.marginBottom=(-(NB_H*(1-scale))).toFixed(1)+'px';
+    stageEl.style.overflowY='hidden';   /* Fit means fit: no vertical scroll */
   }
-  nb.style.transform='scale('+scale+')';
-  nb.style.marginBottom=(-(NB_H*(1-scale))+28)+'px';
+  stageEl.style.overflowX='hidden';
   document.getElementById('zoomBtn').textContent=(zoom==='full')?'A4':'Fit';
   layoutMarks();
 }
@@ -2429,8 +2480,6 @@ function updateDateUI(){
   document.getElementById('nextPage').disabled=(si>=s.length-1);
   document.getElementById('prevWritten').disabled=!adjacentWritten(-1);
   document.getElementById('nextWritten').disabled=!adjacentWritten(1);
-  var n=writtenDays().length;
-  document.getElementById('dayCount').textContent=n?(n+' day'+(n===1?'':'s')+' written'):'';
 }
 document.getElementById('prevDay').onclick=function(){ goDate(shiftISO(cur,-1)); };
 document.getElementById('nextDay').onclick=function(){ goDate(shiftISO(cur,1)); };
@@ -2451,6 +2500,35 @@ document.getElementById('addPage').onclick=function(){
   var n=s.length-1;
   turnTo(1,function(){ si=n; save(); });
 };
+document.getElementById('delPage').onclick=function(){
+  if(turning||coverClosed) return;
+  var s=sheets();
+  var hasContent=(sheet().blocks||[]).length>0;
+  var many=s.length>1;
+  var msg=hasContent
+    ? 'Delete this page and everything on it? This cannot be undone.'
+    : 'Delete this page?';
+  if(!confirm(msg)) return;
+  tearPage(function(){
+    var arr=sheets();
+    arr.splice(si,1);
+    if(!arr.length) arr.push({id:uid(),blocks:[]});  /* a day always keeps one page */
+    si=clamp(si,0,arr.length-1);
+    invalidateHistory(cur);
+    save(); updateDateUI(); render(false);
+  });
+};
+/* rip the current page off, then run the mutation and re-render */
+function tearPage(after){
+  var pg=document.getElementById('page');
+  if(reduced()||!pg.animate){ after(); return; }
+  selId=null; lastLine=null; clearBlockSel();
+  pg.classList.add('tearing');
+  var done=false;
+  function finish(){ if(done) return; done=true; pg.classList.remove('tearing'); after(); }
+  pg.addEventListener('animationend',finish,{once:true});
+  setTimeout(finish,650);   /* safety net if animationend is missed */
+}
 document.getElementById('undoBtn').onclick=undo;
 document.getElementById('redoBtn').onclick=redo;
 document.getElementById('zoomBtn').onclick=function(){  zoom=(zoom==='fit')?'full':'fit';
@@ -2458,10 +2536,14 @@ document.getElementById('zoomBtn').onclick=function(){  zoom=(zoom==='fit')?'ful
   fit(); if(zoom==='full') stage.scrollTop=0;
 };
 document.getElementById('coverSel').addEventListener('change',function(){
-  cover=this.value;
-  var nb=activeNB(); if(nb){ nb.cover=cover; nb.u=Date.now(); }
-  writeLocal(); applyCover(); refreshShelf();
+  setCover(this.value);
 });
+/* single place to change a notebook's cover, so every control stays in sync */
+function setCover(val){
+  cover=val;
+  var nb=activeNB(); if(nb){ nb.cover=cover; nb.u=Date.now(); }
+  writeLocal(); applyCover(); paintFrontCover(); syncCoverBar(); refreshShelf();
+}
 
 /* ================= carry forward ================= */
 document.getElementById('carry').onclick=function(){
@@ -2830,9 +2912,9 @@ try{
 buildShelf();
 setupCover();
 updateDateUI(); refreshUndo(); fit(); render(false);
-/* real users always land on the cover; ?nocover=1 lets the test harness start
-   on the page instead so it can drive the canvas directly */
-if(!_skipCover) showCover();
+/* the shelf is home: on load you see all notebooks and pick one. ?nocover=1
+   lets the test harness skip straight to the page. */
+if(!_skipCover) landOnShelf();
 setStatus('','Sync off','Click to set up syncing across devices');
 pull(true);
 /* When the webfonts finish loading, text metrics change, so re-render the page and
