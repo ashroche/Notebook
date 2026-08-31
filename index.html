@@ -87,7 +87,8 @@ body.oncover .dock{display:none}
 /* ---------- stage & notebook ---------- */
 .stage{position:absolute;inset:48px 0 62px 0;overflow:auto;display:flex;
   justify-content:center;align-items:flex-start;padding:12px 0 0}
-.notebook{position:relative;width:818px;height:1123px;flex:none;transform-origin:top center}
+.notebook{position:relative;width:818px;height:1123px;flex:none;transform-origin:top center;
+  perspective:2400px;perspective-origin:2% 50%}
 
 .cover{position:absolute;z-index:1;left:18px;top:-7px;width:812px;height:1139px;border-radius:3px 7px 7px 3px;
   background:linear-gradient(160deg,#413a30,#26211b);
@@ -147,18 +148,23 @@ body.oncover .dock{display:none}
 /* the front cover: a real surface that sits over the page when the notebook is
    closed and swings open on the spine to reveal the last page written on */
 .frontcover{position:absolute;z-index:5;left:18px;top:-7px;width:812px;height:1139px;
-  border-radius:3px 9px 9px 3px;cursor:pointer;transform-origin:left center;backface-visibility:hidden;
+  border-radius:3px 9px 9px 3px;cursor:pointer;transform-origin:left center;
+  transform-style:preserve-3d;display:none}
+.fc-face{position:absolute;inset:0;border-radius:inherit;backface-visibility:hidden;overflow:hidden}
+.fc-front{display:flex;align-items:center;justify-content:center;
   background:linear-gradient(150deg,#4a4234,#2b241c);
-  box-shadow:0 20px 50px rgba(0,0,0,.5),inset 0 0 60px rgba(0,0,0,.28),inset 3px 0 0 rgba(0,0,0,.35);
-  display:none;align-items:center;justify-content:center}
-.frontcover.cover-kraft{background:linear-gradient(150deg,#4a4132,#2a231a)}
-.frontcover.cover-black{background:linear-gradient(145deg,#2c2e31,#111214)}
-.frontcover.cover-navy{background:linear-gradient(145deg,#28374f,#141b28)}
-.frontcover.cover-red{background:linear-gradient(145deg,#5f2d29,#331715)}
-.frontcover.cover-forest{background:linear-gradient(145deg,#2f4636,#16241a)}
-.frontcover.cover-grey{background:linear-gradient(145deg,#585a5f,#303236)}
-.frontcover::after{content:'';position:absolute;left:20px;top:0;bottom:0;width:2px;
+  box-shadow:0 20px 50px rgba(0,0,0,.5),inset 0 0 60px rgba(0,0,0,.28),inset 3px 0 0 rgba(0,0,0,.35)}
+.frontcover.cover-kraft .fc-front{background:linear-gradient(150deg,#4a4132,#2a231a)}
+.frontcover.cover-black .fc-front{background:linear-gradient(145deg,#2c2e31,#111214)}
+.frontcover.cover-navy .fc-front{background:linear-gradient(145deg,#28374f,#141b28)}
+.frontcover.cover-red .fc-front{background:linear-gradient(145deg,#5f2d29,#331715)}
+.frontcover.cover-forest .fc-front{background:linear-gradient(145deg,#2f4636,#16241a)}
+.frontcover.cover-grey .fc-front{background:linear-gradient(145deg,#585a5f,#303236)}
+.fc-front::after{content:'';position:absolute;left:20px;top:0;bottom:0;width:2px;
   background:repeating-linear-gradient(rgba(0,0,0,.35) 0 4px,transparent 4px 20px)}
+.fc-back{transform:rotateY(180deg);
+  background:linear-gradient(120deg,#efe7d6,#d8cdb6);
+  box-shadow:inset 0 0 80px rgba(0,0,0,.12),inset -4px 0 0 rgba(0,0,0,.16)}
 .fc-inner{display:flex;flex-direction:column;align-items:center;gap:22px;padding:0 60px;text-align:center}
 .fc-title{font-family:'Caveat',cursive;font-size:64px;line-height:1.15;color:#f3ead2;font-weight:700;
   outline:none;min-width:60px;max-width:640px;text-shadow:0 1px 4px rgba(0,0,0,.35);
@@ -194,7 +200,9 @@ body.oncover .dock{display:none}
   border-radius:1px 3px 3px 1px;box-shadow:0 2px 5px rgba(0,0,0,.35);overflow:hidden}
 /* the day's date, handwritten, in the page's top-left corner */
 .pagedate{position:absolute;z-index:2;left:64px;top:26px;font-family:'Caveat',cursive;
-  font-size:27px;line-height:1;color:#6b5f4c;opacity:.72;pointer-events:none;transform:rotate(-1.5deg)}
+  font-size:27px;line-height:1;color:#6b5f4c;opacity:.75;pointer-events:none;transform:rotate(-1.5deg);
+  text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:5px;
+  text-decoration-color:#6b5f4c99}
 /* delete-page control: a red X near the page's top-right, under the closed cover */
 .delpage{position:absolute;z-index:4;top:9px;right:12px;width:26px;height:26px;border-radius:50%;
   background:#c0392b;color:#fff;border:none;font-size:16px;line-height:1;cursor:pointer;opacity:0;
@@ -253,8 +261,6 @@ body.oncover .dock{display:none}
 
 /* ---------- writing area ---------- */
 .canvas{position:absolute;left:80px;top:30px;right:26px;bottom:28px;z-index:4}
-.hint{position:absolute;left:6px;top:8px;font-family:'Caveat',cursive;font-size:27px;
-  color:rgba(0,0,0,.17);pointer-events:none;user-select:none;line-height:1.35}
 
 .block{position:absolute;color:var(--ink)}
 .block img{display:block;width:100%;height:100%;border-radius:2px;
@@ -377,7 +383,7 @@ body.hasbanner .stage{top:86px}
   /* print the page as paper: no desk, no chrome, no selection furniture */
   @page{ size:A4; margin:12mm; }
   body{background:#fff !important;overflow:visible}
-  .bar,.dock,.toast,.modal,.banner,.flipzone,.cover,.sheet,.holes,.spiral,.hint{display:none !important}
+  .bar,.dock,.toast,.modal,.banner,.flipzone,.cover,.sheet,.holes,.spiral{display:none !important}
   .stage{position:static;inset:auto;overflow:visible;padding:0;display:block}
   .notebook{transform:none !important;margin:0 !important;width:auto;height:auto}
   .page{position:static;width:auto;height:auto;box-shadow:none;border-radius:0;
@@ -450,7 +456,7 @@ body.hasbanner .stage{top:86px}
       <div class="grain"></div>
       <div class="holes" id="holes"></div>
       <div class="pagedate" id="pageDate" aria-hidden="true"></div>
-      <div class="canvas" id="canvas"><div class="hint" id="hint">double-click anywhere to write</div></div>
+      <div class="canvas" id="canvas"></div>
     </div>
     <div class="flipzone" id="flipzone">
       <div class="spineshadow" id="spineShadow"></div>
@@ -461,6 +467,7 @@ body.hasbanner .stage{top:86px}
     </div>
     <button id="delPage" class="delpage" title="Delete this page" aria-label="Delete this page">&times;</button>
     <div class="frontcover" id="frontCover" aria-hidden="true" role="button" tabindex="0" title="Open notebook">
+      <div class="fc-face fc-front">
       <div class="fc-inner">
         <div class="fc-title" id="fcTitle" contenteditable="true" spellcheck="false" aria-label="Notebook title"></div>
         <div class="fc-hint" id="fcHint">Click to open</div>
@@ -485,6 +492,8 @@ body.hasbanner .stage{top:86px}
         <button class="fcmat" data-mat="forest" title="Forest" style="background:linear-gradient(145deg,#2f4636,#16241a)"></button>
         <button class="fcmat" data-mat="grey" title="Grey" style="background:linear-gradient(145deg,#585a5f,#303236)"></button>
       </div>
+      </div>
+      <div class="fc-face fc-back" aria-hidden="true"></div>
     </div>
     <svg class="spiral" id="spiral" viewBox="0 0 818 1123" aria-hidden="true"></svg>
   </div>
@@ -593,7 +602,6 @@ var PAPERS=[
 ];
 
 var canvas=document.getElementById('canvas');
-var hint=document.getElementById('hint');
 var nb=document.getElementById('notebook');
 var stage=document.getElementById('stage');
 var dock=document.getElementById('dock');
@@ -1038,7 +1046,7 @@ function applyCover(){
   var el=document.getElementById('cover');
   el.className='cover'+(cover==='cardboard'?'':' cover-'+cover);
   var bn=document.getElementById('shelfBtnName');
-  if(bn){ var nb=activeNB(); bn.textContent=(nb&&nb.title)||'Notebooks'; }
+  if(bn){ bn.textContent='Notebooks'; }
 }
 /* ================= front cover ================= */
 var coverClosed=false;
@@ -1078,8 +1086,15 @@ function openCover(){
   function done(){ coverClosed=false; fc.style.display='none'; fc.classList.remove('opening'); fc.style.transform=''; }
   if(reduced()||!fc.animate){ done(); return; }
   fc.classList.add('opening');
-  var a=fc.animate([{transform:'rotateY(0deg)'},{transform:'rotateY(-168deg)'}],
-    {duration:720,easing:'cubic-bezier(.4,0,.28,1)',fill:'forwards'});
+  /* same feel as a page turn: hinge on the spine, lift off, swing a full 180 and
+     flop open to the left, revealing the page. The back of the cover is a liner
+     face so nothing shows mirrored. */
+  var frames=[], N=26;
+  for(var i=0;i<=N;i++){
+    var t=i/N, ang=-180*t, lift=Math.sin(t*Math.PI)*30;
+    frames.push({transform:'translateZ('+lift.toFixed(1)+'px) rotateY('+ang.toFixed(1)+'deg)',offset:t});
+  }
+  var a=fc.animate(frames,{duration:780,easing:'cubic-bezier(.42,0,.4,1)',fill:'forwards'});
   a.onfinish=done;
 }
 /* index of the last sheet on a day that has content, else the last sheet */
@@ -1152,14 +1167,19 @@ function buildShelf(){
   document.getElementById('coverBtn').onclick=function(){ if(!coverClosed) showCover(); };
   refreshShelf();
 }
-/* a small spiral coil for the shelf tiles, so each reads as a real notebook */
+/* a small twin-loop wire coil for the shelf tiles, matching the real cover's binding */
 function tileCoil(){
-  var s='';
-  for(var y=13;y<180;y+=15.2){
-    s+='<path d="M5 '+(y+3).toFixed(1)+' C6 '+(y-4).toFixed(1)+' 33 '+(y-5).toFixed(1)+' 39 '+(y+2).toFixed(1)+'" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="3.6" stroke-linecap="round"/>';
-    s+='<path d="M5 '+y.toFixed(1)+' C6 '+(y-7).toFixed(1)+' 33 '+(y-8).toFixed(1)+' 39 '+(y-1).toFixed(1)+'" fill="none" stroke="#ece9e3" stroke-width="2.7" stroke-linecap="round"/>';
+  var loops='', y, top=10, bot=176, gap=13.4;
+  var gid='tc'+(tileCoil._n=(tileCoil._n||0)+1);
+  var defs='<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0" stop-color="#ffffff"/><stop offset="0.28" stop-color="#e7e5df"/>'+
+    '<stop offset="0.6" stop-color="#b3b0a9"/><stop offset="1" stop-color="#8a8880"/></linearGradient></defs>';
+  for(y=top;y<=bot;y+=gap){
+    /* shadow of the wire on the cover, then the bright wire looping over the edge */
+    loops+='<path d="M2 '+(y+4).toFixed(1)+' C10 '+(y+5).toFixed(1)+' 34 '+(y+1).toFixed(1)+' 40 '+(y-6).toFixed(1)+'" fill="none" stroke="rgba(0,0,0,.34)" stroke-width="3.4" stroke-linecap="round"/>';
+    loops+='<path d="M2 '+(y+1).toFixed(1)+' C10 '+(y+2).toFixed(1)+' 34 '+(y-2).toFixed(1)+' 40 '+(y-9).toFixed(1)+'" fill="none" stroke="url(#'+gid+')" stroke-width="2.9" stroke-linecap="round"/>';
   }
-  return '<svg class="nbcoil" viewBox="0 0 132 183" preserveAspectRatio="none" aria-hidden="true">'+s+'</svg>';
+  return '<svg class="nbcoil" viewBox="0 0 120 186" preserveAspectRatio="none" aria-hidden="true">'+defs+loops+'</svg>';
 }
 function refreshShelf(){
   var grid=document.getElementById('shelfGrid'); if(!grid) return;
@@ -1203,13 +1223,30 @@ function landOnShelf(){
 }
 function closeShelf(id){
   var sh=document.getElementById('shelf'), st=document.getElementById('stage');
+  /* capture the clicked tile's on-screen box so the cover can grow out of it */
+  var tileEl=id?sh.querySelector('.nbtile[data-id="'+id+'"] .nbcover'):null;
+  var fromRect=tileEl?tileEl.getBoundingClientRect():null;
   sh.classList.remove('on'); sh.setAttribute('aria-hidden','true');
   shelfOpen=false;
   if(id&&id!==NB.active) switchNotebook(id);
   if(!_skipCover) showCover();     /* land on the chosen notebook's cover */
   st.classList.remove('shrinking');
-  st.classList.add('growing');
-  setTimeout(function(){ st.classList.remove('growing'); },320);
+  var fc=document.getElementById('frontCover');
+  if(fromRect&&!_skipCover&&!reduced()&&fc.animate){
+    var toRect=fc.getBoundingClientRect();
+    var sx=fromRect.width/toRect.width, sy=fromRect.height/toRect.height;
+    var dx=(fromRect.left+fromRect.width/2)-(toRect.left+toRect.width/2);
+    var dy=(fromRect.top+fromRect.height/2)-(toRect.top+toRect.height/2);
+    fc.style.transformOrigin='center center';
+    var a=fc.animate([
+      {transform:'translate('+dx.toFixed(1)+'px,'+dy.toFixed(1)+'px) scale('+sx.toFixed(3)+','+sy.toFixed(3)+')',opacity:0.55},
+      {transform:'none',opacity:1}
+    ],{duration:360,easing:'cubic-bezier(.2,.7,.25,1)'});
+    a.onfinish=function(){ fc.style.transformOrigin=''; fc.style.transform=''; };
+  } else {
+    st.classList.add('growing');
+    setTimeout(function(){ st.classList.remove('growing'); },320);
+  }
 }
 /* shelf interactions */
 document.addEventListener('click',function(e){
@@ -1591,8 +1628,7 @@ function render(keepFocus){
   var pd=document.getElementById('pageDate'); if(pd) pd.textContent=fmtLong(cur);
   var frag=document.createDocumentFragment(), bl=blocks();
   for(var i=0;i<bl.length;i++) frag.appendChild(renderBlock(bl[i]));
-  canvas.innerHTML=''; canvas.appendChild(hint); canvas.appendChild(frag);
-  hint.style.display=bl.length?'none':'block';
+  canvas.innerHTML=''; canvas.appendChild(frag);
   if(f) focusLine(f.bid,f.lid,f.pos);
   layoutMarks(); relayoutSoon(); updateDock();
 }
@@ -2510,7 +2546,6 @@ document.getElementById('delPage').onclick=function(){
   if(turning||coverClosed) return;
   var s=sheets();
   var hasContent=(sheet().blocks||[]).length>0;
-  var many=s.length>1;
   var msg=hasContent
     ? 'Delete this page and everything on it? This cannot be undone.'
     : 'Delete this page?';
