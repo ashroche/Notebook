@@ -6,7 +6,7 @@
 <title>Notebook</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,600;1,400&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&family=Caveat:wght@400;700&family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,600;1,400&display=block" rel="stylesheet">
 <style>
 :root{
   --paper:#f7f0dc;
@@ -125,20 +125,29 @@ body.oncover .dock{display:none}
   background:linear-gradient(160deg,#413a30,#26211b);
   box-shadow:0 12px 26px rgba(0,0,0,.5),0 3px 7px rgba(0,0,0,.4);overflow:hidden;
   display:flex;align-items:center;justify-content:center}
-.nbcoil{position:absolute;left:1px;top:4px;bottom:4px;width:19px;pointer-events:none;
-  background-repeat:repeat-y;background-position:left top;background-size:19px 6.2px;
-  background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='19' height='6.2'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23fdfdfc'/><stop offset='0.28' stop-color='%23dedcd7'/><stop offset='0.62' stop-color='%23a4a29c'/><stop offset='1' stop-color='%236d6b66'/></linearGradient></defs><path d='M2.2 5.4 C3 1.5 15 1.2 17.2 4.6' fill='none' stroke='%23000000' stroke-opacity='0.34' stroke-width='2.1' stroke-linecap='round'/><path d='M2.2 4.3 C3 0.5 15 0.2 17.2 3.5' fill='none' stroke='url(%23g)' stroke-width='1.7' stroke-linecap='round'/></svg>")}
+.nbcoil{position:absolute;left:0;top:4px;bottom:4px;width:26px;pointer-events:none;
+  background-repeat:repeat-y;background-position:left top;background-size:26px 6.2px;
+  background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='26' height='6.2'><defs><linearGradient id='w' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23ffffff'/><stop offset='0.22' stop-color='%23f2f0ec'/><stop offset='0.55' stop-color='%23b9b6b0'/><stop offset='0.8' stop-color='%238a8781'/><stop offset='1' stop-color='%23625f5a'/></linearGradient></defs><path d='M3.4 5.9 C4.4 2.3 19 2.0 22.4 5.2' fill='none' stroke='%23000000' stroke-opacity='0.42' stroke-width='2.5' stroke-linecap='round'/><path d='M3.2 4.5 C4.2 0.9 18.6 0.6 22 3.8' fill='none' stroke='url(%23w)' stroke-width='2.2' stroke-linecap='round'/><path d='M4.0 3.7 C5.0 1.5 17.6 1.2 20.6 3.2' fill='none' stroke='%23ffffff' stroke-opacity='0.75' stroke-width='0.7' stroke-linecap='round'/></svg>")}
 .nbmono{font-family:'Caveat',cursive;font-size:58px;font-weight:700;color:#fff;opacity:.9;
   text-shadow:0 1px 3px rgba(0,0,0,.4);user-select:none}
-.nbdel{position:absolute;top:7px;right:7px;width:24px;height:24px;border-radius:50%;
-  background:#000000073;color:#fff;border:none;cursor:pointer;font-size:15px;line-height:1;
+/* every delete X in the app follows the same rule: hidden by default, revealed
+   only when the pointer is in that thing's top-right CORNER, evenly inset. */
+.nbdel{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;
+  background:#c0392b;color:#fff;border:none;cursor:pointer;font-size:15px;line-height:1;
   display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;
-  transition:opacity .15s ease,background .15s ease}
-/* hidden until you hover the tile, then it fades in at the top-right corner and
-   becomes clickable. Its hit area is padded out so it is easy to catch. */
-.nbtile:hover .nbdel,.nbdel:focus-visible{opacity:.92;pointer-events:auto}
-.nbdel::before{content:'';position:absolute;top:-9px;right:-9px;width:46px;height:46px}
-.nbdel:hover{opacity:1;background:#c0392b}
+  box-shadow:0 2px 6px rgba(0,0,0,.4);transition:opacity .14s ease,background .14s ease;z-index:3}
+.nbtile .cornerzone{position:absolute;top:0;right:0;width:58px;height:58px;z-index:2}
+.nbtile .cornerzone:hover ~ .nbdel,.nbdel:hover,.nbdel:focus-visible{opacity:.94;pointer-events:auto}
+.nbdel:hover{opacity:1;background:#e04a3c}
+/* the notebook's name, bottom-right, same look everywhere it appears:
+   condensed caps in a dull gold */
+.nbname{position:absolute;right:14px;bottom:12px;z-index:4;pointer-events:none;
+  font-family:'Oswald','Inter',sans-serif;font-weight:500;letter-spacing:.14em;
+  text-transform:uppercase;color:#b08d47;opacity:.85;white-space:nowrap;
+  text-shadow:0 1px 2px rgba(0,0,0,.45)}
+.page .nbname{font-size:11.5px;right:26px;bottom:20px;color:#a8842f;opacity:.7;text-shadow:none}
+.frontcover .nbname{font-size:13px;right:26px;bottom:22px}
+.nbtile .nbname{font-size:7.5px;right:7px;bottom:6px;letter-spacing:.11em}
 .nbmeta{margin-top:9px;text-align:center;width:100%}
 .nbtitle{font-size:13.5px;color:#efe9df;font-weight:600;line-height:1.25;
   overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
@@ -229,7 +238,8 @@ body.oncover .dock{display:none}
   background:#c0392b;color:#fff;border:none;font-size:14px;line-height:1;cursor:pointer;
   display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;
   box-shadow:0 2px 6px rgba(0,0,0,.4);transition:opacity .14s ease,background .14s ease;z-index:6}
-.block:hover .boxdel,.block.sel .boxdel{opacity:.92;pointer-events:auto}
+.block .cornerzone{position:absolute;top:-20px;right:-20px;width:48px;height:48px;z-index:5}
+.block .cornerzone:hover ~ .boxdel,.boxdel:hover,.boxdel:focus-visible{opacity:.94;pointer-events:auto}
 .boxdel:hover{background:#e04a3c;opacity:1}
 .delpage:hover{opacity:1;background:#e04a3c}
 .delpage:focus-visible{opacity:1;outline:2px solid #ffd0c8;outline-offset:2px}
@@ -477,6 +487,7 @@ body.hasbanner .stage{top:86px}
       <div class="topfade"></div>
       <div class="grain"></div>
       <div class="pagedate" id="pageDate" aria-hidden="true"></div>
+      <div class="nbname" id="pageNbName" aria-hidden="true"></div>
       <div class="canvas" id="canvas"></div>
     </div>
     <div class="flipzone" id="flipzone">
@@ -513,6 +524,7 @@ body.hasbanner .stage{top:86px}
         <button class="fcmat" data-mat="forest" title="Forest" style="background:linear-gradient(145deg,#2f4636,#16241a)"></button>
         <button class="fcmat" data-mat="grey" title="Grey" style="background:linear-gradient(145deg,#585a5f,#303236)"></button>
       </div>
+      <div class="nbname" id="coverNbName" aria-hidden="true"></div>
       </div>
       <div class="fc-face fc-back" aria-hidden="true"></div>
     </div>
@@ -1083,6 +1095,13 @@ function applyCover(){
 /* ================= front cover ================= */
 var coverClosed=false;
 var _skipCover=false; try{ _skipCover=/[?&]nocover=1/.test(location.search); }catch(e){}
+/* keep the bottom-right name badge in sync on the page and the cover */
+function paintNbName(){
+  var nb=activeNB(), t=(nb&&nb.title)||'';
+  var a=document.getElementById('pageNbName'), b=document.getElementById('coverNbName');
+  if(a) a.textContent=t;
+  if(b) b.textContent=t;
+}
 function paintFrontCover(){
   var nb=activeNB(), fc=document.getElementById('frontCover');
   if(!nb||!fc) return;
@@ -1091,6 +1110,7 @@ function paintFrontCover(){
   t.textContent=nb.title||'My Notebook';
   t.className='fc-title font-'+(nb.titleFont||'hand');
   t.style.color=nb.titleColor||'#f3ead2';
+  paintNbName();
   syncCoverBar();
 }
 function showCover(){
@@ -1109,10 +1129,9 @@ function openCover(){
   document.body.classList.remove('oncover');
   var fc=document.getElementById('frontCover');
   document.getElementById('fcTitle').blur();
-  /* land on the last day written on, and its last page, so you pick up where the
-     most recent note is rather than at the top of that day */
-  var ds=writtenDays();
-  cur=ds.length?ds[ds.length-1]:todayISO();
+  /* opening a notebook always lands on TODAY, which is where you write by
+     default. Use the date controls to go anywhere else. */
+  cur=todayISO();
   si=lastWrittenSheet(cur);
   updateDateUI(); render(false);
   function done(){ coverClosed=false; fc.style.display='none'; fc.classList.remove('opening'); fc.style.transform=''; }
@@ -1191,7 +1210,7 @@ function commitTitle(finalize){
   var name=(t.textContent||'').replace(/\s+/g,' ').trim().slice(0,60);
   if(finalize&&!name){ name='My Notebook'; t.textContent=name; }
   nb.title=name||'My Notebook'; nb.u=Date.now();
-  writeLocal(); applyCover(); refreshShelf();
+  writeLocal(); applyCover(); paintNbName(); refreshShelf();
 }
 var shelfOpen=false;
 function buildShelf(){
@@ -1211,6 +1230,8 @@ function refreshShelf(){
     h+='<div class="nbtile" data-id="'+id+'" role="button" tabindex="0">'+
          '<div class="nbcover'+cc+'">'+
            tileCoil()+
+           '<span class="nbname">'+esc(nb.title||'')+'</span>'+
+           '<span class="cornerzone" aria-hidden="true"></span>'+
            '<button class="nbdel" data-del="'+id+'" title="Delete notebook">&times;</button>'+
          '</div>'+
          '<div class="nbmeta">'+
@@ -1580,6 +1601,7 @@ function relayoutSoon(){
 /* ================= rendering ================= */
 function frameParts(){
   return '<div class="frame"></div>'+
+    '<span class="cornerzone" aria-hidden="true"></span>'+
     '<button class="boxdel" title="Delete this box" aria-label="Delete this box">&times;</button>'+
     '<div class="mv mv-t"></div><div class="mv mv-r"></div>'+
     '<div class="mv mv-b"></div><div class="mv mv-l"></div>'+
@@ -1658,6 +1680,7 @@ function render(keepFocus){
      the label via holdDate instead of stamping the destination date here */
   var pd=document.getElementById('pageDate');
   if(pd) pd.textContent=fmtLong(holdDate||cur);
+  paintNbName();
   var frag=document.createDocumentFragment(), bl=blocks();
   for(var i=0;i<bl.length;i++) frag.appendChild(renderBlock(bl[i]));
   canvas.innerHTML=''; canvas.appendChild(frag);
@@ -1959,8 +1982,10 @@ canvas.addEventListener('mousedown',function(e){
 });
 /* One pointer-drag loop for both moving and resizing: onMove gets the delta in
    page units, and the commit only fires if something actually moved. */
+var gesturing=false;   /* true while a move/resize drag is in progress */
 function dragLoop(e,onMove){
   var sx=e.clientX, sy=e.clientY, moved=false;
+  gesturing=true;
   function mv(ev){
     if(!moved){ pushUndo(); moved=true; }
     onMove((ev.clientX-sx)/scale,(ev.clientY-sy)/scale);
@@ -1968,6 +1993,7 @@ function dragLoop(e,onMove){
   function up(){
     document.removeEventListener('mousemove',mv);
     document.removeEventListener('mouseup',up);
+    gesturing=false;
     if(moved){ save(); layoutMarks(); }
   }
   document.addEventListener('mousemove',mv);
@@ -2036,8 +2062,12 @@ canvas.addEventListener('focusout',function(e){
   var id=blk.dataset.id;
   setTimeout(function(){
     var b=findBlock(id); if(!b||b.kind!=='text') return;
+    /* a resize/drag blurs the text, but the box is still very much in use, so
+       leave it alone or it disappears out from under the pointer */
+    if(gesturing) return;
     var el=canvas.querySelector('.block[data-id="'+id+'"]');
     if(el&&el.contains(document.activeElement)) return;
+    if(selId===id||blockSel===id) return;   /* still selected: keep it */
     for(var i=0;i<b.lines.length;i++) if(lineText(b.lines[i].html).trim()!=='') return;
     deleteBlock(id);
   },60);
