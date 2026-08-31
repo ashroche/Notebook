@@ -62,6 +62,7 @@ body{
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* ---------- fixed formatting bar ---------- */
+body.oncover .dock{display:none}
 .dock{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:150;
   display:flex;align-items:center;gap:3px;background:var(--chrome);
   border:1px solid #ffffff20;border-radius:11px;padding:6px 8px;
@@ -119,8 +120,7 @@ body{
   background:linear-gradient(160deg,#413a30,#26211b);
   box-shadow:0 12px 26px rgba(0,0,0,.5),0 3px 7px rgba(0,0,0,.4);overflow:hidden;
   display:flex;align-items:center;justify-content:center}
-.nbcover::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;
-  background:repeating-linear-gradient(#00000055 0 3px,transparent 3px 13px)}
+.nbcoil{position:absolute;left:0;top:0;width:34%;height:100%;pointer-events:none}
 .nbmono{font-family:'Caveat',cursive;font-size:58px;font-weight:700;color:#fff;opacity:.9;
   text-shadow:0 1px 3px rgba(0,0,0,.4);user-select:none}
 .nbdel{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;
@@ -133,7 +133,6 @@ body{
   overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .nbtitle[contenteditable]:focus{outline:none;background:#ffffff1a;border-radius:4px;padding:1px 4px;-webkit-line-clamp:none}
 .nbadd .nbcover{background:none;box-shadow:none;border:2px dashed #ffffff2e}
-.nbadd .nbcover::before{display:none}
 .nbadd .nbmono{font-size:44px;color:#ffffff44;font-weight:400}
 .nbcover.cover-kraft{background:linear-gradient(160deg,#4a4132,#2a231a)}
 .nbcover.cover-black{background:linear-gradient(150deg,#2a2c2f,#111214)}
@@ -172,8 +171,8 @@ body{
   text-transform:uppercase}
 .frontcover.opening .fc-hint,.frontcover.editing .fc-hint{opacity:0}
 .fc-bar{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);display:none;gap:5px;
-  align-items:center;padding:7px 9px;background:#1c1a17ee;border:1px solid #ffffff1f;border-radius:12px;
-  box-shadow:0 10px 26px rgba(0,0,0,.5);max-width:92%;flex-wrap:wrap;justify-content:center}
+  align-items:center;padding:7px 10px;background:#1c1a17ee;border:1px solid #ffffff1f;border-radius:12px;
+  box-shadow:0 10px 26px rgba(0,0,0,.5);white-space:nowrap}
 .frontcover .fc-bar{display:flex}
 .fcfont{width:34px;height:30px;font-size:16px;color:#e9e3d7;background:#ffffff10;border:1px solid #ffffff1a;
   border-radius:7px;cursor:pointer;line-height:1}
@@ -193,20 +192,25 @@ body{
 
 .page{position:absolute;z-index:3;left:26px;top:0;width:794px;height:1123px;background:var(--paper);
   border-radius:1px 3px 3px 1px;box-shadow:0 2px 5px rgba(0,0,0,.35);overflow:hidden}
+/* the day's date, handwritten, in the page's top-left corner */
+.pagedate{position:absolute;z-index:2;left:64px;top:26px;font-family:'Caveat',cursive;
+  font-size:27px;line-height:1;color:#6b5f4c;opacity:.72;pointer-events:none;transform:rotate(-1.5deg)}
 /* delete-page control: a red X near the page's top-right, under the closed cover */
-.delpage{position:absolute;z-index:4;top:16px;right:30px;width:30px;height:30px;border-radius:50%;
-  background:#c0392b;color:#fff;border:none;font-size:19px;line-height:1;cursor:pointer;opacity:0;
+.delpage{position:absolute;z-index:4;top:9px;right:12px;width:26px;height:26px;border-radius:50%;
+  background:#c0392b;color:#fff;border:none;font-size:16px;line-height:1;cursor:pointer;opacity:0;
   display:flex;align-items:center;justify-content:center;box-shadow:0 2px 7px rgba(0,0,0,.35);
   transition:opacity .18s ease,background .15s ease}
 .notebook:hover .delpage{opacity:.9}
 .delpage:hover{opacity:1;background:#e04a3c}
 .delpage:focus-visible{opacity:1;outline:2px solid #ffd0c8;outline-offset:2px}
-.page.tearing{animation:pagetear .55s cubic-bezier(.4,.05,.6,1) forwards;
-  clip-path:polygon(0 3%,5% 0,10% 4%,15% 1%,20% 5%,26% 1%,32% 4%,38% 0,44% 4%,50% 1%,56% 5%,62% 1%,68% 4%,74% 0,80% 4%,86% 1%,92% 5%,97% 1%,100% 3%,100% 100%,0 100%)}
+/* tear-away: the page rips down the left perforation (next to the coil), the freed
+   sheet swings off the binding from the top and falls away */
+.page.tearing{animation:pagetear .62s cubic-bezier(.36,.06,.7,1) forwards;transform-origin:top left;
+  clip-path:polygon(100% 0,100% 100%,2% 100%,5% 96%,2% 92%,5% 88%,2% 84%,5% 80%,2% 76%,5% 72%,2% 68%,5% 64%,2% 60%,5% 56%,2% 52%,5% 48%,2% 44%,5% 40%,2% 36%,5% 32%,2% 28%,5% 24%,2% 20%,5% 16%,2% 12%,5% 8%,2% 4%,5% 0)}
 @keyframes pagetear{
   0%{transform:translate(0,0) rotate(0deg);opacity:1}
-  12%{transform:translate(0,-8px) rotate(-1.5deg)}
-  100%{transform:translate(70px,-46px) rotate(7deg);opacity:0}
+  18%{transform:translate(5px,1px) rotate(2deg)}
+  100%{transform:translate(26px,150px) rotate(13deg);opacity:0}
 }
 .grain{position:absolute;inset:0;pointer-events:none;opacity:.06;mix-blend-mode:multiply;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='180' height='180' filter='url(%23n)'/></svg>")}
@@ -405,6 +409,9 @@ body.hasbanner .stage{top:86px}
     <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><rect x="2.5" y="3" width="4" height="14" rx="1" fill="currentColor"/><rect x="8" y="3" width="4" height="14" rx="1" fill="currentColor" opacity=".7"/><rect x="13.2" y="4.5" width="4" height="12.5" rx="1" fill="currentColor" opacity=".45" transform="rotate(9 15 10)"/></svg>
     <span id="shelfBtnName">Notebooks</span>
   </button>
+  <button id="coverBtn" class="nav" title="Back to this notebook's cover" aria-label="Back to cover">
+    <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><rect x="4.5" y="2.5" width="12" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><line x1="7.5" y1="2.5" x2="7.5" y2="17.5" stroke="currentColor" stroke-width="1.2"/></svg>
+  </button>
   <span class="sep"></span>
   <button class="nav" id="prevDay" title="Previous day (Alt+Left)">&lsaquo;</button>
   <span class="datewrap">
@@ -426,15 +433,6 @@ body.hasbanner .stage{top:86px}
   <span class="sep"></span>
   <button id="carry" title="Bring unfinished items forward from your last written day">Carry Forward</button>
   <span class="spacer"></span>
-  <select id="coverSel" title="Notebook cover" aria-label="Notebook cover">
-    <option value="cardboard">Cardboard</option>
-    <option value="kraft">Kraft</option>
-    <option value="black">Black</option>
-    <option value="navy">Navy</option>
-    <option value="red">Red</option>
-    <option value="forest">Forest</option>
-    <option value="grey">Grey</option>
-  </select>
   <button id="zoomBtn" title="Fit to window, or true A4 size">Fit</button>
   <button id="syncBtn" title="Cloud sync"><span class="sdot" id="sdot"></span><span id="slabel">Sync off</span></button>
   <span class="sep"></span>
@@ -451,6 +449,7 @@ body.hasbanner .stage{top:86px}
       <div class="topfade"></div>
       <div class="grain"></div>
       <div class="holes" id="holes"></div>
+      <div class="pagedate" id="pageDate" aria-hidden="true"></div>
       <div class="canvas" id="canvas"><div class="hint" id="hint">double-click anywhere to write</div></div>
     </div>
     <div class="flipzone" id="flipzone">
@@ -1038,15 +1037,9 @@ var cover='cardboard';
 function applyCover(){
   var el=document.getElementById('cover');
   el.className='cover'+(cover==='cardboard'?'':' cover-'+cover);
-  var sel=document.getElementById('coverSel'); if(sel) sel.value=cover;
   var bn=document.getElementById('shelfBtnName');
   if(bn){ var nb=activeNB(); bn.textContent=(nb&&nb.title)||'Notebooks'; }
 }
-function monogram(title){
-  var t=(title||'').trim();
-  return t?t.charAt(0).toUpperCase():'?';
-}
-
 /* ================= front cover ================= */
 var coverClosed=false;
 var _skipCover=false; try{ _skipCover=/[?&]nocover=1/.test(location.search); }catch(e){}
@@ -1062,6 +1055,7 @@ function paintFrontCover(){
 }
 function showCover(){
   coverClosed=true;
+  document.body.classList.add('oncover');
   var fc=document.getElementById('frontCover');
   /* the open flip uses fill:forwards, so its final rotate persists. Cancel it or
      the re-shown cover stays rotated off to the left. */
@@ -1072,6 +1066,7 @@ function showCover(){
 }
 function openCover(){
   if(!coverClosed) return;
+  document.body.classList.remove('oncover');
   var fc=document.getElementById('frontCover');
   document.getElementById('fcTitle').blur();
   /* land on the last day written on, and its last page, so you pick up where the
@@ -1154,7 +1149,17 @@ function commitTitle(finalize){
 var shelfOpen=false;
 function buildShelf(){
   document.getElementById('shelfBtn').onclick=openShelf;
+  document.getElementById('coverBtn').onclick=function(){ if(!coverClosed) showCover(); };
   refreshShelf();
+}
+/* a small spiral coil for the shelf tiles, so each reads as a real notebook */
+function tileCoil(){
+  var s='';
+  for(var y=13;y<180;y+=15.2){
+    s+='<path d="M5 '+(y+3).toFixed(1)+' C6 '+(y-4).toFixed(1)+' 33 '+(y-5).toFixed(1)+' 39 '+(y+2).toFixed(1)+'" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="3.6" stroke-linecap="round"/>';
+    s+='<path d="M5 '+y.toFixed(1)+' C6 '+(y-7).toFixed(1)+' 33 '+(y-8).toFixed(1)+' 39 '+(y-1).toFixed(1)+'" fill="none" stroke="#ece9e3" stroke-width="2.7" stroke-linecap="round"/>';
+  }
+  return '<svg class="nbcoil" viewBox="0 0 132 183" preserveAspectRatio="none" aria-hidden="true">'+s+'</svg>';
 }
 function refreshShelf(){
   var grid=document.getElementById('shelfGrid'); if(!grid) return;
@@ -1164,7 +1169,7 @@ function refreshShelf(){
     var cc=(nb.cover&&nb.cover!=='cardboard')?(' cover-'+nb.cover):'';
     h+='<div class="nbtile" data-id="'+id+'" role="button" tabindex="0">'+
          '<div class="nbcover'+cc+'">'+
-           '<span class="nbmono">'+esc(monogram(nb.title))+'</span>'+
+           tileCoil()+
            (NB.order.length>1?'<button class="nbdel" data-del="'+id+'" title="Delete notebook">&times;</button>':'')+
          '</div>'+
          '<div class="nbmeta">'+
@@ -1583,6 +1588,7 @@ function focusRef(){
 function render(keepFocus){
   var f=(keepFocus===false)?null:focusRef();
   applyPaper();
+  var pd=document.getElementById('pageDate'); if(pd) pd.textContent=fmtLong(cur);
   var frag=document.createDocumentFragment(), bl=blocks();
   for(var i=0;i<bl.length;i++) frag.appendChild(renderBlock(bl[i]));
   canvas.innerHTML=''; canvas.appendChild(hint); canvas.appendChild(frag);
@@ -2535,9 +2541,6 @@ document.getElementById('zoomBtn').onclick=function(){  zoom=(zoom==='fit')?'ful
   try{ localStorage.setItem(K_ZOOM,zoom); }catch(e){}
   fit(); if(zoom==='full') stage.scrollTop=0;
 };
-document.getElementById('coverSel').addEventListener('change',function(){
-  setCover(this.value);
-});
 /* single place to change a notebook's cover, so every control stays in sync */
 function setCover(val){
   cover=val;
