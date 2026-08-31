@@ -111,6 +111,7 @@ body.oncover .dock{display:none}
 .shelf{position:fixed;inset:0;z-index:400;background:radial-gradient(120% 90% at 50% 0%,#20201d,#141412 70%);
   display:none;flex-direction:column;opacity:0;transition:opacity .28s ease}
 .shelf.on{display:flex;opacity:1}
+.shelf.morphing{opacity:0;transition:opacity .26s ease}
 .shelf.morphing .shelf-head,.shelf.morphing .shelf-grid{opacity:0;transition:opacity .12s ease}
 .shelf-head{display:flex;align-items:center;justify-content:space-between;padding:20px 28px 10px;flex:0 0 auto}
 .shelf-head h1{font-family:'Caveat',cursive;font-size:30px;color:#efe9df;font-weight:700;letter-spacing:.5px}
@@ -122,16 +123,16 @@ body.oncover .dock{display:none}
   background:linear-gradient(160deg,#413a30,#26211b);
   box-shadow:0 12px 26px rgba(0,0,0,.5),0 3px 7px rgba(0,0,0,.4);overflow:hidden;
   display:flex;align-items:center;justify-content:center}
-.nbcoil{position:absolute;left:2px;top:6px;bottom:6px;width:44px;pointer-events:none;
-  background-repeat:repeat-y;background-position:left top;background-size:44px 16px;
-  background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='44' height='16'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23ffffff'/><stop offset='0.5' stop-color='%23cbc8c1'/><stop offset='1' stop-color='%237e7c76'/></linearGradient></defs><path d='M3 13.5 C5 4 32 3 39 12.5' fill='none' stroke='%23000000' stroke-opacity='0.30' stroke-width='3.6' stroke-linecap='round'/><path d='M3 11 C5 1.5 32 0.5 39 10' fill='none' stroke='url(%23g)' stroke-width='2.9' stroke-linecap='round'/></svg>")}
+.nbcoil{position:absolute;left:1px;top:4px;bottom:4px;width:19px;pointer-events:none;
+  background-repeat:repeat-y;background-position:left top;background-size:19px 6.2px;
+  background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='19' height='6.2'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23fdfdfc'/><stop offset='0.28' stop-color='%23dedcd7'/><stop offset='0.62' stop-color='%23a4a29c'/><stop offset='1' stop-color='%236d6b66'/></linearGradient></defs><path d='M2.2 5.4 C3 1.5 15 1.2 17.2 4.6' fill='none' stroke='%23000000' stroke-opacity='0.34' stroke-width='2.1' stroke-linecap='round'/><path d='M2.2 4.3 C3 0.5 15 0.2 17.2 3.5' fill='none' stroke='url(%23g)' stroke-width='1.7' stroke-linecap='round'/></svg>")}
 .nbmono{font-family:'Caveat',cursive;font-size:58px;font-weight:700;color:#fff;opacity:.9;
   text-shadow:0 1px 3px rgba(0,0,0,.4);user-select:none}
 .nbdel{position:absolute;top:7px;right:7px;width:24px;height:24px;border-radius:50%;
   background:#000000073;color:#fff;border:none;cursor:pointer;font-size:15px;line-height:1;
-  display:flex;align-items:center;justify-content:center;opacity:.72;
+  display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;
   transition:opacity .15s ease,background .15s ease}
-.nbtile:hover .nbdel{opacity:1}
+.nbtile:hover .nbdel,.nbdel:focus-visible{opacity:1;pointer-events:auto}
 .nbdel:hover{background:#c0392b;opacity:1}
 .nbdel:hover{background:#c0392b}
 .nbmeta{margin-top:9px;text-align:center;width:100%}
@@ -236,7 +237,7 @@ body.oncover .dock{display:none}
 .topfade{position:absolute;left:0;right:0;top:0;height:26px;pointer-events:none;
   background:linear-gradient(rgba(74,56,30,.10),transparent)}
 
-.holes{position:absolute;left:0;top:0;bottom:0;width:100px;pointer-events:none;z-index:3}
+.holes{position:absolute;left:0;top:0;bottom:0;width:100px;pointer-events:none;z-index:7}
 .hole{position:absolute;left:34px;width:14px;height:14px;border-radius:50%;
   background:radial-gradient(circle at 50% 30%, #35302a, #17140f 70%);
   box-shadow:inset 0 2px 3px rgba(0,0,0,.85), 0 1px 0 rgba(255,255,255,.6)}
@@ -710,8 +711,12 @@ function activeNB(){ return NB.notebooks[NB.active]; }
 /* point pages/tombs/cover at the active notebook after a switch or load */
 function bindActive(){
   var nb=activeNB();
-  if(!nb){ NB.active=NB.order[0]||''; nb=activeNB(); }
-  if(!nb){ createNotebook('My Notebook','cardboard'); nb=activeNB(); }
+  if(!nb){ NB.active=NB.order[0]||null; nb=activeNB(); }
+  if(!nb){
+    /* empty shelf: nothing to bind to. Keep safe empty structures so any stray
+       read does not throw; the shelf is shown until a notebook is created. */
+    pages={}; tombs={}; cover='cardboard'; return;
+  }
   pages=nb.pages; tombs=nb.tomb; cover=nb.cover||'cardboard';
 }
 function docObj(){
@@ -870,7 +875,13 @@ function deleteNotebook(id){
   var i=NB.order.indexOf(id); if(i>=0) NB.order.splice(i,1);
   NB.nbTomb[id]=Date.now();
   if(NB.active===id){
-    if(!NB.order.length) createNotebook('My Notebook','cardboard');
+    if(!NB.order.length){
+      /* an empty shelf is a valid state: no notebook is active until you make one */
+      NB.active=null;
+      writeLocal(); refreshShelf();
+      if(!shelfOpen) landOnShelf();
+      return;
+    }
     NB.active=NB.order[0];
     bindActive();
     cur=todayISO(); si=0; selId=null; lastLine=null; clearBlockSel();
@@ -1173,7 +1184,7 @@ function commitTitle(finalize){
 var shelfOpen=false;
 function buildShelf(){
   document.getElementById('shelfBtn').onclick=openShelf;
-  document.getElementById('coverBtn').onclick=function(){ if(!coverClosed) showCover(); };
+  document.getElementById('coverBtn').onclick=function(){ if(!coverClosed&&activeNB()) showCover(); };
   refreshShelf();
 }
 /* a clean spiral coil for the shelf tiles: one silver wire loop repeated down the
@@ -1220,6 +1231,7 @@ function landOnShelf(){
   document.getElementById('stage').classList.add('shrinking');
 }
 function closeShelf(id){
+  if(!NB.order.length) return;        /* empty shelf: nothing to open into */
   var sh=document.getElementById('shelf'), st=document.getElementById('stage');
   var tileEl=id?sh.querySelector('.nbtile[data-id="'+id+'"] .nbcover'):null;
   var from=tileEl?tileEl.getBoundingClientRect():null;
@@ -1241,7 +1253,7 @@ function closeShelf(id){
     var a=fc.animate([
       {transform:'translate('+dx.toFixed(1)+'px,'+dy.toFixed(1)+'px) scale('+sx.toFixed(3)+','+sy.toFixed(3)+')'},
       {transform:'none'}
-    ],{duration:420,easing:'cubic-bezier(.4,.7,.25,1)'});
+    ],{duration:300,easing:'cubic-bezier(.16,.84,.32,1)'});
     a.onfinish=function(){
       fc.style.transformOrigin=''; fc.style.transform=''; fc.style.zIndex='';
       sh.classList.remove('on','morphing'); sh.setAttribute('aria-hidden','true');
@@ -2448,10 +2460,17 @@ function turnTo(dir,commit){
   var backEl=document.getElementById('lfBack');
 
   var fromSheet=sheet();
+  var fromDate=cur;                   /* the date the leaving page is labelled with */
   turning=true;
   commit();
   var toSheet=sheet();
   afterNav();
+  /* Hide the page's date for the duration of the turn. The static page under the
+     leaf has already re-rendered to the destination date, so leaving it visible
+     means you watch the old sheet relabel itself before it turns. It comes back
+     in endTurn once the correct page is actually settled. */
+  var pdEl=document.getElementById('pageDate');
+  if(pdEl&&fromDate!==cur) pdEl.style.visibility='hidden';
 
   /* The page you SEE turning is the leaving page (forward) or the arriving page
      (backward). It hinges on the spine (left edge) and swings a full 180 while
@@ -2498,6 +2517,9 @@ function endTurn(){
   try{ leaf.getAnimations().forEach(function(a){a.cancel();}); }catch(e){}
   leaf.style.transform='';
   turning=false;
+  /* the turn has landed: show the settled page's own date again */
+  var pd=document.getElementById('pageDate');
+  if(pd){ pd.textContent=fmtLong(cur); pd.style.visibility=''; }
 }
 function afterNav(){
   selId=null; lastLine=null; clearBlockSel();
