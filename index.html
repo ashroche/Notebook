@@ -111,7 +111,9 @@ body.oncover .dock{display:none}
 .shelf{position:fixed;inset:0;z-index:400;background:radial-gradient(120% 90% at 50% 0%,#20201d,#141412 70%);
   display:none;flex-direction:column;opacity:0;transition:opacity .28s ease}
 .shelf.on{display:flex;opacity:1}
-.shelf.morphing{opacity:0;transition:opacity .26s ease}
+/* during the expand the backdrop stays fully opaque so the page can never be seen
+   around the still-small cover; only the tiles fade out */
+.shelf.morphing{opacity:1}
 .shelf.morphing .shelf-head,.shelf.morphing .shelf-grid{opacity:0;transition:opacity .12s ease}
 .shelf-head{display:flex;align-items:center;justify-content:space-between;padding:20px 28px 10px;flex:0 0 auto}
 .shelf-head h1{font-family:'Caveat',cursive;font-size:30px;color:#efe9df;font-weight:700;letter-spacing:.5px}
@@ -2417,9 +2419,17 @@ document.getElementById('tbDel').onclick=function(){
 /* ================= navigation & page turn ================= */
 /* Paints a static, non-interactive snapshot of a sheet into a leaf face:
    its paper colour on the face, its blocks and marks inside the clone layer. */
-function snapshotInto(faceEl,cloneEl,sh){
+function snapshotInto(faceEl,cloneEl,sh,dateISO){
   faceEl.style.background=paperColor((sh&&sh.paper)||'cream');
   cloneEl.innerHTML='';
+  /* the turning page carries its OWN date, so the label never blanks mid-turn */
+  if(dateISO){
+    var dl=document.createElement('div');
+    dl.className='pagedate';
+    dl.style.cssText='left:64px;top:26px';
+    dl.textContent=fmtLong(dateISO);
+    cloneEl.appendChild(dl);
+  }
   var pad=document.createElement('div');
   pad.style.cssText='position:absolute;left:80px;top:30px;right:26px;bottom:28px';
   var bl=(sh&&sh.blocks)||[];
@@ -2465,12 +2475,10 @@ function turnTo(dir,commit){
   commit();
   var toSheet=sheet();
   afterNav();
-  /* Hide the page's date for the duration of the turn. The static page under the
-     leaf has already re-rendered to the destination date, so leaving it visible
-     means you watch the old sheet relabel itself before it turns. It comes back
-     in endTurn once the correct page is actually settled. */
-  var pdEl=document.getElementById('pageDate');
-  if(pdEl&&fromDate!==cur) pdEl.style.visibility='hidden';
+  /* Both layers keep a correct, visible date: the leaf shows the date of the page
+     that is turning, the settled page underneath already shows its own. Nothing
+     blanks and nothing relabels itself mid-flight. */
+  var shownDate=(dir>0)?fromDate:cur;
 
   /* The page you SEE turning is the leaving page (forward) or the arriving page
      (backward). It hinges on the spine (left edge) and swings a full 180 while
@@ -2478,7 +2486,7 @@ function turnTo(dir,commit){
      Front face carries the content; the back is blank paper in that page's
      colour, so nothing can appear mirrored. */
   var shown=(dir>0)?fromSheet:toSheet;
-  snapshotInto(lfFront,frontClone,shown);
+  snapshotInto(lfFront,frontClone,shown,shownDate);
   backEl.style.background=paperColor((shown&&shown.paper)||'cream');
   zone.classList.add('on');
 
@@ -2517,7 +2525,6 @@ function endTurn(){
   try{ leaf.getAnimations().forEach(function(a){a.cancel();}); }catch(e){}
   leaf.style.transform='';
   turning=false;
-  /* the turn has landed: show the settled page's own date again */
   var pd=document.getElementById('pageDate');
   if(pd){ pd.textContent=fmtLong(cur); pd.style.visibility=''; }
 }
