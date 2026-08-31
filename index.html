@@ -134,9 +134,11 @@ body.oncover .dock{display:none}
   background:#000000073;color:#fff;border:none;cursor:pointer;font-size:15px;line-height:1;
   display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;
   transition:opacity .15s ease,background .15s ease}
-.nbtile:hover .nbdel,.nbdel:focus-visible{opacity:1;pointer-events:auto}
-.nbdel:hover{background:#c0392b;opacity:1}
-.nbdel:hover{background:#c0392b}
+/* hidden until you hover the tile, then it fades in at the top-right corner and
+   becomes clickable. Its hit area is padded out so it is easy to catch. */
+.nbtile:hover .nbdel,.nbdel:focus-visible{opacity:.92;pointer-events:auto}
+.nbdel::before{content:'';position:absolute;top:-9px;right:-9px;width:46px;height:46px}
+.nbdel:hover{opacity:1;background:#c0392b}
 .nbmeta{margin-top:9px;text-align:center;width:100%}
 .nbtitle{font-size:13.5px;color:#efe9df;font-weight:600;line-height:1.25;
   overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
@@ -216,11 +218,19 @@ body.oncover .dock{display:none}
   text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:5px;
   text-decoration-color:#6b5f4c99}
 /* delete-page control: a red X near the page's top-right, under the closed cover */
-.delpage{position:absolute;z-index:4;top:9px;right:12px;width:26px;height:26px;border-radius:50%;
+.delpage{position:absolute;z-index:8;top:12px;right:12px;width:26px;height:26px;border-radius:50%;
   background:#c0392b;color:#fff;border:none;font-size:16px;line-height:1;cursor:pointer;opacity:0;
   display:flex;align-items:center;justify-content:center;box-shadow:0 2px 7px rgba(0,0,0,.35);
-  transition:opacity .18s ease,background .15s ease}
-.notebook:hover .delpage{opacity:.9}
+  pointer-events:none;transition:opacity .16s ease,background .15s ease}
+/* only reveal it when the pointer is actually up in the page's top-right corner */
+.delpage.near{opacity:.92;pointer-events:auto}
+/* per-box delete: a red X at the box's own top-right corner, on hover/selection */
+.boxdel{position:absolute;top:-11px;right:-11px;width:22px;height:22px;border-radius:50%;
+  background:#c0392b;color:#fff;border:none;font-size:14px;line-height:1;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;
+  box-shadow:0 2px 6px rgba(0,0,0,.4);transition:opacity .14s ease,background .14s ease;z-index:6}
+.block:hover .boxdel,.block.sel .boxdel{opacity:.92;pointer-events:auto}
+.boxdel:hover{background:#e04a3c;opacity:1}
 .delpage:hover{opacity:1;background:#e04a3c}
 .delpage:focus-visible{opacity:1;outline:2px solid #ffd0c8;outline-offset:2px}
 /* tear-away: the page rips down the left perforation (next to the coil), the freed
@@ -239,7 +249,7 @@ body.oncover .dock{display:none}
 .topfade{position:absolute;left:0;right:0;top:0;height:26px;pointer-events:none;
   background:linear-gradient(rgba(74,56,30,.10),transparent)}
 
-.holes{position:absolute;left:0;top:0;bottom:0;width:100px;pointer-events:none;z-index:7}
+.holes{position:absolute;left:26px;top:0;bottom:0;width:100px;pointer-events:none;z-index:7}
 .hole{position:absolute;left:34px;width:14px;height:14px;border-radius:50%;
   background:radial-gradient(circle at 50% 30%, #35302a, #17140f 70%);
   box-shadow:inset 0 2px 3px rgba(0,0,0,.85), 0 1px 0 rgba(255,255,255,.6)}
@@ -466,7 +476,6 @@ body.hasbanner .stage{top:86px}
       <div class="gutter"></div>
       <div class="topfade"></div>
       <div class="grain"></div>
-      <div class="holes" id="holes"></div>
       <div class="pagedate" id="pageDate" aria-hidden="true"></div>
       <div class="canvas" id="canvas"></div>
     </div>
@@ -507,6 +516,7 @@ body.hasbanner .stage{top:86px}
       </div>
       <div class="fc-face fc-back" aria-hidden="true"></div>
     </div>
+    <div class="holes" id="holes"></div>
     <svg class="spiral" id="spiral" viewBox="0 0 818 1123" aria-hidden="true"></svg>
   </div>
 </div>
@@ -540,7 +550,6 @@ body.hasbanner .stage{top:86px}
   <span class="sep"></span>
   <span class="swatches" id="swatches"></span>
   <span class="sep"></span>
-  <button id="tbDel" class="danger" title="Delete the selected box (Delete)">Delete Box</button>
 </div>
 
 <div class="modal" id="modal">
@@ -628,6 +637,7 @@ var pages={}, tombs={}, cur=todayISO(), si=0;
 var selId=null, zTop=1, scale=1, zoom='fit';
 var typing=false, typingT=null, composing=false;
 var lastLine=null, animSet={}, animT=null, lastEdit=0, turning=false;
+var holdDate=null;   /* date to keep on the static page while a turn is running */
 var dropPoint={x:40,y:40};
 
 /* ================= helpers ================= */
@@ -1570,6 +1580,7 @@ function relayoutSoon(){
 /* ================= rendering ================= */
 function frameParts(){
   return '<div class="frame"></div>'+
+    '<button class="boxdel" title="Delete this box" aria-label="Delete this box">&times;</button>'+
     '<div class="mv mv-t"></div><div class="mv mv-r"></div>'+
     '<div class="mv mv-b"></div><div class="mv mv-l"></div>'+
     '<div class="hd hd-nw" data-d="nw"></div><div class="hd hd-n" data-d="n"></div>'+
@@ -1643,7 +1654,10 @@ function focusRef(){
 function render(keepFocus){
   var f=(keepFocus===false)?null:focusRef();
   applyPaper();
-  var pd=document.getElementById('pageDate'); if(pd) pd.textContent=fmtLong(cur);
+  /* while a turn runs the visible static page is NOT `cur`, so let the turn own
+     the label via holdDate instead of stamping the destination date here */
+  var pd=document.getElementById('pageDate');
+  if(pd) pd.textContent=fmtLong(holdDate||cur);
   var frag=document.createDocumentFragment(), bl=blocks();
   for(var i=0;i<bl.length;i++) frag.appendChild(renderBlock(bl[i]));
   canvas.innerHTML=''; canvas.appendChild(frag);
@@ -1853,7 +1867,6 @@ function updateDock(){
   var isText=!!(b&&b.kind==='text');
   var ids=['tbFont','tbMinus','tbPlus','tbB','tbI','tbU','tbL'];
   for(var i=0;i<ids.length;i++) document.getElementById(ids[i]).disabled=!isText;
-  document.getElementById('tbDel').disabled=!b;
   if(isText){
     document.getElementById('tbFont').value=b.font;
     document.getElementById('tbSize').textContent=b.size;
@@ -1881,6 +1894,14 @@ canvas.addEventListener('dblclick',function(e){
   }
 });
 canvas.addEventListener('mousedown',function(e){
+  var bd=e.target.closest?e.target.closest('.boxdel'):null;
+  if(bd){
+    e.preventDefault(); e.stopPropagation();
+    var host=bd.closest('.block'); if(!host) return;
+    var fxd=focusedTx(); if(fxd) fxd.blur();
+    pushUndo(); deleteBlock(host.dataset.id);
+    return;
+  }
   if(e.target===canvas){
     /* A click in the halo just outside a box should SELECT that box (so it can be
        moved or deleted), not deselect everything. Only a click well clear of any
@@ -2393,9 +2414,6 @@ document.getElementById('tbL').onclick=function(){
   else toggleAllBullets(b);
   save(); render(); updateDock();
 };
-document.getElementById('tbDel').onclick=function(){
-  if(!selId) return; pushUndo(); deleteBlock(selId);
-};
 /* ink colour: a small popover of swatches; a mousedown-based apply so the text
    selection is not lost to a focus change before we read it */
 (function(){
@@ -2478,7 +2496,14 @@ function turnTo(dir,commit){
   /* Both layers keep a correct, visible date: the leaf shows the date of the page
      that is turning, the settled page underneath already shows its own. Nothing
      blanks and nothing relabels itself mid-flight. */
+  /* forward: the leaf is the LEAVING page (fromDate); the static page underneath
+     is the destination (cur).
+     backward: the leaf is the ARRIVING page (cur); the static page underneath is
+     still the page we are leaving (fromDate), so hold that date on it. */
   var shownDate=(dir>0)?fromDate:cur;
+  holdDate=(dir>0)?null:fromDate;
+  var pdStatic=document.getElementById('pageDate');
+  if(pdStatic) pdStatic.textContent=fmtLong(holdDate||cur);
 
   /* The page you SEE turning is the leaving page (forward) or the arriving page
      (backward). It hinges on the spine (left edge) and swings a full 180 while
@@ -2525,6 +2550,7 @@ function endTurn(){
   try{ leaf.getAnimations().forEach(function(a){a.cancel();}); }catch(e){}
   leaf.style.transform='';
   turning=false;
+  holdDate=null;
   var pd=document.getElementById('pageDate');
   if(pd){ pd.textContent=fmtLong(cur); pd.style.visibility=''; }
 }
@@ -2599,6 +2625,19 @@ document.getElementById('addPage').onclick=function(){
   if(coverClosed){ openCoverTo(function(){ si=n; save(); }); return; }
   turnTo(1,function(){ si=n; save(); });
 };
+/* the page's delete X only appears when the pointer is up in the page's own
+   top-right corner, so it is never sitting there while you write */
+(function(){
+  var btn=document.getElementById('delPage');
+  document.addEventListener('mousemove',function(e){
+    if(coverClosed||shelfOpen){ btn.classList.remove('near'); return; }
+    var pr=document.getElementById('page').getBoundingClientRect();
+    if(!pr.width){ btn.classList.remove('near'); return; }
+    var near=(e.clientX > pr.right-130) && (e.clientX < pr.right+30) &&
+             (e.clientY > pr.top-30)   && (e.clientY < pr.top+120);
+    btn.classList.toggle('near',near);
+  });
+})();
 document.getElementById('delPage').onclick=function(){
   if(turning||coverClosed) return;
   var s=sheets();
