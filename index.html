@@ -156,20 +156,24 @@ body.oncover .dock{display:none}
   border-radius:3px 9px 9px 3px;cursor:pointer;transform-origin:left center;
   transform-style:preserve-3d;display:none}
 .fc-face{position:absolute;inset:0;border-radius:inherit;backface-visibility:hidden;overflow:hidden}
+/* both faces are the SAME cover material: the back of a real notebook cover is
+   just the reverse of the same plastic-coated board, not a pale liner */
+.fc-face{background:linear-gradient(150deg,#4a4234,#2b241c)}
+.frontcover.cover-kraft .fc-face{background:linear-gradient(150deg,#4a4132,#2a231a)}
+.frontcover.cover-black .fc-face{background:linear-gradient(145deg,#2c2e31,#111214)}
+.frontcover.cover-navy .fc-face{background:linear-gradient(145deg,#28374f,#141b28)}
+.frontcover.cover-red .fc-face{background:linear-gradient(145deg,#5f2d29,#331715)}
+.frontcover.cover-forest .fc-face{background:linear-gradient(145deg,#2f4636,#16241a)}
+.frontcover.cover-grey .fc-face{background:linear-gradient(145deg,#585a5f,#303236)}
 .fc-front{display:flex;align-items:center;justify-content:center;
-  background:linear-gradient(150deg,#4a4234,#2b241c);
   box-shadow:0 20px 50px rgba(0,0,0,.5),inset 0 0 60px rgba(0,0,0,.28),inset 3px 0 0 rgba(0,0,0,.35)}
-.frontcover.cover-kraft .fc-front{background:linear-gradient(150deg,#4a4132,#2a231a)}
-.frontcover.cover-black .fc-front{background:linear-gradient(145deg,#2c2e31,#111214)}
-.frontcover.cover-navy .fc-front{background:linear-gradient(145deg,#28374f,#141b28)}
-.frontcover.cover-red .fc-front{background:linear-gradient(145deg,#5f2d29,#331715)}
-.frontcover.cover-forest .fc-front{background:linear-gradient(145deg,#2f4636,#16241a)}
-.frontcover.cover-grey .fc-front{background:linear-gradient(145deg,#585a5f,#303236)}
 .fc-front::after{content:'';position:absolute;left:20px;top:0;bottom:0;width:2px;
   background:repeating-linear-gradient(rgba(0,0,0,.35) 0 4px,transparent 4px 20px)}
+/* the reverse side: same material, slight sheen so it reads as the back of the board */
 .fc-back{transform:rotateY(180deg);
-  background:linear-gradient(120deg,#efe7d6,#d8cdb6);
-  box-shadow:inset 0 0 80px rgba(0,0,0,.12),inset -4px 0 0 rgba(0,0,0,.16)}
+  box-shadow:inset 0 0 90px rgba(0,0,0,.30),inset 4px 0 0 rgba(0,0,0,.28)}
+.fc-back::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(255deg,rgba(255,255,255,.10),rgba(255,255,255,0) 45%)}
 .fc-inner{display:flex;flex-direction:column;align-items:center;gap:22px;padding:0 60px;text-align:center}
 .fc-title{font-family:'Caveat',cursive;font-size:64px;line-height:1.15;color:#f3ead2;font-weight:700;
   outline:none;min-width:60px;max-width:640px;text-shadow:0 1px 4px rgba(0,0,0,.35);
@@ -1218,35 +1222,30 @@ function landOnShelf(){
 function closeShelf(id){
   var sh=document.getElementById('shelf'), st=document.getElementById('stage');
   var tileEl=id?sh.querySelector('.nbtile[data-id="'+id+'"] .nbcover'):null;
+  var from=tileEl?tileEl.getBoundingClientRect():null;
   if(id&&id!==NB.active) switchNotebook(id);
   if(!_skipCover) showCover();
   st.classList.remove('shrinking');
   var fc=document.getElementById('frontCover');
-  /* shared-element morph: clone the clicked tile and grow it into the cover's spot
-     while the dark shelf stays behind, so the page is never revealed mid-open */
-  if(tileEl&&!_skipCover&&!reduced()&&fc.animate){
-    var from=tileEl.getBoundingClientRect(), to=fc.getBoundingClientRect();
-    var clone=tileEl.cloneNode(true);
-    clone.className='nbcover nbmorph'+(tileEl.className.replace('nbcover',''));
-    clone.style.cssText='position:fixed;margin:0;z-index:500;left:'+from.left+'px;top:'+from.top+
-      'px;width:'+from.width+'px;height:'+from.height+'px;border-radius:4px 8px 8px 4px;'+
-      'transition:left .42s cubic-bezier(.4,.7,.25,1),top .42s cubic-bezier(.4,.7,.25,1),'+
-      'width .42s cubic-bezier(.4,.7,.25,1),height .42s cubic-bezier(.4,.7,.25,1),border-radius .42s ease;';
-    clone.querySelectorAll('.nbdel').forEach(function(x){ x.remove(); });
-    document.body.appendChild(clone);
-    fc.style.visibility='hidden';           /* hold the real cover until the morph lands */
-    sh.classList.add('morphing');           /* keep the dark backdrop, hide the tiles */
+  /* grow the REAL cover from the clicked tile's spot. No cloned tile, so the
+     notebook's own spiral is what expands and nothing gets swapped mid-flight. */
+  if(from&&!_skipCover&&!reduced()&&fc.animate){
+    var to=fc.getBoundingClientRect();
+    var sx=from.width/to.width, sy=from.height/to.height;
+    var dx=(from.left+from.width/2)-(to.left+to.width/2);
+    var dy=(from.top+from.height/2)-(to.top+to.height/2);
+    sh.classList.add('morphing');          /* dark backdrop stays, tiles fade */
     shelfOpen=false;
-    requestAnimationFrame(function(){
-      clone.style.left=to.left+'px'; clone.style.top=to.top+'px';
-      clone.style.width=to.width+'px'; clone.style.height=to.height+'px';
-      clone.style.borderRadius='3px 9px 9px 3px';
-    });
-    setTimeout(function(){
-      fc.style.visibility='';
+    fc.style.transformOrigin='center center';
+    fc.style.zIndex='450';                 /* above the shelf backdrop while growing */
+    var a=fc.animate([
+      {transform:'translate('+dx.toFixed(1)+'px,'+dy.toFixed(1)+'px) scale('+sx.toFixed(3)+','+sy.toFixed(3)+')'},
+      {transform:'none'}
+    ],{duration:420,easing:'cubic-bezier(.4,.7,.25,1)'});
+    a.onfinish=function(){
+      fc.style.transformOrigin=''; fc.style.transform=''; fc.style.zIndex='';
       sh.classList.remove('on','morphing'); sh.setAttribute('aria-hidden','true');
-      if(clone.parentNode) clone.parentNode.removeChild(clone);
-    },430);
+    };
     return;
   }
   sh.classList.remove('on'); sh.setAttribute('aria-hidden','true'); shelfOpen=false;
@@ -2504,13 +2503,36 @@ function afterNav(){
   selId=null; lastLine=null; clearBlockSel();
   refreshUndo(); updateDateUI(); render(false);
 }
+/* if the notebook is closed, navigating by date or page opens it to that target
+   rather than silently changing state behind the cover */
+function openCoverTo(fn){
+  var fc=document.getElementById('frontCover');
+  coverClosed=false;
+  document.body.classList.remove('oncover');
+  document.getElementById('fcTitle').blur();
+  fn();
+  updateDateUI(); render(false);
+  function done(){ fc.style.display='none'; fc.classList.remove('opening'); fc.style.transform=''; }
+  if(reduced()||!fc.animate){ done(); return; }
+  fc.classList.add('opening');
+  var frames=[], N=26;
+  for(var i=0;i<=N;i++){
+    var t=i/N, ang=-180*t, lift=Math.sin(t*Math.PI)*30;
+    frames.push({transform:'translateZ('+lift.toFixed(1)+'px) rotateY('+ang.toFixed(1)+'deg)',offset:t});
+  }
+  var a=fc.animate(frames,{duration:780,easing:'cubic-bezier(.42,0,.4,1)',fill:'forwards'});
+  a.onfinish=done;
+}
 function goDate(iso){
   if(turning) return;
+  if(coverClosed){ openCoverTo(function(){ prune(); writeLocal(); cur=iso; si=0; }); return; }
   var dir=(iso>cur)?1:-1;
   turnTo(dir,function(){ prune(); writeLocal(); cur=iso; si=0; });
 }
 function goPage(n){
   if(turning) return;
+  if(coverClosed){ var sc=sheets(); if(n<0||n>=sc.length) return;
+    openCoverTo(function(){ si=n; }); return; }
   var s=sheets();
   if(n<0||n>=s.length) return;
   var dir=(n>si)?1:-1;
@@ -2545,6 +2567,7 @@ document.getElementById('addPage').onclick=function(){
   var s=sheets();
   s.push({id:uid(),blocks:[]});
   var n=s.length-1;
+  if(coverClosed){ openCoverTo(function(){ si=n; save(); }); return; }
   turnTo(1,function(){ si=n; save(); });
 };
 document.getElementById('delPage').onclick=function(){
@@ -2590,6 +2613,7 @@ function setCover(val){
 
 /* ================= carry forward ================= */
 document.getElementById('carry').onclick=function(){
+  if(coverClosed){ openCoverTo(function(){}); }   /* open the book before carrying */
   var dates=[];
   for(var d in pages){
     if(d>=cur) continue;
