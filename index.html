@@ -111,6 +111,7 @@ body.oncover .dock{display:none}
 .shelf{position:fixed;inset:0;z-index:400;background:radial-gradient(120% 90% at 50% 0%,#20201d,#141412 70%);
   display:none;flex-direction:column;opacity:0;transition:opacity .28s ease}
 .shelf.on{display:flex;opacity:1}
+.shelf.morphing .shelf-head,.shelf.morphing .shelf-grid{opacity:0;transition:opacity .12s ease}
 .shelf-head{display:flex;align-items:center;justify-content:space-between;padding:20px 28px 10px;flex:0 0 auto}
 .shelf-head h1{font-family:'Caveat',cursive;font-size:30px;color:#efe9df;font-weight:700;letter-spacing:.5px}
 .shelf-grid{flex:1 1 auto;overflow-y:auto;display:grid;gap:26px 24px;padding:16px 28px 40px;
@@ -121,13 +122,17 @@ body.oncover .dock{display:none}
   background:linear-gradient(160deg,#413a30,#26211b);
   box-shadow:0 12px 26px rgba(0,0,0,.5),0 3px 7px rgba(0,0,0,.4);overflow:hidden;
   display:flex;align-items:center;justify-content:center}
-.nbcoil{position:absolute;left:0;top:0;width:34%;height:100%;pointer-events:none}
+.nbcoil{position:absolute;left:2px;top:6px;bottom:6px;width:44px;pointer-events:none;
+  background-repeat:repeat-y;background-position:left top;background-size:44px 16px;
+  background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='44' height='16'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23ffffff'/><stop offset='0.5' stop-color='%23cbc8c1'/><stop offset='1' stop-color='%237e7c76'/></linearGradient></defs><path d='M3 13.5 C5 4 32 3 39 12.5' fill='none' stroke='%23000000' stroke-opacity='0.30' stroke-width='3.6' stroke-linecap='round'/><path d='M3 11 C5 1.5 32 0.5 39 10' fill='none' stroke='url(%23g)' stroke-width='2.9' stroke-linecap='round'/></svg>")}
 .nbmono{font-family:'Caveat',cursive;font-size:58px;font-weight:700;color:#fff;opacity:.9;
   text-shadow:0 1px 3px rgba(0,0,0,.4);user-select:none}
-.nbdel{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;
-  background:#00000055;color:#fff;border:none;cursor:pointer;font-size:14px;line-height:1;
-  display:none;align-items:center;justify-content:center}
-.nbtile:hover .nbdel{display:flex}
+.nbdel{position:absolute;top:7px;right:7px;width:24px;height:24px;border-radius:50%;
+  background:#000000073;color:#fff;border:none;cursor:pointer;font-size:15px;line-height:1;
+  display:flex;align-items:center;justify-content:center;opacity:.72;
+  transition:opacity .15s ease,background .15s ease}
+.nbtile:hover .nbdel{opacity:1}
+.nbdel:hover{background:#c0392b;opacity:1}
 .nbdel:hover{background:#c0392b}
 .nbmeta{margin-top:9px;text-align:center;width:100%}
 .nbtitle{font-size:13.5px;color:#efe9df;font-weight:600;line-height:1.25;
@@ -1167,20 +1172,9 @@ function buildShelf(){
   document.getElementById('coverBtn').onclick=function(){ if(!coverClosed) showCover(); };
   refreshShelf();
 }
-/* a small twin-loop wire coil for the shelf tiles, matching the real cover's binding */
-function tileCoil(){
-  var loops='', y, top=10, bot=176, gap=13.4;
-  var gid='tc'+(tileCoil._n=(tileCoil._n||0)+1);
-  var defs='<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1">'+
-    '<stop offset="0" stop-color="#ffffff"/><stop offset="0.28" stop-color="#e7e5df"/>'+
-    '<stop offset="0.6" stop-color="#b3b0a9"/><stop offset="1" stop-color="#8a8880"/></linearGradient></defs>';
-  for(y=top;y<=bot;y+=gap){
-    /* shadow of the wire on the cover, then the bright wire looping over the edge */
-    loops+='<path d="M2 '+(y+4).toFixed(1)+' C10 '+(y+5).toFixed(1)+' 34 '+(y+1).toFixed(1)+' 40 '+(y-6).toFixed(1)+'" fill="none" stroke="rgba(0,0,0,.34)" stroke-width="3.4" stroke-linecap="round"/>';
-    loops+='<path d="M2 '+(y+1).toFixed(1)+' C10 '+(y+2).toFixed(1)+' 34 '+(y-2).toFixed(1)+' 40 '+(y-9).toFixed(1)+'" fill="none" stroke="url(#'+gid+')" stroke-width="2.9" stroke-linecap="round"/>';
-  }
-  return '<svg class="nbcoil" viewBox="0 0 120 186" preserveAspectRatio="none" aria-hidden="true">'+defs+loops+'</svg>';
-}
+/* a clean spiral coil for the shelf tiles: one silver wire loop repeated down the
+   left edge, at a fixed size so it never stretches or curls into hooks */
+function tileCoil(){ return '<div class="nbcoil" aria-hidden="true"></div>'; }
 function refreshShelf(){
   var grid=document.getElementById('shelfGrid'); if(!grid) return;
   var h='';
@@ -1190,7 +1184,7 @@ function refreshShelf(){
     h+='<div class="nbtile" data-id="'+id+'" role="button" tabindex="0">'+
          '<div class="nbcover'+cc+'">'+
            tileCoil()+
-           (NB.order.length>1?'<button class="nbdel" data-del="'+id+'" title="Delete notebook">&times;</button>':'')+
+           '<button class="nbdel" data-del="'+id+'" title="Delete notebook">&times;</button>'+
          '</div>'+
          '<div class="nbmeta">'+
            '<div class="nbtitle" data-title="'+id+'">'+esc(nb.title||'Untitled')+'</div>'+
@@ -1223,30 +1217,41 @@ function landOnShelf(){
 }
 function closeShelf(id){
   var sh=document.getElementById('shelf'), st=document.getElementById('stage');
-  /* capture the clicked tile's on-screen box so the cover can grow out of it */
   var tileEl=id?sh.querySelector('.nbtile[data-id="'+id+'"] .nbcover'):null;
-  var fromRect=tileEl?tileEl.getBoundingClientRect():null;
-  sh.classList.remove('on'); sh.setAttribute('aria-hidden','true');
-  shelfOpen=false;
   if(id&&id!==NB.active) switchNotebook(id);
-  if(!_skipCover) showCover();     /* land on the chosen notebook's cover */
+  if(!_skipCover) showCover();
   st.classList.remove('shrinking');
   var fc=document.getElementById('frontCover');
-  if(fromRect&&!_skipCover&&!reduced()&&fc.animate){
-    var toRect=fc.getBoundingClientRect();
-    var sx=fromRect.width/toRect.width, sy=fromRect.height/toRect.height;
-    var dx=(fromRect.left+fromRect.width/2)-(toRect.left+toRect.width/2);
-    var dy=(fromRect.top+fromRect.height/2)-(toRect.top+toRect.height/2);
-    fc.style.transformOrigin='center center';
-    var a=fc.animate([
-      {transform:'translate('+dx.toFixed(1)+'px,'+dy.toFixed(1)+'px) scale('+sx.toFixed(3)+','+sy.toFixed(3)+')',opacity:0.55},
-      {transform:'none',opacity:1}
-    ],{duration:360,easing:'cubic-bezier(.2,.7,.25,1)'});
-    a.onfinish=function(){ fc.style.transformOrigin=''; fc.style.transform=''; };
-  } else {
-    st.classList.add('growing');
-    setTimeout(function(){ st.classList.remove('growing'); },320);
+  /* shared-element morph: clone the clicked tile and grow it into the cover's spot
+     while the dark shelf stays behind, so the page is never revealed mid-open */
+  if(tileEl&&!_skipCover&&!reduced()&&fc.animate){
+    var from=tileEl.getBoundingClientRect(), to=fc.getBoundingClientRect();
+    var clone=tileEl.cloneNode(true);
+    clone.className='nbcover nbmorph'+(tileEl.className.replace('nbcover',''));
+    clone.style.cssText='position:fixed;margin:0;z-index:500;left:'+from.left+'px;top:'+from.top+
+      'px;width:'+from.width+'px;height:'+from.height+'px;border-radius:4px 8px 8px 4px;'+
+      'transition:left .42s cubic-bezier(.4,.7,.25,1),top .42s cubic-bezier(.4,.7,.25,1),'+
+      'width .42s cubic-bezier(.4,.7,.25,1),height .42s cubic-bezier(.4,.7,.25,1),border-radius .42s ease;';
+    clone.querySelectorAll('.nbdel').forEach(function(x){ x.remove(); });
+    document.body.appendChild(clone);
+    fc.style.visibility='hidden';           /* hold the real cover until the morph lands */
+    sh.classList.add('morphing');           /* keep the dark backdrop, hide the tiles */
+    shelfOpen=false;
+    requestAnimationFrame(function(){
+      clone.style.left=to.left+'px'; clone.style.top=to.top+'px';
+      clone.style.width=to.width+'px'; clone.style.height=to.height+'px';
+      clone.style.borderRadius='3px 9px 9px 3px';
+    });
+    setTimeout(function(){
+      fc.style.visibility='';
+      sh.classList.remove('on','morphing'); sh.setAttribute('aria-hidden','true');
+      if(clone.parentNode) clone.parentNode.removeChild(clone);
+    },430);
+    return;
   }
+  sh.classList.remove('on'); sh.setAttribute('aria-hidden','true'); shelfOpen=false;
+  st.classList.add('growing');
+  setTimeout(function(){ st.classList.remove('growing'); },320);
 }
 /* shelf interactions */
 document.addEventListener('click',function(e){
