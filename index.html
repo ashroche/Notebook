@@ -41,12 +41,14 @@ body{
 .bar select:hover{background:#ffffff1c}
 .bar option{background:#26241f;color:#ded9d0}
 .nav{padding:6px 10px !important;font-size:15px !important}
-.datewrap{display:flex;align-items:center;gap:8px;padding:5px 10px;position:relative;cursor:pointer}
+.datewrap{display:flex;align-items:center;gap:8px;padding:5px 10px;position:relative;cursor:pointer;
+  border:1px solid transparent;transition:background .18s ease,border-color .18s ease}
+/* today is marked by filling the date box, which changes no layout at all */
+.datewrap.is-today{background:#b08d4726;border-color:#b08d4759}
 .datewrap input{font:inherit;font-size:13px;color:#f2eee6;background:transparent;border:0;padding:0;
   color-scheme:dark;cursor:pointer}
 .datelabel{font-size:13px;color:#f2eee6;white-space:nowrap;
   display:inline-block;width:212px;text-align:center;overflow:hidden;text-overflow:ellipsis}
-.today-dot{width:6px;height:6px;border-radius:50%;background:var(--pen-red);flex:none}
 .hidden-date{position:absolute;inset:0;opacity:0;cursor:pointer}
 .pager{display:flex;align-items:center;gap:2px;padding:3px 4px;cursor:default}
 .pager button{border:0;background:transparent;padding:4px 7px;font-size:13px}
@@ -146,7 +148,7 @@ body.oncover .dock{display:none}
   text-transform:uppercase;color:#b08d47;opacity:.85;white-space:nowrap;
   text-shadow:0 1px 2px rgba(0,0,0,.45)}
 .page .nbname{font-size:11.5px;right:26px;bottom:20px;color:#a8842f;opacity:.7;text-shadow:none}
-.frontcover .nbname{font-size:13px;right:26px;bottom:22px}
+.frontcover .nbname{font-size:21px;right:30px;bottom:26px;letter-spacing:.2em;opacity:.9}
 .nbtile .nbname{font-size:7.5px;right:7px;bottom:6px;letter-spacing:.11em}
 .nbmeta{margin-top:9px;text-align:center;width:100%}
 .nbtitle{font-size:13.5px;color:#efe9df;font-weight:600;line-height:1.25;
@@ -453,7 +455,6 @@ body.hasbanner .stage{top:86px}
   <span class="sep"></span>
   <button class="nav" id="prevDay" title="Previous day (Alt+Left)">&lsaquo;</button>
   <span class="datewrap">
-    <span class="today-dot" id="dot" style="display:none"></span>
     <span class="datelabel" id="datelabel">&nbsp;</span>
     <input type="date" id="dateinput" class="hidden-date" aria-label="Go to date">
   </span>
@@ -1095,12 +1096,13 @@ function applyCover(){
 /* ================= front cover ================= */
 var coverClosed=false;
 var _skipCover=false; try{ _skipCover=/[?&]nocover=1/.test(location.search); }catch(e){}
-/* keep the bottom-right name badge in sync on the page and the cover */
+/* the bottom-right badge is the owner's initials: fixed, the same on every
+   cover, every page and every shelf tile. It is not the notebook's title. */
+var OWNER_INITIALS='AR';
 function paintNbName(){
-  var nb=activeNB(), t=(nb&&nb.title)||'';
   var a=document.getElementById('pageNbName'), b=document.getElementById('coverNbName');
-  if(a) a.textContent=t;
-  if(b) b.textContent=t;
+  if(a) a.textContent=OWNER_INITIALS;
+  if(b) b.textContent=OWNER_INITIALS;
 }
 function paintFrontCover(){
   var nb=activeNB(), fc=document.getElementById('frontCover');
@@ -1123,6 +1125,27 @@ function showCover(){
   paintFrontCover();
   fc.style.display='flex'; fc.style.transform=''; fc.classList.remove('opening','editing');
   fc.setAttribute('aria-hidden','false');
+}
+/* closing the notebook: swing the cover back shut over the page, the exact
+   reverse of openCover, so the transition reads the same in both directions */
+function closeCover(){
+  if(coverClosed) return;
+  var fc=document.getElementById('frontCover');
+  coverClosed=true;
+  document.body.classList.add('oncover');
+  try{ fc.getAnimations().forEach(function(a){ a.cancel(); }); }catch(e){}
+  paintFrontCover();
+  fc.style.display='flex';
+  fc.classList.add('opening');            /* hides the hint while it swings */
+  fc.setAttribute('aria-hidden','false');
+  if(reduced()||!fc.animate){ fc.classList.remove('opening'); fc.style.transform=''; return; }
+  var frames=[], N=26;
+  for(var i=0;i<=N;i++){
+    var t=i/N, ang=-180*(1-t), lift=Math.sin((1-t)*Math.PI)*30;
+    frames.push({transform:'translateZ('+lift.toFixed(1)+'px) rotateY('+ang.toFixed(1)+'deg)',offset:t});
+  }
+  var a=fc.animate(frames,{duration:640,easing:'cubic-bezier(.35,0,.35,1)'});
+  a.onfinish=function(){ fc.classList.remove('opening'); fc.style.transform=''; };
 }
 function openCover(){
   if(!coverClosed) return;
@@ -1215,7 +1238,7 @@ function commitTitle(finalize){
 var shelfOpen=false;
 function buildShelf(){
   document.getElementById('shelfBtn').onclick=openShelf;
-  document.getElementById('coverBtn').onclick=function(){ if(!coverClosed&&activeNB()) showCover(); };
+  document.getElementById('coverBtn').onclick=function(){ if(!coverClosed&&activeNB()) closeCover(); };
   refreshShelf();
 }
 /* a clean spiral coil for the shelf tiles: one silver wire loop repeated down the
@@ -1230,7 +1253,7 @@ function refreshShelf(){
     h+='<div class="nbtile" data-id="'+id+'" role="button" tabindex="0">'+
          '<div class="nbcover'+cc+'">'+
            tileCoil()+
-           '<span class="nbname">'+esc(nb.title||'')+'</span>'+
+           '<span class="nbname">'+esc(OWNER_INITIALS)+'</span>'+
            '<span class="cornerzone" aria-hidden="true"></span>'+
            '<button class="nbdel" data-del="'+id+'" title="Delete notebook">&times;</button>'+
          '</div>'+
@@ -2626,7 +2649,8 @@ function goPage(n){
 function updateDateUI(){
   document.getElementById('datelabel').textContent=fmtLong(cur);
   document.getElementById('dateinput').value=cur;
-  document.getElementById('dot').style.display=(cur===todayISO())?'block':'none';
+  var dw=document.querySelector('.datewrap');
+  if(dw) dw.classList.toggle('is-today',cur===todayISO());
   var s=sheets();
   si=clamp(si,0,s.length-1);
   document.getElementById('pnum').textContent=(si+1)+' / '+s.length;
