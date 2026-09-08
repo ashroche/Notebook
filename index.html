@@ -12,9 +12,68 @@
   --paper:#f7f0dc;
   --ink:#22262e;
   --pen-red:#cf2f27;
+
+  /* one set of control metrics for the whole chrome, so the bar, the pager,
+     the dock and the ink picker all line up exactly */
+  --ctl-h:32px;
+  --ctl-font:12.5px;
+  --ctl-radius:8px;
+  --shell-h:44px;
+  --shell-radius:11px;
+
+  /* theme tokens: only these change between dark and light */
   --desk-1:#39342c;
   --desk-2:#191714;
   --chrome:#26241f;
+  --chrome-border:#ffffff20;
+  --ctl-bg:#ffffff0d;
+  --ctl-bg-hover:#ffffff1c;
+  --ctl-border:#ffffff14;
+  --ctl-text:#ded9d0;
+  --ctl-text-strong:#f2eee6;
+  --ctl-muted:#8e887d;
+  --sep:#ffffff1f;
+  --shelf-1:#20201d;
+  --shelf-2:#141412;
+  --shelf-text:#efe9df;
+  --today-bg:#5a4526;
+  --today-border:#7d6234;
+  --today-text:#f2cf85;
+  --inkpop-bg:#efe8d5;
+  --inkpop-border:#00000026;
+  --shadow-dock:0 12px 30px rgba(0,0,0,.5);
+  --gold:#b08d47;
+  --add-dash:#ffffff2e;
+  --add-glyph:#ffffff44;
+  --card-bg:#211f1b;
+  --input-bg:#15130f;
+}
+html[data-theme="light"]{
+  --desk-1:#efece4;
+  --desk-2:#d6d1c6;
+  --chrome:#ffffff;
+  --chrome-border:#00000018;
+  --ctl-bg:#00000008;
+  --ctl-bg-hover:#00000014;
+  --ctl-border:#00000018;
+  --ctl-text:#3b3730;
+  --ctl-text-strong:#241f19;
+  --ctl-muted:#6f685c;
+  --sep:#00000016;
+  --shelf-1:#efece5;
+  --shelf-2:#dcd7cc;
+  --shelf-text:#2c2820;
+  --today-bg:#e6d6ae;
+  --today-border:#c9b482;
+  --today-text:#4a3a12;
+  --inkpop-bg:#ffffff;
+  --inkpop-border:#00000020;
+  --shadow-dock:0 10px 26px rgba(0,0,0,.13);
+  --gold:#8a6a1e;
+  --add-dash:#00000030;
+  --add-glyph:#00000038;
+  --card-bg:#ffffff;
+  --input-bg:#f4f2ec;
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
@@ -29,30 +88,35 @@ body{
   overflow-x:auto;scrollbar-width:none}
 .bar::-webkit-scrollbar{display:none}
 .bar>*{flex:0 0 auto}
-.bar.top{top:0;height:48px;background:linear-gradient(#14120fe0,#14120f00)}
+.bar.top{top:0;height:52px;background:linear-gradient(var(--desk-2),transparent)}
+/* every bar control shares the same height, font and radius as the dock items */
 .bar button,.bar .datewrap,.bar .pager{
-  font:inherit;font-size:13px;color:#ded9d0;background:#ffffff0d;
-  border:1px solid #ffffff1a;border-radius:7px;padding:6px 11px;cursor:pointer;line-height:1}
-.bar button:hover:not(:disabled){background:#ffffff1c}
+  font:inherit;font-size:var(--ctl-font);height:var(--ctl-h);color:var(--ctl-text);background:var(--ctl-bg);
+  border:1px solid var(--ctl-border);border-radius:var(--ctl-radius);padding:0 11px;cursor:pointer;
+  line-height:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;box-sizing:border-box}
+.bar button:hover:not(:disabled){background:var(--ctl-bg-hover)}
 .bar button:disabled{opacity:.3;cursor:default}
-.bar button:focus-visible,.bar input:focus-visible{outline:2px solid #b9d0ff;outline-offset:2px}
-.bar select{font:inherit;font-size:13px;color:#ded9d0;background:#ffffff0d;
-  border:1px solid #ffffff1a;border-radius:7px;padding:6px 8px;cursor:pointer;color-scheme:dark}
-.bar select:hover{background:#ffffff1c}
-.bar option{background:#26241f;color:#ded9d0}
+.bar button:focus-visible,.bar input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.bar select{font:inherit;font-size:var(--ctl-font);height:var(--ctl-h);color:var(--ctl-text);background:var(--ctl-bg);
+  border:1px solid var(--ctl-border);border-radius:var(--ctl-radius);padding:0 8px;cursor:pointer}
+.bar select:hover{background:var(--ctl-bg-hover)}
+.bar option{background:var(--chrome);color:var(--ctl-text)}
 .nav{padding:6px 10px !important;font-size:15px !important}
 .datewrap{display:flex;align-items:center;gap:8px;padding:5px 10px;position:relative;cursor:pointer;
   border:1px solid transparent;transition:background .18s ease,border-color .18s ease}
 /* today is marked by filling the date box, which changes no layout at all */
-.datewrap.is-today{background:#b08d4726;border-color:#b08d4759}
-.datewrap input{font:inherit;font-size:13px;color:#f2eee6;background:transparent;border:0;padding:0;
-  color-scheme:dark;cursor:pointer}
-.datelabel{font-size:13px;color:#f2eee6;white-space:nowrap;
+.datewrap.is-today{background:var(--today-bg);border-color:var(--today-border)}
+.datewrap.is-today .datelabel,.datewrap.is-today input{color:var(--today-text);font-weight:600}
+.datewrap input{font:inherit;font-size:var(--ctl-font);color:var(--ctl-text-strong);background:transparent;border:0;padding:0;
+  cursor:pointer}
+.datelabel{font-size:var(--ctl-font);color:var(--ctl-text-strong);white-space:nowrap;
   display:inline-block;width:212px;text-align:center;overflow:hidden;text-overflow:ellipsis}
 .hidden-date{position:absolute;inset:0;opacity:0;cursor:pointer}
-.pager{display:flex;align-items:center;gap:2px;padding:3px 4px;cursor:default}
-.pager button{border:0;background:transparent;padding:4px 7px;font-size:13px}
-.pager .pnum{font-size:12px;color:#bdb7ad;min-width:34px;text-align:center;user-select:none}
+.pager{display:inline-flex;align-items:center;gap:2px;padding:0 4px;cursor:default}
+.pager button{border:0;background:transparent;height:24px;min-width:24px;padding:0 5px;
+  font-size:var(--ctl-font);border-radius:5px;display:inline-flex;align-items:center;justify-content:center}
+.pager button:hover:not(:disabled){background:var(--ctl-bg-hover)}
+.pager .pnum{font-size:var(--ctl-font);color:var(--ctl-muted);min-width:34px;text-align:center;user-select:none}
 .spacer{flex:1}
 .sep{width:1px;height:20px;background:#ffffff1a;margin:0 3px;flex:none}
 
@@ -66,19 +130,20 @@ body{
 /* ---------- fixed formatting bar ---------- */
 body.oncover .dock{display:none}
 .dock{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:150;
-  display:flex;align-items:center;gap:3px;background:var(--chrome);
-  border:1px solid #ffffff20;border-radius:11px;padding:6px 8px;
-  box-shadow:0 12px 34px rgba(0,0,0,.55)}
-.dock select,.dock button{font:inherit;font-size:12.5px;color:#e4dfd6;background:transparent;
-  border:0;border-radius:6px;padding:6px 9px;cursor:pointer;line-height:1}
-.dock select{color-scheme:dark;padding:5px 4px}
-.dock option{background:#26241f;color:#e4dfd6}
-.dock button:hover:not(:disabled),.dock select:hover:not(:disabled){background:#ffffff18}
-.dock button.act{background:#ffffff28;color:#fff}
+  display:flex;align-items:center;gap:2px;background:var(--chrome);
+  border:1px solid var(--chrome-border);border-radius:var(--shell-radius);padding:6px 8px;
+  height:var(--shell-h);box-sizing:border-box;box-shadow:var(--shadow-dock)}
+.dock select,.dock button{font:inherit;font-size:var(--ctl-font);color:var(--ctl-text);background:transparent;
+  border:0;border-radius:6px;padding:0 9px;cursor:pointer;line-height:1;
+  height:var(--ctl-h);display:inline-flex;align-items:center;justify-content:center;gap:5px;box-sizing:border-box}
+.dock select{padding:0 4px}
+.dock option{background:var(--chrome);color:var(--ctl-text)}
+.dock button:hover:not(:disabled),.dock select:hover:not(:disabled){background:var(--ctl-bg-hover)}
+.dock button.act{background:var(--ctl-bg-hover);font-weight:600}
 .dock [disabled]{opacity:.3;cursor:default}
-.dock .size{font-size:12px;min-width:20px;text-align:center;color:#bdb7ad;user-select:none}
-.dock .sep{width:1px;height:18px;background:#ffffff1f;margin:0 4px}
-.dock button:focus-visible,.dock select:focus-visible{outline:2px solid #b9d0ff;outline-offset:1px}
+.dock .size{font-size:var(--ctl-font);min-width:20px;text-align:center;color:var(--ctl-muted);user-select:none}
+.dock .sep{width:1px;height:18px;background:var(--sep);margin:0 5px}
+.dock button:focus-visible,.dock select:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
 .swatches{display:flex;align-items:center;gap:5px;padding:0 3px}
 .sw{width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.28);cursor:pointer;padding:0;
   box-shadow:0 0 0 0 #fff0;transition:box-shadow .12s}
@@ -110,7 +175,7 @@ body.oncover .dock{display:none}
 .shelfbtn{display:inline-flex;align-items:center;gap:7px;color:#ded9d0}
 .shelfbtn svg{opacity:.85}
 #shelfBtnName{max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.shelf{position:fixed;inset:0;z-index:400;background:radial-gradient(120% 90% at 50% 0%,#20201d,#141412 70%);
+.shelf{position:fixed;inset:0;z-index:400;background:radial-gradient(120% 90% at 50% 0%,var(--shelf-1),var(--shelf-2) 70%);
   display:none;flex-direction:column;opacity:0;transition:opacity .28s ease}
 .shelf.on{display:flex;opacity:1}
 /* during the expand the backdrop stays fully opaque so the page can never be seen
@@ -118,7 +183,7 @@ body.oncover .dock{display:none}
 .shelf.morphing{opacity:1}
 .shelf.morphing .shelf-head,.shelf.morphing .shelf-grid{opacity:0;transition:opacity .12s ease}
 .shelf-head{display:flex;align-items:center;justify-content:space-between;padding:20px 28px 10px;flex:0 0 auto}
-.shelf-head h1{font-family:'Caveat',cursive;font-size:30px;color:#efe9df;font-weight:700;letter-spacing:.5px}
+.shelf-head h1{font-family:'Caveat',cursive;font-size:30px;color:var(--shelf-text);font-weight:700;letter-spacing:.5px}
 .shelf-grid{flex:1 1 auto;overflow-y:auto;display:grid;gap:26px 24px;padding:16px 28px 40px;
   grid-template-columns:repeat(auto-fill,minmax(150px,1fr));align-content:start;justify-items:center}
 .nbtile{width:100%;max-width:184px;cursor:pointer;transition:transform .16s ease}
@@ -151,11 +216,11 @@ body.oncover .dock{display:none}
 .frontcover .nbname{font-size:21px;right:30px;bottom:26px;letter-spacing:.2em;opacity:.9}
 .nbtile .nbname{font-size:7.5px;right:7px;bottom:6px;letter-spacing:.11em}
 .nbmeta{margin-top:9px;text-align:center;width:100%}
-.nbtitle{font-size:13.5px;color:#efe9df;font-weight:600;line-height:1.25;
+.nbtitle{font-size:13.5px;color:var(--shelf-text);font-weight:600;line-height:1.25;
   overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .nbtitle[contenteditable]:focus{outline:none;background:#ffffff1a;border-radius:4px;padding:1px 4px;-webkit-line-clamp:none}
-.nbadd .nbcover{background:none;box-shadow:none;border:2px dashed #ffffff2e}
-.nbadd .nbmono{font-size:44px;color:#ffffff44;font-weight:400}
+.nbadd .nbcover{background:none;box-shadow:none;border:2px dashed var(--add-dash)}
+.nbadd .nbmono{font-size:44px;color:var(--add-glyph);font-weight:400}
 .nbcover.cover-kraft{background:linear-gradient(160deg,#4a4132,#2a231a)}
 .nbcover.cover-black{background:linear-gradient(150deg,#2a2c2f,#111214)}
 .nbcover.cover-navy{background:linear-gradient(150deg,#26344a,#141b28)}
@@ -333,13 +398,19 @@ body.oncover .dock{display:none}
 #tbInk{display:inline-flex;align-items:center;justify-content:center}
 .inkdot{width:15px;height:15px;border-radius:50%;background:#c0392b;
   box-shadow:inset 0 0 0 1.5px #ffffff33}
+/* the ink picker shares the dock's exact shell metrics, on a light panel so every
+   colour including black reads clearly */
 .inkpop{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
-  display:none;gap:3px;padding:6px;background:var(--chrome);border:1px solid #ffffff22;
-  border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,.45);z-index:120}
+  display:none;align-items:center;gap:2px;padding:6px 8px;height:var(--shell-h);box-sizing:border-box;
+  background:var(--inkpop-bg);border:1px solid var(--inkpop-border);
+  border-radius:var(--shell-radius);box-shadow:var(--shadow-dock);z-index:120}
 .inkpop.on{display:flex}
-.inkopt{font-size:19px;line-height:1;width:30px;height:30px;padding:0;border-radius:7px;
+.inkopt{line-height:1;width:var(--ctl-h);height:var(--ctl-h);padding:0;border-radius:6px;
   display:inline-flex;align-items:center;justify-content:center;background:none;border:0;cursor:pointer}
-.inkopt:hover{background:#ffffff1c}
+.inkopt:hover{background:#00000012}
+.inkopt .idot{width:16px;height:16px;border-radius:50%;
+  box-shadow:0 0 0 1.4px #00000040,0 1px 2px rgba(0,0,0,.22)}
+.inkopt.on{outline:2px solid var(--gold);outline-offset:1px}
 
 .strike{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 .strike path{fill:none;stroke:var(--pen-red);stroke-linecap:round;opacity:.93}
@@ -375,30 +446,30 @@ body.oncover .dock{display:none}
 .modal{position:fixed;inset:0;z-index:400;display:none;align-items:center;justify-content:center;
   background:rgba(10,9,7,.66)}
 .modal.on{display:flex}
-.card{width:430px;max-width:92vw;background:#211f1b;border:1px solid #ffffff1c;
+.card{width:430px;max-width:92vw;background:var(--card-bg);border:1px solid var(--chrome-border);
   border-radius:13px;padding:22px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
-.card h2{margin:0 0 6px;font-size:16px;font-weight:600;color:#f0ece3}
-.card p{margin:0 0 16px;font-size:12.5px;line-height:1.55;color:#a8a297}
-.card label{display:block;font-size:11.5px;color:#a8a297;margin:12px 0 5px}
-.card input{width:100%;font:inherit;font-size:13px;color:#f0ece3;background:#15130f;
-  border:1px solid #ffffff1c;border-radius:7px;padding:9px 10px}
-.card input:focus{outline:2px solid #b9d0ff;outline-offset:1px}
+.card h2{margin:0 0 6px;font-size:16px;font-weight:600;color:var(--ctl-text-strong)}
+.card p{margin:0 0 16px;font-size:12.5px;line-height:1.55;color:var(--ctl-muted)}
+.card label{display:block;font-size:11.5px;color:var(--ctl-muted);margin:12px 0 5px}
+.card input{width:100%;font:inherit;font-size:13px;color:var(--ctl-text-strong);background:var(--input-bg);
+  border:1px solid var(--ctl-border);border-radius:7px;padding:9px 10px}
+.card input:focus{outline:2px solid var(--gold);outline-offset:1px}
 .card .acts{display:flex;gap:8px;margin-top:20px;align-items:center}
-.card button{font:inherit;font-size:12.5px;color:#ded9d0;background:#ffffff0d;
-  border:1px solid #ffffff1a;border-radius:7px;padding:8px 13px;cursor:pointer}
-.card button:hover{background:#ffffff1c}
+.card button{font:inherit;font-size:12.5px;color:var(--ctl-text);background:var(--ctl-bg);
+  border:1px solid var(--ctl-border);border-radius:7px;padding:8px 13px;cursor:pointer}
+.card button:hover{background:var(--ctl-bg-hover)}
 .card button.primary{background:#3d6b46;border-color:#4c8257;color:#eaf5ec}
-.card button.quiet{background:transparent;border-color:transparent;color:#8e887d}
-.card .note{font-size:11.5px;color:#8e887d;margin-top:12px;line-height:1.5}
-.card .mdiv{height:1px;background:#ffffff14;margin:20px 0 16px}
+.card button.quiet{background:transparent;border-color:transparent;color:var(--ctl-muted)}
+.card .note{font-size:11.5px;color:var(--ctl-muted);margin-top:12px;line-height:1.5}
+.card .mdiv{height:1px;background:var(--sep);margin:20px 0 16px}
 .meterwrap{margin-top:14px}
-.meter{height:6px;border-radius:3px;background:#ffffff14;overflow:hidden}
+.meter{height:6px;border-radius:3px;background:var(--sep);overflow:hidden}
 .meter i{display:block;height:100%;width:0;background:#57a866;transition:width .3s,background .3s}
 .meter i.warn{background:#d8a13c}
 .meter i.full{background:#cf4a3f}
 
 .toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:var(--chrome);
-  border:1px solid #ffffff20;color:#e6e1d8;padding:9px 16px;border-radius:22px;font-size:13px;
+  border:1px solid var(--chrome-border);color:var(--ctl-text);padding:9px 16px;border-radius:22px;font-size:13px;
   z-index:300;opacity:0;pointer-events:none;transition:opacity .18s;max-width:70vw;text-align:center}
 .toast.on{opacity:1}
 /* unmissable, stays until resolved: used when saving has actually stopped working */
@@ -472,6 +543,7 @@ body.hasbanner .stage{top:86px}
   <span class="sep"></span>
   <button id="carry" title="Bring unfinished items forward from your last written day">Carry Forward</button>
   <span class="spacer"></span>
+  <button id="themeBtn" title="Switch between light and dark" aria-label="Switch theme"></button>
   <button id="zoomBtn" title="Fit to window, or true A4 size">Fit</button>
   <button id="syncBtn" title="Cloud sync"><span class="sdot" id="sdot"></span><span id="slabel">Sync off</span></button>
   <span class="sep"></span>
@@ -548,16 +620,16 @@ body.hasbanner .stage{top:86px}
   <button id="tbB" title="Bold (Ctrl+B)"><b>B</b></button>
   <button id="tbI" title="Italic (Ctrl+I)"><i>I</i></button>
   <button id="tbU" title="Underline (Ctrl+U)"><u>U</u></button>
-  <button id="tbL" title="Bullet (Ctrl+Shift+8)">&bull;</button>
+  <button id="tbL" title="Bullet list (Ctrl+Shift+8)" aria-label="Bullet list"><svg width="14" height="12" viewBox="0 0 14 12" aria-hidden="true"><circle cx="2" cy="2" r="1.5" fill="currentColor"/><circle cx="2" cy="6" r="1.5" fill="currentColor"/><circle cx="2" cy="10" r="1.5" fill="currentColor"/><rect x="6" y="1.2" width="8" height="1.6" rx=".8" fill="currentColor"/><rect x="6" y="5.2" width="8" height="1.6" rx=".8" fill="currentColor"/><rect x="6" y="9.2" width="8" height="1.6" rx=".8" fill="currentColor"/></svg></button>
   <span class="inkwrap">
     <button id="tbInk" title="Text colour" aria-label="Text colour"><span class="inkdot" id="inkDot"></span></button>
     <span class="inkpop" id="inkPop">
-      <button class="inkopt" data-c="k" title="Ink" style="color:#111417">&#9679;</button>
-      <button class="inkopt" data-c="r" title="Red" style="color:#c0392b">&#9679;</button>
-      <button class="inkopt" data-c="o" title="Orange" style="color:#c0631d">&#9679;</button>
-      <button class="inkopt" data-c="g" title="Green" style="color:#2f7a4e">&#9679;</button>
-      <button class="inkopt" data-c="b" title="Blue" style="color:#2b6cb0">&#9679;</button>
-      <button class="inkopt" data-c="p" title="Purple" style="color:#7a45c2">&#9679;</button>
+      <button class="inkopt" data-c="k" title="Ink"><span class="idot" style="background:#111417"></span></button>
+      <button class="inkopt" data-c="r" title="Red"><span class="idot" style="background:#c0392b"></span></button>
+      <button class="inkopt" data-c="o" title="Orange"><span class="idot" style="background:#c0631d"></span></button>
+      <button class="inkopt" data-c="g" title="Green"><span class="idot" style="background:#2f7a4e"></span></button>
+      <button class="inkopt" data-c="b" title="Blue"><span class="idot" style="background:#2b6cb0"></span></button>
+      <button class="inkopt" data-c="p" title="Purple"><span class="idot" style="background:#7a45c2"></span></button>
     </span>
   </span>
   <span class="sep"></span>
@@ -3098,6 +3170,40 @@ try{
     localStorage.removeItem(K_PAPER);
   }
 }catch(e){}
+/* ---- theme: remembered choice, otherwise follow the system ---- */
+var THEME_KEY='notebook-theme';
+function systemTheme(){
+  try{ return window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'; }
+  catch(e){ return 'dark'; }
+}
+function currentTheme(){
+  var t=null; try{ t=localStorage.getItem(THEME_KEY); }catch(e){}
+  return (t==='light'||t==='dark')?t:systemTheme();
+}
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  var b=document.getElementById('themeBtn');
+  if(b){
+    b.innerHTML=(t==='light')
+      ? '<svg width="15" height="15" viewBox="0 0 20 20" aria-hidden="true"><path d="M15.5 12.5A6.5 6.5 0 0 1 7.5 4.5a6.5 6.5 0 1 0 8 8Z" fill="currentColor"/></svg>'
+      : '<svg width="15" height="15" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M10 1.6v2.2M10 16.2v2.2M18.4 10h-2.2M3.8 10H1.6M15.9 4.1l-1.6 1.6M5.7 14.3l-1.6 1.6M15.9 15.9l-1.6-1.6M5.7 5.7 4.1 4.1"/></g></svg>';
+    b.title=(t==='light')?'Switch to dark':'Switch to light';
+  }
+}
+function toggleTheme(){
+  var t=(currentTheme()==='light')?'dark':'light';
+  try{ localStorage.setItem(THEME_KEY,t); }catch(e){}
+  applyTheme(t);
+}
+applyTheme(currentTheme());
+document.getElementById('themeBtn').onclick=toggleTheme;
+try{
+  var mq=window.matchMedia('(prefers-color-scheme: light)');
+  var onSys=function(){ var saved=null; try{ saved=localStorage.getItem(THEME_KEY); }catch(e){}
+    if(saved!=='light'&&saved!=='dark') applyTheme(systemTheme()); };
+  if(mq.addEventListener) mq.addEventListener('change',onSys); else if(mq.addListener) mq.addListener(onSys);
+}catch(e){}
+
 buildShelf();
 setupCover();
 updateDateUI(); refreshUndo(); fit(); render(false);
