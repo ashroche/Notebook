@@ -85,8 +85,12 @@ body{
 
 /* ---------- bars ---------- */
 .bar{position:fixed;left:0;right:0;z-index:100;display:flex;align-items:center;gap:7px;padding:0 13px;
-  overflow-x:auto;scrollbar-width:none}
+  overflow:visible;scrollbar-width:none}
 .bar::-webkit-scrollbar{display:none}
+/* The bar can't scroll horizontally (that clipped the calendar and find popovers),
+   so it wraps to a second row on narrow windows instead of pushing controls
+   off-screen. The page sits below whatever height the bar ends up. */
+.bar.top{flex-wrap:wrap;height:auto;min-height:52px;padding-top:5px;padding-bottom:5px;row-gap:5px}
 .bar>*{flex:0 0 auto}
 .bar.top{top:0;height:52px;background:linear-gradient(var(--desk-2),transparent)}
 /* every bar control shares the same height, font and radius as the dock items */
@@ -111,7 +115,63 @@ body{
   cursor:pointer}
 .datelabel{font-size:var(--ctl-font);color:var(--ctl-text-strong);white-space:nowrap;
   display:inline-block;width:212px;text-align:center;overflow:hidden;text-overflow:ellipsis}
-.hidden-date{position:absolute;inset:0;opacity:0;cursor:pointer}
+.hidden-date{position:absolute;width:0;height:0;opacity:0;pointer-events:none;border:0;padding:0}
+/* in-app calendar, so the date picker looks the same in every browser */
+.cal{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  display:none;flex-direction:column;gap:6px;padding:10px;min-width:250px;z-index:220;
+  background:var(--chrome);border:1px solid var(--chrome-border);border-radius:var(--shell-radius);
+  box-shadow:var(--shadow-dock);cursor:default}
+.cal.on{display:flex}
+.cal-head{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.cal-title{font-size:var(--ctl-font);font-weight:600;color:var(--ctl-text-strong)}
+.cal-nav{width:26px;height:26px;border:0;background:transparent;color:var(--ctl-text);
+  border-radius:6px;cursor:pointer;font-size:15px;line-height:1;
+  display:inline-flex;align-items:center;justify-content:center}
+.cal-nav:hover{background:var(--ctl-bg-hover)}
+.cal-dow,.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-dow span{font-size:10px;text-align:center;color:var(--ctl-muted);padding:2px 0}
+.cal-cell{height:30px;border:0;background:transparent;color:var(--ctl-text);border-radius:6px;
+  font-size:12px;cursor:pointer;position:relative;font-family:inherit}
+.cal-cell:hover:not(:disabled){background:var(--ctl-bg-hover)}
+.cal-cell.other{opacity:.32}
+.cal-cell.written::after{content:'';position:absolute;left:50%;bottom:4px;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;background:var(--gold)}
+.cal-cell.today{outline:1px solid var(--today-border);color:var(--today-text);font-weight:600}
+.cal-cell.sel{background:var(--today-bg);color:var(--today-text);font-weight:600}
+.cal-foot{display:flex;justify-content:flex-end}
+.cal-today{font-size:11.5px;color:var(--ctl-text);background:var(--ctl-bg);
+  border:1px solid var(--ctl-border);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:inherit}
+.cal-today:hover{background:var(--ctl-bg-hover)}
+/* ---- find ---- */
+.findwrap{position:relative;display:inline-flex}
+/* anchored to the button's RIGHT edge so a bar button near the window edge does
+   not push the panel off-screen */
+.findpop{position:absolute;top:calc(100% + 8px);right:0;display:none;flex-direction:column;gap:8px;
+  width:min(340px,88vw);max-height:60vh;padding:10px;z-index:220;
+  background:var(--chrome);border:1px solid var(--chrome-border);border-radius:var(--shell-radius);
+  box-shadow:var(--shadow-dock);cursor:default}
+.findpop.on{display:flex}
+.find-top{display:flex;gap:6px;align-items:center}
+#findInput{flex:1;font:inherit;font-size:var(--ctl-font);height:var(--ctl-h);box-sizing:border-box;
+  color:var(--ctl-text-strong);background:var(--input-bg);border:1px solid var(--ctl-border);
+  border-radius:var(--ctl-radius);padding:0 10px}
+#findInput:focus{outline:2px solid var(--gold);outline-offset:1px}
+.find-scope{font-size:11px;height:var(--ctl-h);white-space:nowrap;color:var(--ctl-text);
+  background:var(--ctl-bg);border:1px solid var(--ctl-border);border-radius:var(--ctl-radius);
+  padding:0 9px;cursor:pointer;font-family:inherit}
+.find-scope:hover{background:var(--ctl-bg-hover)}
+.find-scope.all{background:var(--today-bg);border-color:var(--today-border);color:var(--today-text)}
+.find-results{overflow-y:auto;display:flex;flex-direction:column;gap:2px;max-height:44vh}
+.find-hit{text-align:left;border:0;background:transparent;border-radius:7px;padding:7px 8px;cursor:pointer;
+  font-family:inherit;display:flex;flex-direction:column;gap:2px}
+.find-hit:hover{background:var(--ctl-bg-hover)}
+.find-when{font-size:10.5px;color:var(--ctl-muted)}
+.find-text{font-size:12px;color:var(--ctl-text-strong);line-height:1.35;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.find-text mark{background:var(--today-bg);color:var(--today-text);border-radius:3px;padding:0 2px}
+.find-empty{font-size:11.5px;color:var(--ctl-muted);padding:6px 8px}
+/* the matched line on the page itself */
+.row.findhit .tx{background:#f7e08a55;border-radius:3px;box-shadow:0 0 0 2px #f7e08a55}
 .pager{display:inline-flex;align-items:center;gap:2px;padding:0 4px;cursor:default}
 .pager button{border:0;background:transparent;height:24px;min-width:24px;padding:0 5px;
   font-size:var(--ctl-font);border-radius:5px;display:inline-flex;align-items:center;justify-content:center}
@@ -525,9 +585,19 @@ body.hasbanner .stage{top:86px}
   </button>
   <span class="sep"></span>
   <button class="nav" id="prevDay" title="Previous day (Alt+Left)">&lsaquo;</button>
-  <span class="datewrap">
+  <span class="datewrap" id="dateWrap" role="button" tabindex="0" aria-haspopup="dialog" aria-label="Pick a date">
     <span class="datelabel" id="datelabel">&nbsp;</span>
-    <input type="date" id="dateinput" class="hidden-date" aria-label="Go to date">
+    <input type="date" id="dateinput" class="hidden-date" aria-label="Go to date" tabindex="-1">
+    <span class="cal" id="cal" role="dialog" aria-label="Choose a date">
+      <span class="cal-head">
+        <button class="cal-nav" id="calPrev" aria-label="Previous month">&lsaquo;</button>
+        <span class="cal-title" id="calTitle"></span>
+        <button class="cal-nav" id="calNext" aria-label="Next month">&rsaquo;</button>
+      </span>
+      <span class="cal-dow"></span>
+      <span class="cal-grid" id="calGrid"></span>
+      <span class="cal-foot"><button class="cal-today" id="calToday">Today</button></span>
+    </span>
   </span>
   <button class="nav" id="nextDay" title="Next day (Alt+Right)">&rsaquo;</button>
   <button id="todayBtn">Today</button>
@@ -541,6 +611,18 @@ body.hasbanner .stage{top:86px}
     <button id="addPage" title="Add a page to this day">+</button>
   </span>
   <span class="sep"></span>
+  <span class="findwrap">
+    <button id="findBtn" title="Find in your notes (Ctrl+F)" aria-label="Find">
+      <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10.6 10.6L14 14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+    </button>
+    <span class="findpop" id="findPop" role="dialog" aria-label="Find in notes">
+      <span class="find-top">
+        <input id="findInput" type="text" placeholder="Find in notes" aria-label="Search text" autocomplete="off">
+        <button id="findScope" class="find-scope" title="Search this notebook or all of them">This notebook</button>
+      </span>
+      <span class="find-results" id="findResults"></span>
+    </span>
+  </span>
   <button id="carry" title="Bring unfinished items forward from your last written day">Carry Forward</button>
   <span class="spacer"></span>
   <button id="themeBtn" title="Switch between light and dark" aria-label="Switch theme"></button>
@@ -2817,6 +2899,178 @@ document.getElementById('nextWritten').onclick=function(){
 document.getElementById('dateinput').addEventListener('change',function(){
   if(this.value&&this.value!==cur) goDate(this.value);
 });
+
+/* ================= find =================
+   Everything is already in memory, so a plain scan is enough at this scale
+   (a page or two a day). Searches the current notebook, or all of them. */
+var findAll=false, findTimer=null;
+function findMatches(q){
+  q=(q||'').trim().toLowerCase();
+  if(q.length<2) return [];
+  var out=[], books=findAll?NB.order:[NB.active];
+  for(var bi=0;bi<books.length;bi++){
+    var nbId=books[bi], nb=NB.notebooks[nbId]; if(!nb) continue;
+    var days=Object.keys(nb.pages||{}).sort().reverse();     /* newest first */
+    for(var di=0;di<days.length;di++){
+      var day=days[di], sheets=(nb.pages[day].sheets)||[];
+      for(var si2=0;si2<sheets.length;si2++){
+        var blocks=sheets[si2].blocks||[];
+        for(var bl=0;bl<blocks.length;bl++){
+          var b=blocks[bl]; if(b.kind!=='text') continue;
+          var lines=b.lines||[];
+          for(var li=0;li<lines.length;li++){
+            var txt=lineText(lines[li].html);
+            if(txt.toLowerCase().indexOf(q)<0) continue;
+            out.push({nb:nbId, nbTitle:nb.title||'Untitled', date:day, sheet:si2,
+                      bid:b.id, lid:lines[li].id, text:txt});
+            if(out.length>=200) return out;
+          }
+        }
+      }
+    }
+  }
+  return out;
+}
+function markQuery(text,q){
+  var i=text.toLowerCase().indexOf(q.toLowerCase());
+  if(i<0) return esc(text);
+  return esc(text.slice(0,i))+'<mark>'+esc(text.slice(i,i+q.length))+'</mark>'+esc(text.slice(i+q.length));
+}
+function renderFind(){
+  var q=document.getElementById('findInput').value.trim();
+  var box=document.getElementById('findResults');
+  if(q.length<2){ box.innerHTML='<span class="find-empty">Type at least two characters.</span>'; return; }
+  var hits=findMatches(q);
+  if(!hits.length){ box.innerHTML='<span class="find-empty">Nothing found.</span>'; return; }
+  box.innerHTML=hits.map(function(h,i){
+    var when=fmtLong(h.date)+(findAll?(' &middot; '+esc(h.nbTitle)):'');
+    return '<button class="find-hit" data-i="'+i+'">'+
+             '<span class="find-when">'+when+'</span>'+
+             '<span class="find-text">'+markQuery(h.text,q)+'</span></button>';
+  }).join('');
+  box._hits=hits;
+}
+function gotoHit(h){
+  hideFind();
+  function land(){
+    cur=h.date; si=h.sheet;
+    updateDateUI(); render(false);
+    setTimeout(function(){
+      var row=canvas.querySelector('.block[data-id="'+h.bid+'"] .row[data-lid="'+h.lid+'"]');
+      if(row){
+        row.classList.add('findhit');
+        row.scrollIntoView({block:'center',behavior:'smooth'});
+        setTimeout(function(){ row.classList.remove('findhit'); },2600);
+      }
+    },60);
+  }
+  if(h.nb!==NB.active) switchNotebook(h.nb);
+  if(coverClosed){ openCoverTo(land); return; }
+  land();
+}
+function showFind(){
+  document.getElementById('findPop').classList.add('on');
+  var i=document.getElementById('findInput'); i.focus(); i.select();
+  renderFind();
+}
+function hideFind(){ document.getElementById('findPop').classList.remove('on'); }
+(function(){
+  var pop=document.getElementById('findPop');
+  document.getElementById('findBtn').onclick=function(e){
+    e.stopPropagation();
+    pop.classList.contains('on')?hideFind():showFind();
+  };
+  document.getElementById('findInput').addEventListener('input',function(){
+    clearTimeout(findTimer); findTimer=setTimeout(renderFind,120);
+  });
+  document.getElementById('findInput').addEventListener('keydown',function(e){
+    e.stopPropagation();
+    if(e.key==='Escape'){ hideFind(); }
+  });
+  document.getElementById('findScope').onclick=function(e){
+    e.stopPropagation();
+    findAll=!findAll;
+    this.textContent=findAll?'All notebooks':'This notebook';
+    this.classList.toggle('all',findAll);
+    renderFind();
+  };
+  document.getElementById('findResults').addEventListener('click',function(e){
+    var hit=e.target.closest('.find-hit'); if(!hit) return;
+    var hits=this._hits||[]; var h=hits[+hit.dataset.i]; if(h) gotoHit(h);
+  });
+  document.addEventListener('mousedown',function(e){
+    if(pop.classList.contains('on')&&!e.target.closest('.findwrap')) hideFind();
+  });
+  document.addEventListener('keydown',function(e){
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='f'){ e.preventDefault(); showFind(); }
+  });
+})();
+
+/* ================= calendar picker =================
+   An in-app month grid so the date picker looks and behaves the same everywhere.
+   Days you have written on are dotted, so it doubles as a map of the notebook. */
+var calMonth=null;   /* first of the month currently shown */
+function calOpen(){ return document.getElementById('cal').classList.contains('on'); }
+function monthStart(iso){ var p=iso.split('-'); return p[0]+'-'+p[1]+'-01'; }
+function shiftMonth(iso,delta){
+  var p=iso.split('-'), y=+p[0], m=+p[1]-1+delta;
+  y+=Math.floor(m/12); m=((m%12)+12)%12;
+  return y+'-'+String(m+1).padStart(2,'0')+'-01';
+}
+function renderCal(){
+  var grid=document.getElementById('calGrid'); if(!grid) return;
+  var base=calMonth||monthStart(cur);
+  var p=base.split('-'), y=+p[0], m=+p[1]-1;
+  document.getElementById('calTitle').textContent=
+    new Date(y,m,1).toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  var first=new Date(y,m,1), lead=first.getDay();
+  var written={}; writtenDays().forEach(function(d){ written[d]=1; });
+  var today=todayISO(), html='';
+  for(var i=0;i<42;i++){
+    var d=new Date(y,m,1-lead+i);
+    var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    var cls='cal-cell';
+    if(d.getMonth()!==m) cls+=' other';
+    if(written[iso]) cls+=' written';
+    if(iso===today) cls+=' today';
+    if(iso===cur) cls+=' sel';
+    html+='<button type="button" class="'+cls+'" data-d="'+iso+'">'+d.getDate()+'</button>';
+  }
+  grid.innerHTML=html;
+}
+function showCal(){
+  calMonth=monthStart(cur);
+  renderCal();
+  document.getElementById('cal').classList.add('on');
+}
+function hideCal(){ document.getElementById('cal').classList.remove('on'); }
+(function(){
+  var wrap=document.getElementById('dateWrap'), cal=document.getElementById('cal');
+  var dow=cal.querySelector('.cal-dow');
+  dow.innerHTML=['S','M','T','W','T','F','S'].map(function(x){ return '<span>'+x+'</span>'; }).join('');
+  wrap.addEventListener('click',function(e){
+    if(e.target.closest('#cal')) return;          /* clicks inside the calendar */
+    calOpen()?hideCal():showCal();
+  });
+  wrap.addEventListener('keydown',function(e){
+    if(e.key==='Enter'||e.key===' '){ e.preventDefault(); calOpen()?hideCal():showCal(); }
+    if(e.key==='Escape') hideCal();
+  });
+  document.getElementById('calPrev').onclick=function(e){ e.stopPropagation();
+    calMonth=shiftMonth(calMonth||monthStart(cur),-1); renderCal(); };
+  document.getElementById('calNext').onclick=function(e){ e.stopPropagation();
+    calMonth=shiftMonth(calMonth||monthStart(cur),1); renderCal(); };
+  document.getElementById('calToday').onclick=function(e){ e.stopPropagation();
+    hideCal(); if(cur!==todayISO()) goDate(todayISO()); };
+  document.getElementById('calGrid').addEventListener('click',function(e){
+    var c=e.target.closest('.cal-cell'); if(!c) return;
+    e.stopPropagation(); hideCal();
+    if(c.dataset.d!==cur) goDate(c.dataset.d);
+  });
+  document.addEventListener('mousedown',function(e){
+    if(calOpen()&&!e.target.closest('#dateWrap')) hideCal();
+  });
+})();
 document.getElementById('prevPage').onclick=function(){ goPage(si-1); };
 document.getElementById('nextPage').onclick=function(){ goPage(si+1); };
 document.getElementById('addPage').onclick=function(){
