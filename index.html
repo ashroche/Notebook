@@ -722,7 +722,7 @@ var pages={}, tombs={}, cur=todayISO(), si=0;
 var selId=null, zTop=1, scale=1, zoom='fit';
 var typing=false, typingT=null, composing=false;
 var lastLine=null, animSet={}, animT=null, lastEdit=0, turning=false;
-var holdDate=null;   /* date to keep on the static page while a turn is running */
+var holdDate=null, holdSheet=0;   /* page kept visible while a turn runs */
 var dropPoint={x:40,y:40};
 
 /* ================= helpers ================= */
@@ -1190,6 +1190,8 @@ function paintFrontCover(){
 function showCover(){
   coverClosed=true;
   document.body.classList.add('oncover');
+  cur=todayISO(); si=lastWrittenSheet(cur);
+  updateDateUI(); render(false);
   var fc=document.getElementById('frontCover');
   /* the open flip uses fill:forwards, so its final rotate persists. Cancel it or
      the re-shown cover stays rotated off to the left. */
@@ -1205,6 +1207,10 @@ function closeCover(){
   var fc=document.getElementById('frontCover');
   coverClosed=true;
   document.body.classList.add('oncover');
+  /* a closed notebook always sits on today, so the bar and the page behind the
+     cover agree with where opening it will actually take you */
+  cur=todayISO(); si=lastWrittenSheet(cur);
+  updateDateUI(); render(false);
   try{ fc.getAnimations().forEach(function(a){ a.cancel(); }); }catch(e){}
   paintFrontCover();
   fc.style.display='flex';
@@ -1259,15 +1265,42 @@ function setupCover(){
     e.preventDefault(); openCover();
   });
   fc.addEventListener('keydown',function(e){
-    if((e.key==='Enter'||e.key===' ')&&e.target===fc){ e.preventDefault(); openCover(); }
+    if(e.target!==fc) return;                 /* never react to keys typed in the title */
+    if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openCover(); }
   });
-  /* title editing */
+  /* The title used to swallow single clicks, so clicking the middle of the cover
+     did nothing. Now it is only editable after a double-click; a single click
+     anywhere on the cover, title included, opens the notebook. */
+  t.setAttribute('contenteditable','false');
+  var titleJustEdited=0;
+  /* A single click opens the notebook; a double click renames. Because the first
+     mousedown of a double click looks identical to a single click, hold the open
+     briefly and cancel it if a second click arrives. */
+  var titleTimer=null;
+  t.addEventListener('mousedown',function(e){
+    if(t.getAttribute('contenteditable')==='true') return;   /* already renaming */
+    if(Date.now()-titleJustEdited<400) return;               /* just finished a rename */
+    e.preventDefault();
+    if(e.detail>1){ clearTimeout(titleTimer); titleTimer=null; return; }
+    clearTimeout(titleTimer);
+    titleTimer=setTimeout(function(){ titleTimer=null; openCover(); },260);
+  });
+  t.addEventListener('dblclick',function(e){
+    e.preventDefault(); e.stopPropagation();
+    clearTimeout(titleTimer); titleTimer=null;
+    t.setAttribute('contenteditable','true');
+    t.focus();
+    try{ var r=document.createRange(); r.selectNodeContents(t);
+         var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r); }catch(err){}
+  });
   t.addEventListener('focus',function(){ fc.classList.add('editing'); syncCoverBar(); });
   t.addEventListener('input',function(){ commitTitle(); });
-  t.addEventListener('blur',function(){ fc.classList.remove('editing'); commitTitle(true); });
+  t.addEventListener('blur',function(){
+    titleJustEdited=Date.now();
+    fc.classList.remove('editing'); t.setAttribute('contenteditable','false'); commitTitle(true); });
   t.addEventListener('keydown',function(e){
-    if(e.key==='Enter'){ e.preventDefault(); t.blur(); }
     e.stopPropagation();
+    if(e.key==='Enter'){ e.preventDefault(); t.blur(); }
   });
   var bar=document.getElementById('fcBar');
   bar.querySelectorAll('.fcfont').forEach(function(btn){
@@ -1436,11 +1469,23 @@ function startRenameTile(el){
   el.addEventListener('blur',finish); el.addEventListener('keydown',key);
 }
 function curPaper(){ var s=sheet(); return s.paper||'cream'; }
+/* the paper colour of whatever page is actually VISIBLE underneath. During a turn
+   that is not `cur` yet, so honour the same hold the date label uses, otherwise the
+   page you are leaving repaints to the destination's colour before it flips. */
+function shownPaper(){
+  if(holdDate&&pages[holdDate]){
+    var ss=pages[holdDate].sheets||[];
+    var sh=ss[clamp(holdSheet||0,0,Math.max(0,ss.length-1))];
+    if(sh) return sh.paper||'cream';
+  }
+  return curPaper();
+}
 function applyPaper(){
-  var id=curPaper();
+  var id=shownPaper();
   document.getElementById('page').style.background=paperColor(id);
+  var cid=curPaper();
   var sw=document.querySelectorAll('.sw');
-  for(var k=0;k<sw.length;k++) sw[k].classList.toggle('on',sw[k].dataset.p===id);
+  for(var k=0;k<sw.length;k++) sw[k].classList.toggle('on',sw[k].dataset.p===cid);
 }
 function buildSwatches(){
   var box=document.getElementById('swatches'), h='';
@@ -1999,7 +2044,28 @@ function updateDock(){
 }
 
 /* ================= mouse ================= */
+/* A single click on bare paper turns to the next page, like tapping the edge of a
+   real notebook. A double click still creates a text box, so the turn is held
+   briefly and cancelled the moment a second click arrives. */
+var pageTurnTimer=null, consumedByDeselect=false;
+function cancelPageTurnClick(){ if(pageTurnTimer){ clearTimeout(pageTurnTimer); pageTurnTimer=null; } }
+canvas.addEventListener('click',function(e){
+  if(e.target!==canvas) return;            /* only bare paper, never a block */
+  if(turning||coverClosed) return;
+  if(selId||blockSel){ return; }           /* something still selected */
+  if(focusedTx()) return;                  /* leaving a text box: don't also turn */
+  if(consumedByDeselect){ consumedByDeselect=false; return; }  /* that click just deselected */
+  if(e.detail>1){ cancelPageTurnClick(); return; }
+  cancelPageTurnClick();
+  pageTurnTimer=setTimeout(function(){
+    pageTurnTimer=null;
+    var s=sheets();
+    if(si<s.length-1) goPage(si+1);        /* next page of this day */
+    else goDate(shiftISO(cur,1));          /* or roll on to the next day */
+  },260);
+});
 canvas.addEventListener('dblclick',function(e){
+  cancelPageTurnClick();
   /* create a text box on bare canvas, and also when the double-click lands on the
      hover frame/bands of an IMAGE (you can't type into an image, so the intent is
      clearly to start text near it) */
@@ -2030,6 +2096,9 @@ canvas.addEventListener('mousedown',function(e){
       var fx=focusedTx(); if(fx) fx.blur();   /* clean frame-select, so Delete removes the box */
       selectBlock(near.id); return;
     }
+    /* note whether this click actually cleared a selection or an editing box: the
+       following click event must then only deselect, not also turn the page */
+    consumedByDeselect=!!(selId||blockSel||focusedTx());
     dropPoint={x:e.offsetX,y:e.offsetY}; deselect(); return;
   }
   var blk=e.target.closest?e.target.closest('.block'):null;
@@ -2614,6 +2683,7 @@ function turnTo(dir,commit){
 
   var fromSheet=sheet();
   var fromDate=cur;                   /* the date the leaving page is labelled with */
+  var fromSi=si;                      /* and which sheet of it was showing */
   turning=true;
   commit();
   var toSheet=sheet();
@@ -2627,6 +2697,8 @@ function turnTo(dir,commit){
      still the page we are leaving (fromDate), so hold that date on it. */
   var shownDate=(dir>0)?fromDate:cur;
   holdDate=(dir>0)?null:fromDate;
+  holdSheet=(dir>0)?0:fromSi;
+  applyPaper();                       /* repaint with the held page's colour */
   var pdStatic=document.getElementById('pageDate');
   if(pdStatic) pdStatic.textContent=fmtLong(holdDate||cur);
 
@@ -2675,7 +2747,8 @@ function endTurn(){
   try{ leaf.getAnimations().forEach(function(a){a.cancel();}); }catch(e){}
   leaf.style.transform='';
   turning=false;
-  holdDate=null;
+  holdDate=null; holdSheet=0;
+  applyPaper();
   var pd=document.getElementById('pageDate');
   if(pd){ pd.textContent=fmtLong(cur); pd.style.visibility=''; }
 }
