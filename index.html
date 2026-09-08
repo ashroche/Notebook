@@ -1207,23 +1207,26 @@ function closeCover(){
   var fc=document.getElementById('frontCover');
   coverClosed=true;
   document.body.classList.add('oncover');
-  /* a closed notebook always sits on today, so the bar and the page behind the
-     cover agree with where opening it will actually take you */
-  cur=todayISO(); si=lastWrittenSheet(cur);
-  updateDateUI(); render(false);
   try{ fc.getAnimations().forEach(function(a){ a.cancel(); }); }catch(e){}
   paintFrontCover();
   fc.style.display='flex';
   fc.classList.add('opening');            /* hides the hint while it swings */
   fc.setAttribute('aria-hidden','false');
-  if(reduced()||!fc.animate){ fc.classList.remove('opening'); fc.style.transform=''; return; }
+  /* The notebook resets to today, but ONLY once the cover has actually shut.
+     Doing it up front means you watch the page you were on flip to today's blank
+     page before the cover swings over it. */
+  function settle(){
+    cur=todayISO(); si=lastWrittenSheet(cur);
+    updateDateUI(); render(false);
+  }
+  if(reduced()||!fc.animate){ fc.classList.remove('opening'); fc.style.transform=''; settle(); return; }
   var frames=[], N=26;
   for(var i=0;i<=N;i++){
     var t=i/N, ang=-180*(1-t), lift=Math.sin((1-t)*Math.PI)*30;
     frames.push({transform:'translateZ('+lift.toFixed(1)+'px) rotateY('+ang.toFixed(1)+'deg)',offset:t});
   }
   var a=fc.animate(frames,{duration:640,easing:'cubic-bezier(.35,0,.35,1)'});
-  a.onfinish=function(){ fc.classList.remove('opening'); fc.style.transform=''; };
+  a.onfinish=function(){ fc.classList.remove('opening'); fc.style.transform=''; settle(); };
 }
 function openCover(){
   if(!coverClosed) return;
