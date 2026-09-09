@@ -384,7 +384,7 @@ body.oncover .dock{display:none}
 }
 .grain{position:absolute;inset:0;pointer-events:none;opacity:.06;mix-blend-mode:multiply;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='180' height='180' filter='url(%23n)'/></svg>")}
-.gutter{position:absolute;left:0;top:0;bottom:0;width:96px;pointer-events:none;
+.gutter{position:absolute;left:0;top:0;bottom:0;width:96px;cursor:pointer;
   background:linear-gradient(90deg, rgba(74,56,30,.17), rgba(74,56,30,.04) 46%, transparent)}
 .topfade{position:absolute;left:0;right:0;top:0;height:26px;pointer-events:none;
   background:linear-gradient(rgba(74,56,30,.10),transparent)}
@@ -642,7 +642,7 @@ body.hasbanner .stage{top:86px}
     <div class="cover" id="cover"></div>
     <div class="sheet s1"></div><div class="sheet s2"></div><div class="sheet s3"></div>
     <div class="page" id="page">
-      <div class="gutter"></div>
+      <div class="gutter" id="gutter" title="Previous page"></div>
       <div class="topfade"></div>
       <div class="grain"></div>
       <div class="pagedate" id="pageDate" aria-hidden="true"></div>
@@ -2149,13 +2149,31 @@ canvas.addEventListener('click',function(e){
   if(consumedByDeselect){ consumedByDeselect=false; return; }  /* that click just deselected */
   if(e.detail>1){ cancelPageTurnClick(); return; }
   cancelPageTurnClick();
-  pageTurnTimer=setTimeout(function(){
-    pageTurnTimer=null;
-    var s=sheets();
-    if(si<s.length-1) goPage(si+1);        /* next page of this day */
-    else goDate(shiftISO(cur,1));          /* or roll on to the next day */
-  },260);
+  /* left quarter of the sheet goes BACK, the rest goes forward, like thumbing a
+     real notebook from either edge */
+  var back=(e.offsetX < canvas.clientWidth*0.25);
+  pageTurnTimer=setTimeout(function(){ pageTurnTimer=null; turnByClick(back); },260);
 });
+(function(){
+  var g=document.getElementById('gutter');
+  if(!g) return;
+  g.addEventListener('click',function(e){
+    if(turning||coverClosed) return;
+    if(e.detail>1) return;
+    turnByClick(true);
+  });
+})();
+/* one place that decides where a page-edge click takes you */
+function turnByClick(back){
+  var s=sheets();
+  if(back){
+    if(si>0) goPage(si-1);                 /* previous page of this day */
+    else goDate(shiftISO(cur,-1));         /* or back to the previous day */
+  } else {
+    if(si<s.length-1) goPage(si+1);        /* next page of this day */
+    else goDate(shiftISO(cur,1));          /* or on to the next day */
+  }
+}
 canvas.addEventListener('dblclick',function(e){
   cancelPageTurnClick();
   /* create a text box on bare canvas, and also when the double-click lands on the
@@ -2804,14 +2822,19 @@ function turnTo(dir,commit){
      staying on screen, so you actually watch it lift, go edge-on, and flop over.
      Front face carries the content; the back is blank paper in that page's
      colour, so nothing can appear mirrored. */
-  var shown=(dir>0)?fromSheet:toSheet;
+  /* Which physical face you see WHEN depends on the rotation, so work it out from
+     the angles rather than by direction alone:
+       forward  runs 0 -> -180 : the FRONT faces you at the start, the BACK at the end
+       backward runs -180 -> 0 : the BACK faces you at the start, the FRONT at the end
+     The face you see first must carry the page you are leaving, and the face you
+     see last must carry the page you are arriving at. Get this wrong either way
+     and the colour appears to swap partway through or snap at the end. */
+  var shown=(dir>0)?fromSheet:toSheet;          /* sheet whose CONTENT is rendered */
   snapshotInto(lfFront,frontClone,shown,shownDate);
-  /* The BACK of the turning leaf is the side you see once it passes upright, so
-     it must carry the colour of the sheet being revealed, not another copy of the
-     one turning away. Otherwise the whole turn stays one colour and the new page
-     snaps in at the very end. */
-  var other=(dir>0)?toSheet:fromSheet;
-  backEl.style.background=paperColor((other&&other.paper)||'cream');
+  var firstFace=(dir>0)?lfFront:backEl;         /* seen at the start of the turn */
+  var lastFace =(dir>0)?backEl:lfFront;         /* seen at the end   of the turn */
+  firstFace.style.background=paperColor((fromSheet&&fromSheet.paper)||'cream');
+  lastFace.style.background =paperColor((toSheet&&toSheet.paper)||'cream');
   zone.classList.add('on');
 
   var from=(dir>0)?0:-180, to=(dir>0)?-180:0;
