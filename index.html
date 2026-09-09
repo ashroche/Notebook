@@ -220,7 +220,7 @@ body.oncover .dock{display:none}
 .notebook{position:relative;width:818px;height:1123px;flex:none;transform-origin:top center;
   perspective:2400px;perspective-origin:2% 50%}
 
-.cover{position:absolute;z-index:1;left:18px;top:-7px;width:812px;height:1139px;border-radius:3px 7px 7px 3px;
+.cover{position:absolute;z-index:1;left:12px;top:-13px;width:826px;height:1151px;border-radius:3px 9px 9px 3px;
   background:linear-gradient(160deg,#413a30,#26211b);
   box-shadow:0 30px 60px rgba(0,0,0,.55), 0 6px 14px rgba(0,0,0,.4)}
 /* cover materials */
@@ -296,7 +296,7 @@ body.oncover .dock{display:none}
 
 /* the front cover: a real surface that sits over the page when the notebook is
    closed and swings open on the spine to reveal the last page written on */
-.frontcover{position:absolute;z-index:5;left:18px;top:-7px;width:812px;height:1139px;
+.frontcover{position:absolute;z-index:5;left:12px;top:-13px;width:826px;height:1151px;
   border-radius:3px 9px 9px 3px;cursor:pointer;transform-origin:left center;
   transform-style:preserve-3d;display:none}
 .fc-face{position:absolute;inset:0;border-radius:inherit;backface-visibility:hidden;overflow:hidden}
@@ -1562,12 +1562,12 @@ function curPaper(){ var s=sheet(); return s.paper||'cream'; }
 /* the paper colour of whatever page is actually VISIBLE underneath. During a turn
    that is not `cur` yet, so honour the same hold the date label uses, otherwise the
    page you are leaving repaints to the destination's colour before it flips. */
+/* The sheet UNDER the turning leaf is the one being revealed, so its colour is
+   always the destination's. The leaf itself carries the page being left. */
 function shownPaper(){
-  var hd=holdPaper?holdPaper.d:holdDate;
-  var hs=holdPaper?holdPaper.s:holdSheet;
-  if(hd&&pages[hd]){
-    var ss=pages[hd].sheets||[];
-    var sh=ss[clamp(hs||0,0,Math.max(0,ss.length-1))];
+  if(holdPaper&&pages[holdPaper.d]){
+    var ss=pages[holdPaper.d].sheets||[];
+    var sh=ss[clamp(holdPaper.s||0,0,Math.max(0,ss.length-1))];
     if(sh) return sh.paper||'cream';
   }
   return curPaper();
@@ -2156,11 +2156,36 @@ canvas.addEventListener('click',function(e){
 });
 (function(){
   var g=document.getElementById('gutter');
-  if(!g) return;
-  g.addEventListener('click',function(e){
+  if(g) g.addEventListener('click',function(e){
     if(turning||coverClosed) return;
     if(e.detail>1) return;
     turnByClick(true);
+  });
+  /* The empty desk to the LEFT of the notebook goes back a page, and keeps going
+     back until the notebook is closed on its cover. The desk to the RIGHT goes
+     forward, so the whole window works like thumbing a real pad. */
+  var stage=document.getElementById('stage');
+  if(!stage) return;
+  stage.addEventListener('click',function(e){
+    if(e.target!==stage) return;          /* only the bare desk, never the notebook */
+    if(turning||shelfOpen) return;
+    if(e.detail>1) return;
+    var nbEl=document.getElementById('notebook');
+    var r=nbEl.getBoundingClientRect();
+    var leftSide=(e.clientX<r.left+r.width/2);
+    if(coverClosed){
+      if(!leftSide) openCover();          /* closed: the right side opens it */
+      return;
+    }
+    if(leftSide){
+      /* already on the first page of the first written day: close to the cover */
+      var days=writtenDays();
+      var firstDay=days.length?days[0]:cur;
+      if(si<=0&&cur<=firstDay){ closeCover(); return; }
+      turnByClick(true);
+    } else {
+      turnByClick(false);
+    }
   });
 })();
 /* one place that decides where a page-edge click takes you */
@@ -2806,14 +2831,19 @@ function turnTo(dir,commit){
      backward: the leaf is the ARRIVING page (cur); the static page underneath is
      still the page we are leaving (fromDate), so hold that date on it. */
   var shownDate=(dir>0)?fromDate:cur;
+  /* holdDate only governs the DATE LABEL on the static page (backward turns show
+     the leaving page underneath until the leaf lands). The paper colour is a
+     separate question and always follows the destination, because the sheet
+     underneath is the one being revealed. */
   holdDate=(dir>0)?null:fromDate;
   holdSheet=(dir>0)?0:fromSi;
-  /* The turning leaf never covers the whole page, so on a FORWARD turn the
-     destination's paper colour would show around it while the old page is
-     clearly still there. Hold the leaving page's colour for the whole turn in
-     both directions; the date label keeps its own (correct) per-direction rule. */
-  holdPaper=(dir>0)?{d:fromDate,s:fromSi}:null;
-  applyPaper();                       /* repaint with the held page's colour */
+  /* The page UNDERNEATH is the one being revealed, so it takes the destination's
+     colour straight away. Only the turning leaf carries the old page. Holding the
+     old colour underneath (as this used to) meant the previous colour filled the
+     screen for the whole ~800ms turn and the new one appeared to snap in at the
+     very end, which is exactly the "wrong colour while turning" problem. */
+  holdPaper=null;
+  applyPaper();                       /* underneath = destination colour */
   var pdStatic=document.getElementById('pageDate');
   if(pdStatic) pdStatic.textContent=fmtLong(holdDate||cur);
 
@@ -2846,7 +2876,10 @@ function turnTo(dir,commit){
     frames.push({transform:'translateZ('+lift.toFixed(1)+'px) rotateY('+ang.toFixed(1)+'deg)',
                  offset:t});
   }
-  var ease=(dir>0)?'cubic-bezier(.42,0,.4,1)':'cubic-bezier(.6,0,.58,1)';
+  /* Start lifting promptly. The old easing stayed near-flat for the first ~200ms,
+     so the page you were leaving covered the whole sheet and the new colour only
+     appeared right at the end, reading as a snap. */
+  var ease=(dir>0)?'cubic-bezier(.22,.42,.32,1)':'cubic-bezier(.24,.4,.34,1)';
   var leafAnim=leaf.animate(frames,{duration:DUR,easing:ease,fill:'forwards'});
 
   /* a highlight rides across the face as it tips, and a shadow deepens toward
