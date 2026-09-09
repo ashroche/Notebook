@@ -222,12 +222,18 @@ body.oncover .dock{display:none}
 
 .cover{position:absolute;z-index:1;left:12px;top:-13px;width:826px;height:1151px;border-radius:3px 9px 9px 3px;
   background:linear-gradient(160deg,#413a30,#26211b);
-  box-shadow:0 30px 60px rgba(0,0,0,.55), 0 6px 14px rgba(0,0,0,.4)}
+  box-shadow:0 2px 4px rgba(0,0,0,.20),
+             0 8px 16px rgba(0,0,0,.16),
+             0 20px 40px rgba(0,0,0,.13),
+             0 40px 80px rgba(0,0,0,.10)}
 /* cover materials */
 .cover.cover-kraft{background:linear-gradient(160deg,#4a4132,#2a231a)}
 .cover.cover-black{background:linear-gradient(150deg,#2a2c2f,#111214);
-  box-shadow:0 30px 60px rgba(0,0,0,.6), 0 6px 14px rgba(0,0,0,.45),
-    inset 0 1px 0 rgba(255,255,255,.05)}
+  box-shadow:0 2px 4px rgba(0,0,0,.22),
+             0 8px 16px rgba(0,0,0,.18),
+             0 20px 40px rgba(0,0,0,.14),
+             0 40px 80px rgba(0,0,0,.11),
+             inset 0 1px 0 rgba(255,255,255,.05)}
 .cover.cover-black::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
   background-image:radial-gradient(rgba(255,255,255,.018) 1px, transparent 1.1px);
   background-size:3px 3px}
@@ -310,7 +316,11 @@ body.oncover .dock{display:none}
 .frontcover.cover-forest .fc-face{background:linear-gradient(145deg,#2f4636,#16241a)}
 .frontcover.cover-grey .fc-face{background:linear-gradient(145deg,#585a5f,#303236)}
 .fc-front{display:flex;align-items:center;justify-content:center;
-  box-shadow:0 20px 50px rgba(0,0,0,.5),inset 0 0 60px rgba(0,0,0,.28),inset 3px 0 0 rgba(0,0,0,.35)}
+  box-shadow:0 2px 4px rgba(0,0,0,.20),
+             0 8px 16px rgba(0,0,0,.16),
+             0 20px 40px rgba(0,0,0,.13),
+             0 40px 80px rgba(0,0,0,.10),
+             inset 0 0 60px rgba(0,0,0,.28),inset 3px 0 0 rgba(0,0,0,.35)}
 .fc-front::after{content:'';position:absolute;left:20px;top:0;bottom:0;width:2px;
   background:repeating-linear-gradient(rgba(0,0,0,.35) 0 4px,transparent 4px 20px)}
 /* the reverse side: same material, slight sheen so it reads as the back of the board */
@@ -1608,7 +1618,7 @@ function fit(){
     /* Leave room for the cover overhang AND its drop shadow, otherwise the stage's
        overflow:hidden slices the shadow off and leaves a hard line across the
        bottom of the notebook. */
-    var SHADOW=46;
+    var SHADOW=92;   /* the cover's soft shadow reaches ~80px below the page */
     var availH=window.innerHeight-48-62-34-SHADOW;
     var availW=window.innerWidth-30;
     scale=clamp(Math.min(availH/NB_H,availW/NB_W),0.30,1);
@@ -2860,7 +2870,10 @@ function turnTo(dir,commit){
      The face you see first must carry the page you are leaving, and the face you
      see last must carry the page you are arriving at. Get this wrong either way
      and the colour appears to swap partway through or snap at the end. */
-  var shown=(dir>0)?fromSheet:toSheet;          /* sheet whose CONTENT is rendered */
+  /* The sheet that physically turns is ALWAYS the one you are leaving, in both
+     directions. Rendering the arriving sheet on a backward turn meant the page
+     you were still looking at appeared to change colour as it lifted. */
+  var shown=fromSheet;
   snapshotInto(lfFront,frontClone,shown,shownDate);
   /* The leaf is ONE physical sheet, so both of its faces are the same paper. The
      sheet that turns is the one you are leaving (forward) or arriving at
