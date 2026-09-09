@@ -2806,7 +2806,12 @@ function turnTo(dir,commit){
      colour, so nothing can appear mirrored. */
   var shown=(dir>0)?fromSheet:toSheet;
   snapshotInto(lfFront,frontClone,shown,shownDate);
-  backEl.style.background=paperColor((shown&&shown.paper)||'cream');
+  /* The BACK of the turning leaf is the side you see once it passes upright, so
+     it must carry the colour of the sheet being revealed, not another copy of the
+     one turning away. Otherwise the whole turn stays one colour and the new page
+     snaps in at the very end. */
+  var other=(dir>0)?toSheet:fromSheet;
+  backEl.style.background=paperColor((other&&other.paper)||'cream');
   zone.classList.add('on');
 
   var from=(dir>0)?0:-180, to=(dir>0)?-180:0;
