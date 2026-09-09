@@ -1605,12 +1605,17 @@ function fit(){
   } else {
     /* leave room for the bar (48), dock (62), the stage's own top padding and a
        little breathing space for the cover, which overhangs the page slightly */
-    var availH=window.innerHeight-48-62-34;
+    /* Leave room for the cover overhang AND its drop shadow, otherwise the stage's
+       overflow:hidden slices the shadow off and leaves a hard line across the
+       bottom of the notebook. */
+    var SHADOW=46;
+    var availH=window.innerHeight-48-62-34-SHADOW;
     var availW=window.innerWidth-30;
     scale=clamp(Math.min(availH/NB_H,availW/NB_W),0.30,1);
     nb.style.transform='scale('+scale+')';
-    /* collapse the layout gap the scale leaves below (origin is top center) */
-    nb.style.marginBottom=(-(NB_H*(1-scale))).toFixed(1)+'px';
+    /* collapse the layout gap the scale leaves below (origin is top center), but
+       keep a little so the shadow has somewhere to fall */
+    nb.style.marginBottom=(-(NB_H*(1-scale))+SHADOW).toFixed(1)+'px';
     stageEl.style.overflowY='hidden';   /* Fit means fit: no vertical scroll */
   }
   stageEl.style.overflowX='hidden';
@@ -2178,11 +2183,7 @@ canvas.addEventListener('click',function(e){
       return;
     }
     if(leftSide){
-      /* already on the first page of the first written day: close to the cover */
-      var days=writtenDays();
-      var firstDay=days.length?days[0]:cur;
-      if(si<=0&&cur<=firstDay){ closeCover(); return; }
-      turnByClick(true);
+      turnByClick(true);        /* one page back, same as clicking the left edge */
     } else {
       turnByClick(false);
     }
@@ -2861,10 +2862,15 @@ function turnTo(dir,commit){
      and the colour appears to swap partway through or snap at the end. */
   var shown=(dir>0)?fromSheet:toSheet;          /* sheet whose CONTENT is rendered */
   snapshotInto(lfFront,frontClone,shown,shownDate);
-  var firstFace=(dir>0)?lfFront:backEl;         /* seen at the start of the turn */
-  var lastFace =(dir>0)?backEl:lfFront;         /* seen at the end   of the turn */
-  firstFace.style.background=paperColor((fromSheet&&fromSheet.paper)||'cream');
-  lastFace.style.background =paperColor((toSheet&&toSheet.paper)||'cream');
+  /* The leaf is ONE physical sheet, so both of its faces are the same paper. The
+     sheet that turns is the one you are leaving (forward) or arriving at
+     (backward) -- whichever is rendered on it -- and the destination's colour is
+     already showing on the page underneath. Giving the two faces different
+     colours made a green page flip over to reveal a yellow back, which no real
+     notebook does. */
+  var leafPaper=paperColor((shown&&shown.paper)||'cream');
+  lfFront.style.background=leafPaper;
+  backEl.style.background=leafPaper;
   zone.classList.add('on');
 
   var from=(dir>0)?0:-180, to=(dir>0)?-180:0;
