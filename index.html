@@ -216,23 +216,23 @@ body.oncover .dock{display:none}
 
 /* ---------- stage & notebook ---------- */
 .stage{position:absolute;inset:48px 0 62px 0;overflow:auto;display:flex;
-  justify-content:center;align-items:flex-start;padding:12px 0 0}
+  justify-content:center;align-items:center;padding:0}
 .notebook{position:relative;width:818px;height:1123px;flex:none;transform-origin:top center;
   perspective:2400px;perspective-origin:2% 50%}
 
 .cover{position:absolute;z-index:1;left:12px;top:-13px;width:826px;height:1151px;border-radius:3px 9px 9px 3px;
   background:linear-gradient(160deg,#413a30,#26211b);
-  box-shadow:0 2px 4px rgba(0,0,0,.20),
-             0 8px 16px rgba(0,0,0,.16),
-             0 20px 40px rgba(0,0,0,.13),
-             0 40px 80px rgba(0,0,0,.10)}
+  box-shadow:0 4px 10px rgba(0,0,0,.22),
+             0 12px 24px rgba(0,0,0,.22),
+             0 26px 50px rgba(0,0,0,.19),
+             0 44px 82px rgba(0,0,0,.13)}
 /* cover materials */
 .cover.cover-kraft{background:linear-gradient(160deg,#4a4132,#2a231a)}
 .cover.cover-black{background:linear-gradient(150deg,#2a2c2f,#111214);
-  box-shadow:0 2px 4px rgba(0,0,0,.22),
-             0 8px 16px rgba(0,0,0,.18),
-             0 20px 40px rgba(0,0,0,.14),
-             0 40px 80px rgba(0,0,0,.11),
+  box-shadow:0 4px 10px rgba(0,0,0,.24),
+             0 12px 24px rgba(0,0,0,.24),
+             0 26px 50px rgba(0,0,0,.20),
+             0 44px 82px rgba(0,0,0,.14),
              inset 0 1px 0 rgba(255,255,255,.05)}
 .cover.cover-black::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
   background-image:radial-gradient(rgba(255,255,255,.018) 1px, transparent 1.1px);
@@ -253,6 +253,9 @@ body.oncover .dock{display:none}
 .shelf.morphing .shelf-head,.shelf.morphing .shelf-grid{opacity:0;transition:opacity .12s ease}
 .shelf-head{display:flex;align-items:center;justify-content:space-between;padding:20px 28px 10px;flex:0 0 auto}
 .shelf-head h1{font-family:'Caveat',cursive;font-size:30px;color:var(--shelf-text);font-weight:700;letter-spacing:.5px}
+.shelf-sync{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--shelf-text);
+  background:transparent;border:0;cursor:pointer;opacity:.8;font-family:inherit;padding:6px 8px;border-radius:7px}
+.shelf-sync:hover{opacity:1;background:#00000010}
 .shelf-grid{flex:1 1 auto;overflow-y:auto;display:grid;gap:26px 24px;padding:16px 28px 40px;
   grid-template-columns:repeat(auto-fill,minmax(150px,1fr));align-content:start;justify-items:center}
 .nbtile{width:100%;max-width:184px;cursor:pointer;transition:transform .16s ease}
@@ -671,7 +674,6 @@ body.hasbanner .stage{top:86px}
       <div class="fc-face fc-front">
       <div class="fc-inner">
         <div class="fc-title" id="fcTitle" contenteditable="true" spellcheck="false" aria-label="Notebook title"></div>
-        <div class="fc-hint" id="fcHint">Click to open</div>
       </div>
       <div class="fc-bar" id="fcBar">
         <button data-f="hand" class="fcfont" title="Handwriting" style="font-family:Caveat,cursive">Aa</button>
@@ -766,6 +768,7 @@ body.hasbanner .stage{top:86px}
 <div class="shelf" id="shelf" aria-hidden="true">
   <div class="shelf-head">
     <h1>Notebooks</h1>
+    <button class="shelf-sync" id="shelfSync" title="Cloud sync"><span class="sdot" id="sdotShelf"></span><span id="slabelShelf">Sync off</span></button>
   </div>
   <div class="shelf-grid" id="shelfGrid"></div>
 </div>
@@ -1608,19 +1611,17 @@ function fit(){
     nb.style.marginBottom='';
     stageEl.style.overflowY='auto';
   } else {
-    /* leave room for the bar (48), dock (62), the stage's own top padding and a
-       little breathing space for the cover, which overhangs the page slightly */
-    /* Leave room for the cover overhang AND its drop shadow, otherwise the stage's
-       overflow:hidden slices the shadow off and leaves a hard line across the
-       bottom of the notebook. */
-    var SHADOW=92;   /* the cover's soft shadow reaches ~80px below the page */
-    var availH=window.innerHeight-48-62-34-SHADOW;
+    /* Reserve an equal band above and below the page so it sits centred in the
+       stage, the lower band giving the cover's drop shadow room to fall without the
+       stage's overflow slicing it into a hard line across the bottom. */
+    var MARGIN=84;
+    var availH=window.innerHeight-48-62-MARGIN*2;
     var availW=window.innerWidth-30;
     scale=clamp(Math.min(availH/NB_H,availW/NB_W),0.30,1);
     nb.style.transform='scale('+scale+')';
-    /* collapse the layout gap the scale leaves below (origin is top center), but
-       keep a little so the shadow has somewhere to fall */
-    nb.style.marginBottom=(-(NB_H*(1-scale))+SHADOW).toFixed(1)+'px';
+    /* collapse the empty layout height the scale leaves below (origin is top
+       center) so flex centring centres the visible page, not the full-size box */
+    nb.style.marginBottom=(-(NB_H*(1-scale))).toFixed(1)+'px';
     stageEl.style.overflowY='hidden';   /* Fit means fit: no vertical scroll */
   }
   stageEl.style.overflowX='hidden';
@@ -3285,6 +3286,13 @@ function setStatus(cls,label,title){
   d.className='sdot'+(cls?' '+cls:'');
   document.getElementById('slabel').textContent=label;
   document.getElementById('syncBtn').title=title||'Cloud sync';
+  /* mirror the same status onto the shelf / landing page */
+  var ds=document.getElementById('sdotShelf');
+  if(ds){
+    ds.className='sdot'+(cls?' '+cls:'');
+    document.getElementById('slabelShelf').textContent=label;
+    document.getElementById('shelfSync').title=title||'Cloud sync';
+  }
 }
 function pushSoon(){
   var c=cfg(); if(!c.key||!c.bin) return;
@@ -3489,6 +3497,7 @@ function openModal(){
 }
 function closeModal(){ modal.classList.remove('on'); }
 document.getElementById('syncBtn').onclick=openModal;
+document.getElementById('shelfSync').onclick=openModal;
 document.getElementById('mCancel').onclick=closeModal;
 modal.addEventListener('mousedown',function(e){ if(e.target===modal) closeModal(); });
 document.getElementById('mSave').onclick=function(){
