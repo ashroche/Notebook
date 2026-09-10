@@ -192,7 +192,7 @@ body{
 
 /* ---------- fixed formatting bar ---------- */
 body.oncover .dock{display:none}
-.dock{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:150;
+.dock{position:fixed;left:50%;bottom:32px;transform:translateX(-50%);z-index:150;
   display:flex;align-items:center;gap:2px;background:var(--chrome);
   border:1px solid var(--chrome-border);border-radius:var(--shell-radius);padding:6px 8px;
   height:var(--shell-h);box-sizing:border-box;box-shadow:var(--shadow-dock)}
@@ -353,21 +353,22 @@ body.oncover .dock{display:none}
 .fc-hint{font-family:'Inter',sans-serif;font-size:13px;letter-spacing:.5px;color:#ffffff66;
   text-transform:uppercase}
 .frontcover.opening .fc-hint,.frontcover.editing .fc-hint{opacity:0}
-.fc-bar{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);display:none;gap:5px;
-  align-items:center;padding:7px 10px;background:#1c1a17ee;border:1px solid #ffffff1f;border-radius:12px;
-  box-shadow:0 10px 26px rgba(0,0,0,.5);white-space:nowrap}
-.frontcover .fc-bar{display:flex}
-.fcfont{width:34px;height:30px;font-size:16px;color:#e9e3d7;background:#ffffff10;border:1px solid #ffffff1a;
-  border-radius:7px;cursor:pointer;line-height:1}
-.fcfont:hover{background:#ffffff22}
-.fcfont.on{background:#ffffff2e;border-color:#ffffff55}
-.fc-sep{width:1px;height:20px;background:#ffffff26;margin:0 3px}
-.fccol{width:22px;height:22px;border-radius:50%;border:2px solid #ffffff33;cursor:pointer;padding:0}
+.fc-bar{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);z-index:150;display:none;gap:2px;
+  align-items:center;padding:6px 8px;background:var(--chrome);border:1px solid var(--chrome-border);
+  border-radius:var(--shell-radius);height:var(--shell-h);box-sizing:border-box;color:var(--ctl-text);
+  box-shadow:var(--shadow-dock);white-space:nowrap}
+body.oncover .fc-bar{display:flex}
+.fcfont{width:34px;height:32px;font-size:16px;color:var(--ctl-text);background:transparent;
+  border:1px solid transparent;border-radius:7px;cursor:pointer;line-height:1}
+.fcfont:hover{background:rgba(128,128,128,.16)}
+.fcfont.on{background:rgba(128,128,128,.26);border-color:var(--chrome-border)}
+.fc-sep{width:1px;height:20px;background:currentColor;opacity:.2;margin:0 3px}
+.fccol{width:22px;height:22px;border-radius:50%;border:2px solid rgba(128,128,128,.4);cursor:pointer;padding:0}
 .fccol:hover{transform:scale(1.12)}
-.fccol.on{border-color:#fff}
-.fcmat{width:24px;height:24px;border-radius:5px;border:2px solid #ffffff26;cursor:pointer;padding:0}
+.fccol.on{border-color:var(--ctl-text)}
+.fcmat{width:24px;height:24px;border-radius:5px;border:2px solid rgba(128,128,128,.32);cursor:pointer;padding:0}
 .fcmat:hover{transform:scale(1.1)}
-.fcmat.on{border-color:#fff}
+.fcmat.on{border-color:var(--ctl-text)}
 .sheet{position:absolute;z-index:2;width:794px;height:1123px;border-radius:1px 3px 3px 1px}
 .s1{left:35px;top:12px;background:#c8c2b3}
 .s2{left:32px;top:8px;background:#ded9cc}
@@ -686,26 +687,6 @@ body.hasbanner .stage{top:86px}
       <div class="fc-inner">
         <div class="fc-title" id="fcTitle" contenteditable="true" spellcheck="false" aria-label="Notebook title"></div>
       </div>
-      <div class="fc-bar" id="fcBar">
-        <button data-f="hand" class="fcfont" title="Handwriting" style="font-family:Caveat,cursive">Aa</button>
-        <button data-f="sans" class="fcfont" title="Sans" style="font-family:Inter,sans-serif">Aa</button>
-        <button data-f="serif" class="fcfont" title="Serif" style="font-family:Lora,serif">Aa</button>
-        <span class="fc-sep"></span>
-        <button class="fccol" data-col="#f3ead2" title="Cream" style="background:#f3ead2"></button>
-        <button class="fccol" data-col="#e2c15a" title="Gold" style="background:#e2c15a"></button>
-        <button class="fccol" data-col="#ffffff" title="White" style="background:#ffffff"></button>
-        <button class="fccol" data-col="#1b1b1b" title="Charcoal" style="background:#1b1b1b"></button>
-        <button class="fccol" data-col="#c0392b" title="Red" style="background:#c0392b"></button>
-        <button class="fccol" data-col="#2b6cb0" title="Blue" style="background:#2b6cb0"></button>
-        <span class="fc-sep"></span>
-        <button class="fcmat" data-mat="cardboard" title="Cardboard" style="background:linear-gradient(150deg,#4a4234,#2b241c)"></button>
-        <button class="fcmat" data-mat="kraft" title="Kraft" style="background:linear-gradient(150deg,#4a4132,#2a231a)"></button>
-        <button class="fcmat" data-mat="black" title="Black" style="background:linear-gradient(145deg,#2c2e31,#111214)"></button>
-        <button class="fcmat" data-mat="navy" title="Navy" style="background:linear-gradient(145deg,#28374f,#141b28)"></button>
-        <button class="fcmat" data-mat="red" title="Red" style="background:linear-gradient(145deg,#5f2d29,#331715)"></button>
-        <button class="fcmat" data-mat="forest" title="Forest" style="background:linear-gradient(145deg,#2f4636,#16241a)"></button>
-        <button class="fcmat" data-mat="grey" title="Grey" style="background:linear-gradient(145deg,#585a5f,#303236)"></button>
-      </div>
       <div class="nbname" id="coverNbName" aria-hidden="true"></div>
       </div>
       <div class="fc-face fc-back" aria-hidden="true"></div>
@@ -715,6 +696,26 @@ body.hasbanner .stage{top:86px}
   </div>
 </div>
 
+<div class="fc-bar" id="fcBar">
+  <button data-f="hand" class="fcfont" title="Handwriting" style="font-family:Caveat,cursive">Aa</button>
+  <button data-f="sans" class="fcfont" title="Sans" style="font-family:Inter,sans-serif">Aa</button>
+  <button data-f="serif" class="fcfont" title="Serif" style="font-family:Lora,serif">Aa</button>
+  <span class="fc-sep"></span>
+  <button class="fccol" data-col="#f3ead2" title="Cream" style="background:#f3ead2"></button>
+  <button class="fccol" data-col="#e2c15a" title="Gold" style="background:#e2c15a"></button>
+  <button class="fccol" data-col="#ffffff" title="White" style="background:#ffffff"></button>
+  <button class="fccol" data-col="#1b1b1b" title="Charcoal" style="background:#1b1b1b"></button>
+  <button class="fccol" data-col="#c0392b" title="Red" style="background:#c0392b"></button>
+  <button class="fccol" data-col="#2b6cb0" title="Blue" style="background:#2b6cb0"></button>
+  <span class="fc-sep"></span>
+  <button class="fcmat" data-mat="cardboard" title="Cardboard" style="background:linear-gradient(150deg,#4a4234,#2b241c)"></button>
+  <button class="fcmat" data-mat="kraft" title="Kraft" style="background:linear-gradient(150deg,#4a4132,#2a231a)"></button>
+  <button class="fcmat" data-mat="black" title="Black" style="background:linear-gradient(145deg,#2c2e31,#111214)"></button>
+  <button class="fcmat" data-mat="navy" title="Navy" style="background:linear-gradient(145deg,#28374f,#141b28)"></button>
+  <button class="fcmat" data-mat="red" title="Red" style="background:linear-gradient(145deg,#5f2d29,#331715)"></button>
+  <button class="fcmat" data-mat="forest" title="Forest" style="background:linear-gradient(145deg,#2f4636,#16241a)"></button>
+  <button class="fcmat" data-mat="grey" title="Grey" style="background:linear-gradient(145deg,#585a5f,#303236)"></button>
+</div>
 <div class="dock" id="dock">
   <select id="tbFont" aria-label="Font">
     <option value="hand">Handwriting</option>
@@ -1641,6 +1642,17 @@ function fit(){
                                            nothing scrolls anyway */
   }
   stageEl.style.overflowX=(zoom==='full')?'hidden':'visible';
+  /* Centre the bottom bars on the page itself, which sits a little right of window
+     centre because of the spine inset. Read the page's real position so it stays
+     aligned at any zoom rather than centring on the window. */
+  (function(){
+    var pgEl=document.getElementById('page'), cx=null;
+    if(pgEl){ var pr=pgEl.getBoundingClientRect(); if(pr.width>0) cx=pr.left+pr.width/2; }
+    if(cx==null) cx=window.innerWidth/2;
+    var dk=document.getElementById('dock'), fb=document.getElementById('fcBar');
+    if(dk) dk.style.left=cx.toFixed(1)+'px';
+    if(fb) fb.style.left=cx.toFixed(1)+'px';
+  })();
   document.getElementById('zoomBtn').textContent=(zoom==='full')?'A4':'Fit';
   layoutMarks();
 }
