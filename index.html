@@ -196,22 +196,24 @@ body.oncover .dock{display:none}
   display:flex;align-items:center;gap:2px;background:var(--chrome);
   border:1px solid var(--chrome-border);border-radius:var(--shell-radius);padding:6px 8px;
   height:var(--shell-h);box-sizing:border-box;box-shadow:var(--shadow-dock)}
-.dock select,.dock button{font:inherit;font-size:var(--ctl-font);color:var(--ctl-text);background:transparent;
+.dock select,.dock button,.fc-bar select,.fc-bar button{font:inherit;font-size:var(--ctl-font);color:var(--ctl-text);background:transparent;
   border:0;border-radius:6px;padding:0 9px;cursor:pointer;line-height:1;
   height:var(--ctl-h);display:inline-flex;align-items:center;justify-content:center;gap:5px;box-sizing:border-box}
-.dock select{padding:0 4px}
-.dock option{background:var(--chrome);color:var(--ctl-text)}
-.dock button:hover:not(:disabled),.dock select:hover:not(:disabled){background:var(--ctl-bg-hover)}
-.dock button.act{background:var(--ctl-bg-hover);font-weight:600}
+.dock select,.fc-bar select{padding:0 4px}
+#tbFont,#fcFont{width:112px;justify-content:flex-start}
+.dock option,.fc-bar option{background:var(--chrome);color:var(--ctl-text)}
+.dock button:hover:not(:disabled),.dock select:hover:not(:disabled),.fc-bar button:hover,.fc-bar select:hover{background:var(--ctl-bg-hover)}
+.dock button.act,.fc-bar button.act{background:var(--ctl-bg-hover);font-weight:600}
 .dock [disabled]{opacity:.3;cursor:default}
-.dock .size{font-size:var(--ctl-font);min-width:20px;text-align:center;color:var(--ctl-muted);user-select:none}
-.dock .sep{width:1px;height:18px;background:var(--sep);margin:0 5px}
-.dock button:focus-visible,.dock select:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.dock .size,.fc-bar .size{font-size:var(--ctl-font);min-width:22px;text-align:center;color:var(--ctl-muted);user-select:none}
+.dock .sep,.fc-bar .sep{width:1px;height:18px;background:var(--sep);margin:0 5px;flex:none}
+.dock button:focus-visible,.dock select:focus-visible,.fc-bar button:focus-visible,.fc-bar select:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
 .swatches{display:flex;align-items:center;gap:5px;padding:0 3px}
-.sw{width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.28);cursor:pointer;padding:0;
+.sw,.fcmat{width:20px;height:20px;border-radius:5px;border:1px solid rgba(0,0,0,.2);cursor:pointer;padding:0;
   box-shadow:0 0 0 0 #fff0;transition:box-shadow .12s}
-.sw:hover{box-shadow:0 0 0 2px #ffffff45}
-.sw.on{box-shadow:0 0 0 2px #fff}
+.sw:hover,.fcmat:hover{box-shadow:0 0 0 2px #ffffff66}
+.sw.on,.fcmat.on{box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--gold)}
+.fcmats{display:flex;align-items:center;gap:5px;padding:0 3px}
 .dock .danger:hover:not(:disabled){background:#6d2b26;color:#ffeceb}
 
 /* ---------- stage & notebook ---------- */
@@ -358,17 +360,6 @@ body.oncover .dock{display:none}
   border-radius:var(--shell-radius);height:var(--shell-h);box-sizing:border-box;color:var(--ctl-text);
   box-shadow:var(--shadow-dock);white-space:nowrap}
 body.oncover .fc-bar{display:flex}
-.fcfont{width:34px;height:32px;font-size:16px;color:var(--ctl-text);background:transparent;
-  border:1px solid transparent;border-radius:7px;cursor:pointer;line-height:1}
-.fcfont:hover{background:rgba(128,128,128,.16)}
-.fcfont.on{background:rgba(128,128,128,.26);border-color:var(--chrome-border)}
-.fc-sep{width:1px;height:20px;background:currentColor;opacity:.2;margin:0 3px}
-.fccol{width:22px;height:22px;border-radius:50%;border:2px solid rgba(128,128,128,.4);cursor:pointer;padding:0}
-.fccol:hover{transform:scale(1.12)}
-.fccol.on{border-color:var(--ctl-text)}
-.fcmat{width:24px;height:24px;border-radius:5px;border:2px solid rgba(128,128,128,.32);cursor:pointer;padding:0}
-.fcmat:hover{transform:scale(1.1)}
-.fcmat.on{border-color:var(--ctl-text)}
 .sheet{position:absolute;z-index:2;width:794px;height:1123px;border-radius:1px 3px 3px 1px}
 .s1{left:35px;top:12px;background:#c8c2b3}
 .s2{left:32px;top:8px;background:#ded9cc}
@@ -484,8 +475,8 @@ body.oncover .fc-bar{display:flex}
 .tx span[data-c="k"],span[data-c="k"]{color:#111417}
 .inkwrap{position:relative;display:inline-flex}
 #tbInk{display:inline-flex;align-items:center;justify-content:center}
-.inkdot{width:15px;height:15px;border-radius:50%;background:#c0392b;
-  box-shadow:inset 0 0 0 1.5px #ffffff33}
+.inkdot{width:11px;height:11px;border-radius:50%;background:#c0392b;
+  box-shadow:inset 0 0 0 1px #ffffff40,0 0 0 1px #00000022}
 /* the ink picker shares the dock's exact shell metrics, on a light panel so every
    colour including black reads clearly */
 .inkpop{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
@@ -697,24 +688,39 @@ body.hasbanner .stage{top:86px}
 </div>
 
 <div class="fc-bar" id="fcBar">
-  <button data-f="hand" class="fcfont" title="Handwriting" style="font-family:Caveat,cursive">Aa</button>
-  <button data-f="sans" class="fcfont" title="Sans" style="font-family:Inter,sans-serif">Aa</button>
-  <button data-f="serif" class="fcfont" title="Serif" style="font-family:Lora,serif">Aa</button>
-  <span class="fc-sep"></span>
-  <button class="fccol" data-col="#f3ead2" title="Cream" style="background:#f3ead2"></button>
-  <button class="fccol" data-col="#e2c15a" title="Gold" style="background:#e2c15a"></button>
-  <button class="fccol" data-col="#ffffff" title="White" style="background:#ffffff"></button>
-  <button class="fccol" data-col="#1b1b1b" title="Charcoal" style="background:#1b1b1b"></button>
-  <button class="fccol" data-col="#c0392b" title="Red" style="background:#c0392b"></button>
-  <button class="fccol" data-col="#2b6cb0" title="Blue" style="background:#2b6cb0"></button>
-  <span class="fc-sep"></span>
-  <button class="fcmat" data-mat="cardboard" title="Cardboard" style="background:linear-gradient(150deg,#4a4234,#2b241c)"></button>
-  <button class="fcmat" data-mat="kraft" title="Kraft" style="background:linear-gradient(150deg,#4a4132,#2a231a)"></button>
-  <button class="fcmat" data-mat="black" title="Black" style="background:linear-gradient(145deg,#2c2e31,#111214)"></button>
-  <button class="fcmat" data-mat="navy" title="Navy" style="background:linear-gradient(145deg,#28374f,#141b28)"></button>
-  <button class="fcmat" data-mat="red" title="Red" style="background:linear-gradient(145deg,#5f2d29,#331715)"></button>
-  <button class="fcmat" data-mat="forest" title="Forest" style="background:linear-gradient(145deg,#2f4636,#16241a)"></button>
-  <button class="fcmat" data-mat="grey" title="Grey" style="background:linear-gradient(145deg,#585a5f,#303236)"></button>
+  <select id="fcFont" aria-label="Title font">
+    <option value="hand">Handwriting</option>
+    <option value="sans">Sans</option>
+    <option value="serif">Serif</option>
+  </select>
+  <span class="sep"></span>
+  <button id="fcMinus" aria-label="Smaller title">&minus;</button>
+  <span class="size" id="fcSize">30</span>
+  <button id="fcPlus" aria-label="Bigger title">+</button>
+  <span class="sep"></span>
+  <button id="fcB" title="Bold title"><b>B</b></button>
+  <button id="fcI" title="Italic title"><i>I</i></button>
+  <button id="fcU" title="Underline title"><u>U</u></button>
+  <span class="inkwrap">
+    <button id="fcColBtn" title="Title colour"><span class="inkdot" id="fcDot"></span></button>
+    <span class="inkpop" id="fcPop">
+      <button class="inkopt" data-col="#f3ead2" title="Cream"><span class="idot" style="background:#f3ead2"></span></button>
+      <button class="inkopt" data-col="#e2c15a" title="Gold"><span class="idot" style="background:#e2c15a"></span></button>
+      <button class="inkopt" data-col="#ffffff" title="White"><span class="idot" style="background:#ffffff"></span></button>
+      <button class="inkopt" data-col="#1b1b1b" title="Charcoal"><span class="idot" style="background:#1b1b1b"></span></button>
+      <button class="inkopt" data-col="#c0392b" title="Red"><span class="idot" style="background:#c0392b"></span></button>
+      <button class="inkopt" data-col="#2b6cb0" title="Blue"><span class="idot" style="background:#2b6cb0"></span></button>
+    </span>
+  </span>
+  <span class="fcmats">
+    <button class="fcmat" data-mat="cardboard" title="Cardboard" style="background:linear-gradient(150deg,#4a4234,#2b241c)"></button>
+    <button class="fcmat" data-mat="kraft" title="Kraft" style="background:linear-gradient(150deg,#4a4132,#2a231a)"></button>
+    <button class="fcmat" data-mat="black" title="Black" style="background:linear-gradient(145deg,#2c2e31,#111214)"></button>
+    <button class="fcmat" data-mat="navy" title="Navy" style="background:linear-gradient(145deg,#28374f,#141b28)"></button>
+    <button class="fcmat" data-mat="red" title="Red" style="background:linear-gradient(145deg,#5f2d29,#331715)"></button>
+    <button class="fcmat" data-mat="forest" title="Forest" style="background:linear-gradient(145deg,#2f4636,#16241a)"></button>
+    <button class="fcmat" data-mat="grey" title="Grey" style="background:linear-gradient(145deg,#585a5f,#303236)"></button>
+  </span>
 </div>
 <div class="dock" id="dock">
   <select id="tbFont" aria-label="Font">
@@ -1288,6 +1294,14 @@ function paintNbName(){
   if(a) a.textContent=OWNER_INITIALS;
   if(b) b.textContent=OWNER_INITIALS;
 }
+function titleBaseSize(font){ return font==='sans'?52:(font==='serif'?54:64); }
+function titleSizePx(nb){ return clamp(titleBaseSize(nb.titleFont||'hand')+(nb.titleSize||0),30,96); }
+function applyTitleStyle(nb,t){
+  t.style.fontSize=titleSizePx(nb)+'px';
+  t.style.fontWeight=nb.titleBold?'700':'';
+  t.style.fontStyle=nb.titleItalic?'italic':'';
+  t.style.textDecoration=nb.titleUnderline?'underline':'';
+}
 function paintFrontCover(){
   var nb=activeNB(), fc=document.getElementById('frontCover');
   if(!nb||!fc) return;
@@ -1296,6 +1310,7 @@ function paintFrontCover(){
   t.textContent=nb.title||'My Notebook';
   t.className='fc-title font-'+(nb.titleFont||'hand');
   t.style.color=nb.titleColor||'#f3ead2';
+  applyTitleStyle(nb,t);
   paintNbName();
   syncCoverBar();
 }
@@ -1418,22 +1433,43 @@ function setupCover(){
     if(e.key==='Enter'){ e.preventDefault(); t.blur(); }
   });
   var bar=document.getElementById('fcBar');
-  bar.querySelectorAll('.fcfont').forEach(function(btn){
-    btn.addEventListener('mousedown',function(e){
-      e.preventDefault();
-      var nb=activeNB(); if(!nb) return;
-      nb.titleFont=this.dataset.f; nb.u=Date.now();
-      t.className='fc-title font-'+nb.titleFont; writeLocal(); syncCoverBar();
-    });
+  document.getElementById('fcFont').addEventListener('change',function(){
+    var nb=activeNB(); if(!nb) return;
+    nb.titleFont=this.value; nb.u=Date.now();
+    paintFrontCover(); writeLocal();
   });
-  bar.querySelectorAll('.fccol').forEach(function(btn){
-    btn.addEventListener('mousedown',function(e){
-      e.preventDefault();
-      var nb=activeNB(); if(!nb) return;
-      nb.titleColor=this.dataset.col; nb.u=Date.now();
-      t.style.color=nb.titleColor; writeLocal(); syncCoverBar();
+  function stepTitle(d){
+    var nb=activeNB(); if(!nb) return;
+    var base=titleBaseSize(nb.titleFont||'hand');
+    var applied=clamp(base+(nb.titleSize||0)+d*4,30,96);
+    nb.titleSize=applied-base; nb.u=Date.now();
+    paintFrontCover(); writeLocal();
+  }
+  document.getElementById('fcMinus').onclick=function(){ stepTitle(-1); };
+  document.getElementById('fcPlus').onclick=function(){ stepTitle(1); };
+  function toggleTitle(prop){
+    var nb=activeNB(); if(!nb) return;
+    nb[prop]=!nb[prop]; nb.u=Date.now();
+    paintFrontCover(); writeLocal();
+  }
+  document.getElementById('fcB').onclick=function(){ toggleTitle('titleBold'); };
+  document.getElementById('fcI').onclick=function(){ toggleTitle('titleItalic'); };
+  document.getElementById('fcU').onclick=function(){ toggleTitle('titleUnderline'); };
+  (function(){
+    var pop=document.getElementById('fcPop'), btn=document.getElementById('fcColBtn');
+    btn.onclick=function(e){ e.stopPropagation(); pop.classList.toggle('on'); };
+    pop.querySelectorAll('.inkopt').forEach(function(o){
+      o.addEventListener('mousedown',function(ev){
+        ev.preventDefault(); ev.stopPropagation();
+        var nb=activeNB(); if(!nb) return;
+        nb.titleColor=this.getAttribute('data-col'); nb.u=Date.now();
+        paintFrontCover(); writeLocal(); pop.classList.remove('on');
+      });
     });
-  });
+    document.addEventListener('mousedown',function(e){
+      if(pop.classList.contains('on')&&!e.target.closest('.inkwrap')) pop.classList.remove('on');
+    });
+  })();
   bar.querySelectorAll('.fcmat').forEach(function(btn){
     btn.addEventListener('mousedown',function(e){
       e.preventDefault();
@@ -1443,10 +1479,17 @@ function setupCover(){
 }
 function syncCoverBar(){
   var nb=activeNB(); if(!nb) return;
-  var f=nb.titleFont||'hand', c=nb.titleColor||'#f3ead2', mat=nb.cover||'cardboard';
-  document.querySelectorAll('.fcfont').forEach(function(b){ b.classList.toggle('on',b.dataset.f===f); });
-  document.querySelectorAll('.fccol').forEach(function(b){ b.classList.toggle('on',b.dataset.col.toLowerCase()===c.toLowerCase()); });
-  document.querySelectorAll('.fcmat').forEach(function(b){ b.classList.toggle('on',b.dataset.mat===mat); });
+  var f=nb.titleFont||'hand', c=(nb.titleColor||'#f3ead2'), mat=nb.cover||'cardboard';
+  var sel=document.getElementById('fcFont'); if(sel) sel.value=f;
+  var sz=document.getElementById('fcSize'); if(sz) sz.textContent=titleSizePx(nb);
+  var b=document.getElementById('fcB'); if(b) b.classList.toggle('act',!!nb.titleBold);
+  var it=document.getElementById('fcI'); if(it) it.classList.toggle('act',!!nb.titleItalic);
+  var u=document.getElementById('fcU'); if(u) u.classList.toggle('act',!!nb.titleUnderline);
+  var dot=document.getElementById('fcDot'); if(dot) dot.style.background=c;
+  document.querySelectorAll('.fcmat').forEach(function(el){ el.classList.toggle('on',el.dataset.mat===mat); });
+  document.querySelectorAll('#fcPop .inkopt').forEach(function(el){
+    el.classList.toggle('on',(el.getAttribute('data-col')||'').toLowerCase()===c.toLowerCase());
+  });
 }
 function commitTitle(finalize){
   var nb=activeNB(), t=document.getElementById('fcTitle'); if(!nb) return;
@@ -3447,7 +3490,11 @@ function mergeDoc(remoteRaw){
     if(!lnb.tomb) lnb.tomb={};
     var r=mergeNotebookPages(lnb.pages,lnb.tomb,rnb.pages,rnb.tomb||{},id===NB.active);
     if(r.curTouched) changedActive=true;
-    if((rnb.u||0)>(lnb.u||0)){ lnb.title=rnb.title; lnb.cover=rnb.cover; }
+    if((rnb.u||0)>(lnb.u||0)){
+      lnb.title=rnb.title; lnb.cover=rnb.cover;
+      lnb.titleFont=rnb.titleFont; lnb.titleColor=rnb.titleColor; lnb.titleSize=rnb.titleSize;
+      lnb.titleBold=rnb.titleBold; lnb.titleItalic=rnb.titleItalic; lnb.titleUnderline=rnb.titleUnderline;
+    }
     if((lnb.u||0)>(rnb.u||0)) localNewer=true;
     lnb.u=Math.max(lnb.u||0,rnb.u||0);
   }
