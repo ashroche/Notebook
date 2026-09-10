@@ -2837,24 +2837,27 @@ function turnTo(dir,commit){
   /* Both layers keep a correct, visible date: the leaf shows the date of the page
      that is turning, the settled page underneath already shows its own. Nothing
      blanks and nothing relabels itself mid-flight. */
-  /* forward: the leaf is the LEAVING page (fromDate); the static page underneath
-     is the destination (cur).
-     backward: the leaf is the ARRIVING page (cur); the static page underneath is
-     still the page we are leaving (fromDate), so hold that date on it. */
-  var shownDate=(dir>0)?fromDate:cur;
+  /* The turning leaf renders the LEAVING page's content (shown=fromSheet) in both
+     directions, so it must also carry the LEAVING page's date. It previously
+     carried the arriving date on backward turns, which put today's date on a leaf
+     that was showing the page you were leaving.
+     Underneath: forward reveals the destination (cur); backward holds the leaving
+     page (fromDate) until the leaf lands. */
+  var shownDate=fromDate;
   /* holdDate only governs the DATE LABEL on the static page (backward turns show
      the leaving page underneath until the leaf lands). The paper colour is a
      separate question and always follows the destination, because the sheet
      underneath is the one being revealed. */
   holdDate=(dir>0)?null:fromDate;
   holdSheet=(dir>0)?0:fromSi;
-  /* The page UNDERNEATH is the one being revealed, so it takes the destination's
-     colour straight away. Only the turning leaf carries the old page. Holding the
-     old colour underneath (as this used to) meant the previous colour filled the
-     screen for the whole ~800ms turn and the new one appeared to snap in at the
-     very end, which is exactly the "wrong colour while turning" problem. */
-  holdPaper=null;
-  applyPaper();                       /* underneath = destination colour */
+  /* The paper colour underneath must track the SAME page as the held date label,
+     or the page reads one date while wearing another date's colour. That means it
+     mirrors holdDate exactly: forward turns reveal the destination underneath (no
+     hold, destination colour), backward turns keep the leaving page underneath
+     until the leaf lands (hold its date AND its colour). Nulling this for both
+     directions is what made a coloured page snap to today's colour on Today. */
+  holdPaper=(dir>0)?null:{d:fromDate,s:fromSi};
+  applyPaper();                       /* underneath: destination fwd, leaving back */
   var pdStatic=document.getElementById('pageDate');
   if(pdStatic) pdStatic.textContent=fmtLong(holdDate||cur);
 
