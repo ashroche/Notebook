@@ -2834,20 +2834,18 @@ function turnTo(dir,commit){
   commit();
   var toSheet=sheet();
   afterNav();
-  /* Both layers keep a correct, visible date: the leaf shows the date of the page
-     that is turning, the settled page underneath already shows its own. Nothing
-     blanks and nothing relabels itself mid-flight. */
-  /* The turning leaf renders the LEAVING page's content (shown=fromSheet) in both
-     directions, so it must also carry the LEAVING page's date. It previously
-     carried the arriving date on backward turns, which put today's date on a leaf
-     that was showing the page you were leaving.
-     Underneath: forward reveals the destination (cur); backward holds the leaving
-     page (fromDate) until the leaf lands. */
-  var shownDate=fromDate;
-  /* holdDate only governs the DATE LABEL on the static page (backward turns show
-     the leaving page underneath until the leaf lands). The paper colour is a
-     separate question and always follows the destination, because the sheet
-     underneath is the one being revealed. */
+  /* Natural notebook motion: the page that physically MOVES differs by direction.
+     Forward, the page you are LEAVING lifts and swings away, revealing the next
+     page underneath. Backward, the PREVIOUS page swings back in from the spine and
+     drops on top of the current one. So the moving leaf is the leaving page going
+     forward, and the destination (previous) page going backward. Its date label
+     follows the page it actually is: fromDate forward, the arriving date backward. */
+  var shownDate=(dir>0)?fromDate:cur;
+  /* The static page UNDERNEATH is the reverse of the leaf: the destination on a
+     forward turn (revealed as the leaf lifts away) and the LEAVING page on a
+     backward turn (held until the previous-page leaf lands on top of it).
+     holdDate/holdSheet/holdPaper carry that page so its label and colour move
+     together and never disagree. */
   holdDate=(dir>0)?null:fromDate;
   holdSheet=(dir>0)?0:fromSi;
   /* The paper colour underneath must track the SAME page as the held date label,
@@ -2861,29 +2859,19 @@ function turnTo(dir,commit){
   var pdStatic=document.getElementById('pageDate');
   if(pdStatic) pdStatic.textContent=fmtLong(holdDate||cur);
 
-  /* The page you SEE turning is the leaving page (forward) or the arriving page
-     (backward). It hinges on the spine (left edge) and swings a full 180 while
-     staying on screen, so you actually watch it lift, go edge-on, and flop over.
-     Front face carries the content; the back is blank paper in that page's
-     colour, so nothing can appear mirrored. */
-  /* Which physical face you see WHEN depends on the rotation, so work it out from
-     the angles rather than by direction alone:
-       forward  runs 0 -> -180 : the FRONT faces you at the start, the BACK at the end
-       backward runs -180 -> 0 : the BACK faces you at the start, the FRONT at the end
-     The face you see first must carry the page you are leaving, and the face you
-     see last must carry the page you are arriving at. Get this wrong either way
-     and the colour appears to swap partway through or snap at the end. */
-  /* The sheet that physically turns is ALWAYS the one you are leaving, in both
-     directions. Rendering the arriving sheet on a backward turn meant the page
-     you were still looking at appeared to change colour as it lifted. */
-  var shown=fromSheet;
+  /* The moving leaf carries the LEAVING page forward and the DESTINATION (previous)
+     page backward, matching shownDate above and the underneath hold below. It hinges
+     on the left spine and swings a full 180 on screen.
+       forward  runs 0 -> -180 : the front (content) faces you at the start and the
+                blank back at the end, so the leaving page lifts off and reveals the
+                next page painted on #page underneath.
+       backward runs -180 -> 0 : the blank back faces you at the start and the front
+                (content) at the end, so the previous page swings in from the spine
+                and lands on top of the current page held underneath.
+     Both faces are the same paper, so a sheet never flips over to a different colour
+     on its back. */
+  var shown=(dir>0)?fromSheet:toSheet;
   snapshotInto(lfFront,frontClone,shown,shownDate);
-  /* The leaf is ONE physical sheet, so both of its faces are the same paper. The
-     sheet that turns is the one you are leaving (forward) or arriving at
-     (backward) -- whichever is rendered on it -- and the destination's colour is
-     already showing on the page underneath. Giving the two faces different
-     colours made a green page flip over to reveal a yellow back, which no real
-     notebook does. */
   var leafPaper=paperColor((shown&&shown.paper)||'cream');
   lfFront.style.background=leafPaper;
   backEl.style.background=leafPaper;
