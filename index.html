@@ -208,12 +208,12 @@ body.oncover .dock{display:none}
 .dock .size,.fc-bar .size{font-size:var(--ctl-font);min-width:22px;text-align:center;color:var(--ctl-muted);user-select:none}
 .dock .sep,.fc-bar .sep{width:1px;height:18px;background:var(--sep);margin:0 5px;flex:none}
 .dock button:focus-visible,.dock select:focus-visible,.fc-bar button:focus-visible,.fc-bar select:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
-.swatches{display:flex;align-items:center;gap:5px;padding:0 3px}
+.swatches{display:flex;align-items:center;gap:5px;padding:0 3px;margin-left:auto}
 .sw,.fcmat{width:20px;height:20px;border-radius:5px;border:1px solid rgba(0,0,0,.2);cursor:pointer;padding:0;
   box-shadow:0 0 0 0 #fff0;transition:box-shadow .12s}
 .sw:hover,.fcmat:hover{box-shadow:0 0 0 2px #ffffff66}
 .sw.on,.fcmat.on{box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--gold)}
-.fcmats{display:flex;align-items:center;gap:5px;padding:0 3px}
+.fcmats{display:flex;align-items:center;gap:5px;padding:0 3px;margin-left:auto}
 .dock .danger:hover:not(:disabled){background:#6d2b26;color:#ffeceb}
 
 /* ---------- stage & notebook ---------- */
@@ -748,9 +748,7 @@ body.hasbanner .stage{top:86px}
       <button class="inkopt" data-c="p" title="Purple"><span class="idot" style="background:#7a45c2"></span></button>
     </span>
   </span>
-  <span class="sep"></span>
   <span class="swatches" id="swatches"></span>
-  <span class="sep"></span>
 </div>
 
 <div class="modal" id="modal">
@@ -1685,9 +1683,15 @@ function fit(){
                                            nothing scrolls anyway */
   }
   stageEl.style.overflowX=(zoom==='full')?'hidden':'visible';
-  /* Centre the bottom bars on the page itself, which sits a little right of window
-     centre because of the spine inset. Read the page's real position so it stays
-     aligned at any zoom rather than centring on the window. */
+  /* Both bottom bars must be the SAME length, so the bar never resizes when you go
+     from the cover to a page. They hold different controls, so measure each one's
+     natural width (off-screen, since only one is visible at a time) and set both to
+     the wider. Left-aligned, so the font dropdown and format controls stay in the
+     exact same spot on both; only the trailing edge differs. */
+  equalizeBars();
+  /* Centre the bars on the page itself, which sits a little right of window centre
+     because of the spine inset. Read the page's real position so it stays aligned
+     at any zoom rather than centring on the window. */
   (function(){
     var pgEl=document.getElementById('page'), cx=null;
     if(pgEl){ var pr=pgEl.getBoundingClientRect(); if(pr.width>0) cx=pr.left+pr.width/2; }
@@ -1698,6 +1702,21 @@ function fit(){
   })();
   document.getElementById('zoomBtn').textContent=(zoom==='full')?'A4':'Fit';
   layoutMarks();
+}
+/* natural (content) width of a bar, measured even while it is hidden by cloning its
+   layout off-screen so nothing flashes */
+function barNaturalWidth(el){
+  var d=el.style.display, v=el.style.visibility, w=el.style.width, l=el.style.left, po=el.style.position;
+  el.style.width=''; el.style.visibility='hidden'; el.style.position='fixed'; el.style.left='-9999px'; el.style.display='inline-flex';
+  var n=Math.ceil(el.getBoundingClientRect().width);
+  el.style.display=d; el.style.visibility=v; el.style.width=w; el.style.left=l; el.style.position=po;
+  return n;
+}
+function equalizeBars(){
+  var dock=document.getElementById('dock'), fcb=document.getElementById('fcBar');
+  if(!dock||!fcb) return;
+  var w=Math.max(barNaturalWidth(dock), barNaturalWidth(fcb));
+  dock.style.width=w+'px'; fcb.style.width=w+'px';
 }
 
 /* ================= pen marks ================= */
