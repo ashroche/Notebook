@@ -1569,17 +1569,12 @@ function startRenameTile(el){
   el.addEventListener('blur',finish); el.addEventListener('keydown',key);
 }
 function curPaper(){ var s=sheet(); return s.paper||'cream'; }
-/* the paper colour of whatever page is actually VISIBLE underneath. During a turn
-   that is not `cur` yet, so honour the same hold the date label uses, otherwise the
-   page you are leaving repaints to the destination's colour before it flips. */
-/* The sheet UNDER the turning leaf is the one being revealed, so its colour is
-   always the destination's. The leaf itself carries the page being left. */
+/* The paper colour visible underneath a turn. When holdPaper is set it is the
+   leaving page's colour, captured as a value before the turn committed, so it
+   stays correct even if commit() has since pruned that empty page. Otherwise the
+   current page's own colour. */
 function shownPaper(){
-  if(holdPaper&&pages[holdPaper.d]){
-    var ss=pages[holdPaper.d].sheets||[];
-    var sh=ss[clamp(holdPaper.s||0,0,Math.max(0,ss.length-1))];
-    if(sh) return sh.paper||'cream';
-  }
+  if(holdPaper) return holdPaper;
   return curPaper();
 }
 function applyPaper(){
@@ -2848,13 +2843,13 @@ function turnTo(dir,commit){
      together and never disagree. */
   holdDate=(dir>0)?null:fromDate;
   holdSheet=(dir>0)?0:fromSi;
-  /* The paper colour underneath must track the SAME page as the held date label,
-     or the page reads one date while wearing another date's colour. That means it
-     mirrors holdDate exactly: forward turns reveal the destination underneath (no
-     hold, destination colour), backward turns keep the leaving page underneath
-     until the leaf lands (hold its date AND its colour). Nulling this for both
-     directions is what made a coloured page snap to today's colour on Today. */
-  holdPaper=(dir>0)?null:{d:fromDate,s:fromSi};
+  /* The colour of the page held underneath a backward turn, captured as a VALUE
+     here rather than looked up by date later. commit() prunes the empty leaving
+     page moments after this runs, so a later by-date lookup would miss it and fall
+     back to the destination's colour, painting the leaving date in the wrong colour.
+     That was the "blank page turns the next page's colour mid-flip" bug. Forward
+     turns reveal the destination underneath, so there is nothing to hold. */
+  holdPaper=(dir>0)?null:((fromSheet&&fromSheet.paper)||'cream');
   applyPaper();                       /* underneath: destination fwd, leaving back */
   var pdStatic=document.getElementById('pageDate');
   if(pdStatic) pdStatic.textContent=fmtLong(holdDate||cur);
