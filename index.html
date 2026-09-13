@@ -6,7 +6,7 @@
 <title>Notebook</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&family=Caveat:wght@400;700&family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,600;1,400&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&family=Caveat:wght@400;700&family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,600;1,400&family=Arimo:ital,wght@0,400;0,700;1,400&family=Carlito:ital,wght@0,400;0,700;1,400&family=Gelasio:ital,wght@0,400;0,600;1,400&family=Tinos:ital,wght@0,400;0,700;1,400&family=Poppins:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Merriweather:wght@400;700&display=block" rel="stylesheet">
 <style>
 :root{
   --paper:#f7f0dc;
@@ -689,9 +689,16 @@ body.hasbanner .stage{top:86px}
 
 <div class="fc-bar" id="fcBar">
   <select id="fcFont" aria-label="Title font">
-    <option value="hand">Handwriting</option>
-    <option value="sans">Sans</option>
-    <option value="serif">Serif</option>
+    <option value="caveat">Caveat</option>
+    <option value="inter">Inter</option>
+    <option value="lora">Lora</option>
+    <option value="arimo">Arimo</option>
+    <option value="carlito">Carlito</option>
+    <option value="gelasio">Gelasio</option>
+    <option value="tinos">Tinos</option>
+    <option value="poppins">Poppins</option>
+    <option value="playfair">Playfair Display</option>
+    <option value="merriweather">Merriweather</option>
   </select>
   <span class="sep"></span>
   <button id="fcMinus" aria-label="Smaller title">&minus;</button>
@@ -724,9 +731,16 @@ body.hasbanner .stage{top:86px}
 </div>
 <div class="dock" id="dock">
   <select id="tbFont" aria-label="Font">
-    <option value="hand">Handwriting</option>
-    <option value="sans">Sans</option>
-    <option value="serif">Serif</option>
+    <option value="caveat">Caveat</option>
+    <option value="inter">Inter</option>
+    <option value="lora">Lora</option>
+    <option value="arimo">Arimo</option>
+    <option value="carlito">Carlito</option>
+    <option value="gelasio">Gelasio</option>
+    <option value="tinos">Tinos</option>
+    <option value="poppins">Poppins</option>
+    <option value="playfair">Playfair Display</option>
+    <option value="merriweather">Merriweather</option>
   </select>
   <span class="sep"></span>
   <button id="tbMinus" aria-label="Smaller">&minus;</button>
@@ -796,7 +810,13 @@ body.hasbanner .stage{top:86px}
 
 /* ================= constants ================= */
 var NB_W=818, NB_H=1123;
-var FONTS={hand:"'Caveat','Bradley Hand',cursive",sans:"'Inter',system-ui,sans-serif",serif:"'Lora',Georgia,serif"};
+var FONTS={hand:"'Caveat',cursive",sans:"'Inter',system-ui,sans-serif",serif:"'Lora',Georgia,serif",
+  caveat:"'Caveat',cursive",inter:"'Inter',system-ui,sans-serif",lora:"'Lora',Georgia,serif",
+  arimo:"'Arimo',Arial,sans-serif",carlito:"'Carlito','Calibri',sans-serif",gelasio:"'Gelasio',Georgia,serif",
+  tinos:"'Tinos','Times New Roman',serif",poppins:"'Poppins',sans-serif",
+  playfair:"'Playfair Display',Georgia,serif",merriweather:"'Merriweather',Georgia,serif"};
+/* old blocks/titles stored hand/sans/serif; map those to the new keys for display */
+function normFont(f){ return f==='hand'?'caveat':(f==='sans'?'inter':(f==='serif'?'lora':(f||'caveat'))); }
 /* Caveat has a small x-height, so it needs ~1.55x the px size of Inter to look the same
    size on the page. Sizes in the dock are apparent size, not raw CSS px. */
 var FSCALE={hand:1.55,sans:1,serif:1};
@@ -1292,9 +1312,15 @@ function paintNbName(){
   if(a) a.textContent=OWNER_INITIALS;
   if(b) b.textContent=OWNER_INITIALS;
 }
-function titleBaseSize(font){ return font==='sans'?52:(font==='serif'?54:64); }
+function titleBaseSize(font){
+  font=normFont(font);
+  if(font==='caveat') return 64;
+  if(font==='inter'||font==='arimo'||font==='carlito'||font==='poppins') return 52;
+  return 54;   /* serifs: lora, gelasio, tinos, playfair, merriweather */
+}
 function titleSizePx(nb){ return clamp(titleBaseSize(nb.titleFont||'hand')+(nb.titleSize||0),30,96); }
 function applyTitleStyle(nb,t){
+  t.style.fontFamily=FONTS[normFont(nb.titleFont)]||FONTS.caveat;
   t.style.fontSize=titleSizePx(nb)+'px';
   t.style.fontWeight=nb.titleBold?'700':'';
   t.style.fontStyle=nb.titleItalic?'italic':'';
@@ -1306,7 +1332,7 @@ function paintFrontCover(){
   fc.className='frontcover'+((nb.cover&&nb.cover!=='cardboard')?(' cover-'+nb.cover):'');
   var t=document.getElementById('fcTitle');
   t.textContent=nb.title||'My Notebook';
-  t.className='fc-title font-'+(nb.titleFont||'hand');
+  t.className='fc-title';
   t.style.color=nb.titleColor||'#f3ead2';
   applyTitleStyle(nb,t);
   paintNbName();
@@ -1478,7 +1504,7 @@ function setupCover(){
 function syncCoverBar(){
   var nb=activeNB(); if(!nb) return;
   var f=nb.titleFont||'hand', c=(nb.titleColor||'#f3ead2'), mat=nb.cover||'cardboard';
-  var sel=document.getElementById('fcFont'); if(sel) sel.value=f;
+  var sel=document.getElementById('fcFont'); if(sel) sel.value=normFont(f);
   var sz=document.getElementById('fcSize'); if(sz) sz.textContent=titleSizePx(nb);
   var b=document.getElementById('fcB'); if(b) b.classList.toggle('act',!!nb.titleBold);
   var it=document.getElementById('fcI'); if(it) it.classList.toggle('act',!!nb.titleItalic);
@@ -2224,7 +2250,7 @@ function updateDock(){
   var ids=['tbFont','tbMinus','tbPlus','tbB','tbI','tbU','tbL'];
   for(var i=0;i<ids.length;i++) document.getElementById(ids[i]).disabled=!isText;
   if(isText){
-    document.getElementById('tbFont').value=b.font;
+    document.getElementById('tbFont').value=normFont(b.font);
     document.getElementById('tbSize').textContent=b.size;
   } else document.getElementById('tbSize').textContent='\u2013';
   var tx=focusedTx();
