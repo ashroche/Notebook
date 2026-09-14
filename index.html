@@ -104,6 +104,30 @@ body{
 .bar select{font:inherit;font-size:var(--ctl-font);height:var(--ctl-h);color:var(--ctl-text);background:var(--ctl-bg);
   border:1px solid var(--ctl-border);border-radius:var(--ctl-radius);padding:0 8px;cursor:pointer}
 .bar select:hover{background:var(--ctl-bg-hover)}
+/* Zoom: one control doing one job. The track sets the level, the label reads it
+   back, and clicking the label returns to Fit. Shares the bar's control metrics
+   so it sits on the same line as everything else. */
+.zoomctl{display:inline-flex;align-items:center;gap:7px;height:var(--ctl-h);
+  padding:0 8px 0 9px;box-sizing:border-box;
+  background:var(--ctl-bg);border:1px solid var(--ctl-border);border-radius:var(--ctl-radius)}
+.zoomctl:hover{background:var(--ctl-bg-hover)}
+.zoomctl #zoomBtn{border:0;background:none;padding:0;height:auto;min-width:32px;
+  font-variant-numeric:tabular-nums;text-align:right;color:var(--ctl-text);cursor:pointer}
+.zoomctl #zoomBtn:hover{background:none;color:var(--ctl-text-strong);text-decoration:underline}
+#zoomRange{-webkit-appearance:none;appearance:none;width:74px;height:14px;background:none;
+  cursor:ew-resize;margin:0;padding:0}
+#zoomRange::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:var(--ctl-border)}
+#zoomRange::-moz-range-track{height:3px;border-radius:2px;background:var(--ctl-border)}
+#zoomRange::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;
+  margin-top:-4.5px;background:var(--gold);border:1px solid #00000030;
+  box-shadow:0 1px 2px rgba(0,0,0,.35)}
+#zoomRange::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--gold);
+  border:1px solid #00000030;box-shadow:0 1px 2px rgba(0,0,0,.35)}
+#zoomRange:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:3px}
+/* the glide. Suppressed while a gesture is actually in flight, where a transition
+   would lag behind the pointer instead of smoothing anything. */
+.notebook{transition:transform .13s cubic-bezier(.25,.8,.35,1)}
+.notebook.nozoomanim{transition:none}
 .bar option{background:var(--chrome);color:var(--ctl-text)}
 .nav{padding:6px 10px !important;font-size:15px !important}
 .datewrap{display:flex;align-items:center;gap:8px;padding:5px 10px;position:relative;cursor:pointer;
@@ -214,11 +238,10 @@ body.oncover .dock{display:none}
 .sw:hover,.fcmat:hover{box-shadow:0 0 0 2px #ffffff66}
 .sw.on,.fcmat.on{box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--gold)}
 .fcmats{display:flex;align-items:center;gap:5px;padding:0 3px;margin-left:auto}
-.dock .danger:hover:not(:disabled){background:#6d2b26;color:#ffeceb}
 
 /* ---------- stage & notebook ---------- */
 .stage{position:absolute;inset:48px 0 62px 0;overflow:auto;display:flex;
-  justify-content:center;align-items:center;padding:0}
+  justify-content:safe center;align-items:safe center;padding:0}
 .notebook{position:relative;width:818px;height:1123px;flex:none;transform-origin:top center;
   perspective:2400px;perspective-origin:2% 50%}
 
@@ -235,20 +258,6 @@ body.oncover .dock{display:none}
   background:radial-gradient(50% 50% at 50% 50%,rgba(0,0,0,.32),rgba(0,0,0,.15) 46%,rgba(0,0,0,0) 78%);
   filter:blur(17px)}
 /* cover materials */
-.cover.cover-kraft{background:linear-gradient(160deg,#cdb185,#a88a5c)}
-.cover.cover-black{background:linear-gradient(150deg,#2a2c2f,#111214);
-  box-shadow:0 4px 10px rgba(0,0,0,.24),
-             0 12px 24px rgba(0,0,0,.24),
-             0 26px 50px rgba(0,0,0,.20),
-             0 44px 82px rgba(0,0,0,.14),
-             inset 0 1px 0 rgba(255,255,255,.05)}
-.cover.cover-black::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-  background-image:radial-gradient(rgba(255,255,255,.018) 1px, transparent 1.1px);
-  background-size:3px 3px}
-.cover.cover-navy{background:linear-gradient(150deg,#26344a,#141b28)}
-.cover.cover-red{background:linear-gradient(150deg,#5a2b28,#331715)}
-.cover.cover-forest{background:linear-gradient(150deg,#2c4232,#16241a)}
-.cover.cover-grey{background:linear-gradient(150deg,#54565b,#303236)}
 .shelfbtn{display:inline-flex;align-items:center;gap:7px;color:#ded9d0}
 .shelfbtn svg{opacity:.85}
 #shelfBtnName{max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -306,12 +315,6 @@ body.oncover .dock{display:none}
 .nbtitle[contenteditable]:focus{outline:none;background:#ffffff1a;border-radius:4px;padding:1px 4px;-webkit-line-clamp:none}
 .nbadd .nbcover{background:none;box-shadow:none;border:2px dashed var(--add-dash)}
 .nbadd .nbmono{font-size:44px;color:var(--add-glyph);font-weight:400}
-.nbcover.cover-kraft{background:linear-gradient(160deg,#cdb185,#a88a5c)}
-.nbcover.cover-black{background:linear-gradient(150deg,#2a2c2f,#111214)}
-.nbcover.cover-navy{background:linear-gradient(150deg,#26344a,#141b28)}
-.nbcover.cover-red{background:linear-gradient(150deg,#5a2b28,#331715)}
-.nbcover.cover-forest{background:linear-gradient(150deg,#2c4232,#16241a)}
-.nbcover.cover-grey{background:linear-gradient(150deg,#54565b,#303236)}
 .stage.shrinking{transition:transform .3s ease,opacity .3s ease;transform:scale(.82);opacity:0;pointer-events:none}
 .stage.growing{animation:nbgrow .3s ease}
 @keyframes nbgrow{from{transform:scale(.86);opacity:.3}to{transform:none;opacity:1}}
@@ -330,12 +333,6 @@ body.oncover .dock{display:none}
 .fc-face::before,.cover::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
   background-size:150px 150px;opacity:.16;mix-blend-mode:overlay}
-.frontcover.cover-kraft .fc-face{background:linear-gradient(150deg,#cdb185,#a88a5c)}
-.frontcover.cover-black .fc-face{background:linear-gradient(145deg,#2c2e31,#111214)}
-.frontcover.cover-navy .fc-face{background:linear-gradient(145deg,#28374f,#141b28)}
-.frontcover.cover-red .fc-face{background:linear-gradient(145deg,#5f2d29,#331715)}
-.frontcover.cover-forest .fc-face{background:linear-gradient(145deg,#2f4636,#16241a)}
-.frontcover.cover-grey .fc-face{background:linear-gradient(145deg,#585a5f,#303236)}
 .fc-front{display:flex;align-items:center;justify-content:center;
   box-shadow:0 2px 4px rgba(0,0,0,.20),
              0 8px 16px rgba(0,0,0,.16),
@@ -353,13 +350,7 @@ body.oncover .dock{display:none}
 .fc-title{font-family:'Caveat',cursive;font-size:64px;line-height:1.15;color:#f3ead2;font-weight:700;
   outline:none;min-width:60px;max-width:640px;text-shadow:0 1px 4px rgba(0,0,0,.35);
   border-radius:8px;padding:4px 14px;cursor:text}
-.fc-title.font-hand{font-family:'Caveat',cursive}
-.fc-title.font-sans{font-family:'Inter',sans-serif;font-size:52px;font-weight:600}
-.fc-title.font-serif{font-family:'Lora',serif;font-size:54px}
 .fc-title:focus{background:rgba(255,255,255,.08)}
-.fc-hint{font-family:'Inter',sans-serif;font-size:13px;letter-spacing:.5px;color:#ffffff66;
-  text-transform:uppercase}
-.frontcover.opening .fc-hint,.frontcover.editing .fc-hint{opacity:0}
 .fc-bar{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);z-index:150;display:none;gap:2px;
   align-items:center;padding:6px 8px;background:var(--chrome);border:1px solid var(--chrome-border);
   border-radius:var(--shell-radius);height:var(--shell-h);box-sizing:border-box;color:var(--ctl-text);
@@ -408,7 +399,10 @@ body.oncover .fc-bar{display:flex}
 }
 .grain{position:absolute;inset:0;pointer-events:none;opacity:.06;mix-blend-mode:multiply;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='180' height='180' filter='url(%23n)'/></svg>")}
-.gutter{position:absolute;left:0;top:0;bottom:0;width:96px;cursor:pointer;
+/* The gutter turns a page like the paper's own edge bands do, and none of those
+   show a pointer, so neither does this. A hand cursor over the coil implied a
+   control sitting there, and the coil is not a control. */
+.gutter{position:absolute;left:0;top:0;bottom:0;width:96px;cursor:default;
   background:linear-gradient(90deg, rgba(74,56,30,.17), rgba(74,56,30,.04) 46%, transparent)}
 .topfade{position:absolute;left:0;right:0;top:0;height:26px;pointer-events:none;
   background:linear-gradient(rgba(74,56,30,.10),transparent)}
@@ -426,17 +420,29 @@ body.oncover .fc-bar{display:flex}
    destination page painted on the base #page underneath. No double-sided 3D,
    so an image can never appear mirrored on a back face. */
 .flipzone{position:absolute;left:26px;top:0;width:794px;height:1123px;
-  perspective:2400px;perspective-origin:0% 50%;pointer-events:none;z-index:6;display:none}
-.flipzone.on{display:block}
+  perspective:2400px;perspective-origin:0% 50%;pointer-events:none;z-index:6;
+  visibility:hidden}
+/* Hidden with visibility, NOT display. The turning page is measured before it is
+   shown - every strike and tick is positioned from a real getBoundingClientRect -
+   and a display:none element has no layout, so those measurements all came back
+   zero and the marks were silently skipped. */
+.flipzone.on{visibility:visible}
 .spineshadow{position:absolute;left:0;top:0;width:150px;height:100%;opacity:0;
   background:linear-gradient(90deg, rgba(0,0,0,.34), rgba(0,0,0,0));border-radius:2px;z-index:1}
 .leaf{position:absolute;inset:0;transform-origin:left center;will-change:transform;z-index:2;
   transform-style:preserve-3d}
+/* No backface-visibility here on purpose. Chromium does not apply it consistently
+   to these two coplanar faces: it left the written side showing past edge-on, and
+   then hid the blank reverse at the angles where it was the face you should see.
+   Which face is visible is driven explicitly from the turn's angle instead, which
+   is both correct and testable. */
 .lf{position:absolute;inset:0;overflow:hidden;background:var(--paper);
-  backface-visibility:hidden;
   border-radius:1px 3px 3px 1px;box-shadow:2px 6px 22px rgba(0,0,0,.30)}
 /* blank reverse of the sheet, revealed once the page passes edge-on */
 .lf-back{transform:rotateY(180deg)}
+.lf-shade{position:absolute;inset:0;pointer-events:none;z-index:2;opacity:0;
+  background:linear-gradient(90deg, rgba(20,17,12,.30) 0%, rgba(20,17,12,.72) 78%,
+                                    rgba(20,17,12,.85) 100%)}
 .lf-back::after{content:'';position:absolute;inset:0;
   background:linear-gradient(270deg, rgba(0,0,0,.16), rgba(0,0,0,0) 42%)}
 .lfclone{position:absolute;inset:0;overflow:hidden}
@@ -446,7 +452,64 @@ body.oncover .fc-bar{display:flex}
     rgba(0,0,0,0) 55%)}
 
 /* ---------- writing area ---------- */
+/* ---------- cover material ----------
+   One overlay element per cover surface. The selectors are descendant, not
+   child: the material class sits on the cover element, and on the front cover
+   the texture layer is a grandchild inside .fc-face. The per-material texture is drawn in
+   CSS with no images, so it costs nothing to download, nothing to store and it
+   works offline. Every period is 6px or more: the app scales the notebook to
+   roughly 45% in Fit mode, and anything finer than that turns to moire. */
+.covtex{position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:1}
+.mat-fine .covtex{background-image:
+  radial-gradient(circle at 50% 50%, rgba(255,255,255,.045) 0 .6px, transparent 1px),
+  radial-gradient(circle at 20% 80%, rgba(0,0,0,.16) 0 .7px, transparent 1.1px);
+  background-size:6px 6px,7px 7px}
+.mat-pebble .covtex{background-image:
+  radial-gradient(ellipse 58% 52% at 30% 30%, rgba(255,255,255,.075) 0 36%, transparent 64%),
+  radial-gradient(ellipse 52% 58% at 74% 70%, rgba(0,0,0,.24) 0 38%, transparent 68%),
+  radial-gradient(ellipse 62% 56% at 48% 58%, rgba(255,255,255,.04) 0 34%, transparent 66%),
+  radial-gradient(ellipse 70% 62% at 55% 42%, rgba(0,0,0,.14) 0 44%, transparent 74%);
+  background-size:9px 8px,13px 12px,17px 19px,31px 28px;
+  background-position:0 0,3px 5px,7px 2px,0 0}
+.mat-saffiano .covtex{background-image:
+  repeating-linear-gradient(45deg, rgba(255,255,255,.055) 0 1px, transparent 1px 6px),
+  repeating-linear-gradient(-45deg, rgba(0,0,0,.24) 0 1px, transparent 1px 6px)}
+.mat-linen .covtex{background-image:
+  repeating-linear-gradient(90deg, rgba(255,255,255,.055) 0 1.5px, transparent 1.5px 6px),
+  repeating-linear-gradient(0deg,  rgba(0,0,0,.22) 0 1.5px, transparent 1.5px 6px)}
+/* A light cover shows the dark half of every texture far more than a dark one
+   does, so the same overlay reads as polka dots or stripes rather than grain.
+   Halving it keeps the material legible without the pattern taking over. */
+.cover-light .covtex{opacity:.45}
+
+/* ---------- shelf tile coil ----------
+   The wire wraps around the spine on a real pad, so it has to sit OUTSIDE the
+   cover's overflow clip, which the cover needs for its rounded corners. Hence a
+   wrapper: cover inside it, coil over the top of it.
+   Every measurement is a percentage of the tile, because the shelf grid sizes
+   tiles fluidly between 150px and 184px and a fixed pitch would drift.
+   Derivation, with COIL_RINGS = 28 and a tile aspect of 0.72:
+     usable height = 95% of the tile height
+     pitch         = 95% / 28            = 3.393% of the tile height
+     ring width    = 1.75 x pitch        = 5.938% of height = 8.25% of width
+     hang          = 3px on a 150px tile = 2% of width
+   which puts 6.2% of the tile's width under the ring, against the full-size
+   notebook's own 6.7%. */
+.nbcoverwrap{position:relative;width:100%}
+.nbcoil{position:absolute;left:-2%;top:2.5%;bottom:2.5%;width:8.25%;z-index:5;pointer-events:none;
+  background-repeat:repeat-y;background-position:left top;background-size:100% 3.5714%;
+  filter:drop-shadow(-.5px .5px .6px rgba(0,0,0,.35))}
+/* the board's cut edge, so the wire reads as passing in front of something */
+.nbspine{position:absolute;left:0;top:0;bottom:0;width:2px;z-index:4;border-radius:2px 0 0 2px;
+  background:linear-gradient(90deg,rgba(0,0,0,.45),rgba(0,0,0,0))}
+.cover-light+.nbspine{background:linear-gradient(90deg,rgba(0,0,0,.22),rgba(0,0,0,0))}
+
 .canvas{position:absolute;left:80px;top:30px;right:26px;bottom:28px;z-index:4}
+/* the page held underneath a turn shows the day you are leaving, so nothing on
+   it may be clicked or typed into while the leaf is in the air */
+.canvas.holding{pointer-events:none}
+.canvas.holding .tick{opacity:0}
+.canvas.holding .row.done .tick{opacity:1}
 
 .block{position:absolute;color:var(--ink)}
 .block img{display:block;width:100%;height:100%;border-radius:2px;
@@ -654,7 +717,10 @@ body.hasbanner .stage{top:86px}
   <button id="carry" title="Bring unfinished items forward from your last written day">Carry Forward</button>
   <span class="spacer"></span>
   <button id="themeBtn" title="Switch between light and dark" aria-label="Switch theme"></button>
-  <button id="zoomBtn" title="Fit to window, or true A4 size">Fit</button>
+  <span class="zoomctl" id="zoomCtl" title="Drag to zoom. Ctrl/Cmd + scroll or pinch also works, and Ctrl/Cmd with + - 0. Snaps at 100% and at fit; click the label to fit to the window">
+    <input type="range" id="zoomRange" min="0" max="1000" value="0" step="1" aria-label="Zoom">
+    <button id="zoomBtn" aria-label="Fit the page to the window">Fit</button>
+  </span>
   <button id="syncBtn" title="Cloud sync"><span class="sdot" id="sdot"></span><span id="slabel">Sync off</span></button>
   <span class="sep"></span>
   <button id="undoBtn" title="Undo (Ctrl+Z)">Undo</button>
@@ -677,7 +743,7 @@ body.hasbanner .stage{top:86px}
       <div class="spineshadow" id="spineShadow"></div>
       <div class="leaf" id="leaf">
         <div class="lf lf-front" id="lfFront"><div class="lfclone" id="lfFrontClone"></div><div class="sheen"></div></div>
-        <div class="lf lf-back" id="lfBack"></div>
+        <div class="lf lf-back" id="lfBack"><div class="lf-shade" id="lfShade"></div></div>
       </div>
     </div>
     <button id="delPage" class="delpage" title="Delete this page" aria-label="Delete this page">&times;</button>
@@ -727,15 +793,8 @@ body.hasbanner .stage{top:86px}
       <button class="inkopt" data-col="#2b6cb0" title="Blue"><span class="idot" style="background:#2b6cb0"></span></button>
     </span>
   </span>
-  <span class="fcmats">
-    <button class="fcmat" data-mat="kraft" title="Kraft" style="background:linear-gradient(150deg,#cdb185,#a88a5c)"></button>
-    <button class="fcmat" data-mat="cardboard" title="Cardboard" style="background:linear-gradient(150deg,#4a4234,#2b241c)"></button>
-    <button class="fcmat" data-mat="grey" title="Grey" style="background:linear-gradient(145deg,#585a5f,#303236)"></button>
-    <button class="fcmat" data-mat="black" title="Black" style="background:linear-gradient(145deg,#2c2e31,#111214)"></button>
-    <button class="fcmat" data-mat="navy" title="Navy" style="background:linear-gradient(145deg,#28374f,#141b28)"></button>
-    <button class="fcmat" data-mat="forest" title="Forest" style="background:linear-gradient(145deg,#2f4636,#16241a)"></button>
-    <button class="fcmat" data-mat="red" title="Red" style="background:linear-gradient(145deg,#5f2d29,#331715)"></button>
-  </span>
+  <select id="fcMaterial" aria-label="Cover material"></select>
+  <span class="fcmats" id="fcMats"></span>
 </div>
 <div class="dock" id="dock">
   <select id="tbFont" aria-label="Font">
@@ -818,6 +877,12 @@ body.hasbanner .stage{top:86px}
 
 /* ================= constants ================= */
 var NB_W=818, NB_H=1123;
+/* how much of the sheet's width, at each edge, is a page-turn zone. The middle is
+   inert. Left band = back, right band = forward; swap the two in the canvas click
+   handler if you ever want the opposite. */
+var TURN_BAND=0.15;
+/* zoom limits for ctrl/cmd + wheel, pinch and the keyboard shortcuts */
+var ZOOM_MIN=0.30, ZOOM_MAX=3.00;
 var FONTS={hand:"'Caveat',cursive",sans:"'Inter',system-ui,sans-serif",serif:"'Lora',Georgia,serif",
   caveat:"'Caveat',cursive",inter:"'Inter',system-ui,sans-serif",lora:"'Lora',Georgia,serif",
   arimo:"'Arimo',Arial,sans-serif",carlito:"'Carlito','Calibri',sans-serif",gelasio:"'Gelasio',Georgia,serif",
@@ -845,6 +910,115 @@ var SIZE_WARN=700*1024, SIZE_STOP=980*1024;   /* JSONBin caps a standard bin at 
 /* Deliberately separated tints. The previous set differed by as little as 12 of
    765, so six of seven read as the same off-white. All keep >12:1 contrast with
    the ink, so text stays comfortable to read. */
+/* ================= covers =================
+   A cover is a COLOUR and a MATERIAL, kept as two independent axes. Four
+   materials across nine colours is thirty-six covers out of thirteen entries,
+   and every surface that draws a cover - the closed board, the shelf tile, the
+   front cover's two faces and the picker - is generated from these lists. Adding
+   a cover means adding one line here and nothing else, which is what stops the
+   four surfaces drifting out of step with each other. */
+var COVERS=[
+  {id:'red',       label:'Oxblood',   a:'#5a2b28', b:'#331715'},
+  {id:'forest',    label:'Forest',    a:'#2c4232', b:'#16241a'},
+  {id:'navy',      label:'Navy',      a:'#26344a', b:'#141b28'},
+  {id:'petrol',    label:'Petrol',    a:'#24444a', b:'#0f2226'},
+  {id:'aubergine', label:'Aubergine', a:'#4a2c42', b:'#261320'},
+  {id:'cognac',    label:'Cognac',    a:'#7d4f2c', b:'#3f2412'},
+  {id:'slate',     label:'Slate',     a:'#3a4450', b:'#1c222a'},
+  {id:'ink',       label:'Ink',       a:'#1e2530', b:'#0b0f15'},
+  /* the one light cover. `light` flips the title, monogram and initials to a dark
+     ink and softens the texture overlay, which would otherwise read as polka dots
+     on a pale ground instead of grain. */
+  {id:'bone',      label:'Bone',      a:'#e8e1d2', b:'#cdc4b0', light:true}
+];
+var MATERIALS=[
+  {id:'fine',     label:'Fine grain'},
+  {id:'pebble',   label:'Pebbled leather'},
+  {id:'saffiano', label:'Saffiano'},
+  {id:'linen',    label:'Linen bookcloth'}
+];
+var DEFAULT_COVER='ink', DEFAULT_MATERIAL='fine';
+/* Covers that used to exist. A notebook saved on one is moved to its nearest
+   survivor rather than silently falling back to the default, so an old notebook
+   keeps roughly the look it had. */
+var COVER_RETIRED={cardboard:'ink', kraft:'cognac', grey:'slate', black:'ink'};
+var COVER_BY_ID={};
+for(var _ci=0;_ci<COVERS.length;_ci++) COVER_BY_ID[COVERS[_ci].id]=COVERS[_ci];
+function coverDef(id){ return COVER_BY_ID[id]||COVER_BY_ID[DEFAULT_COVER]; }
+/* the single place an unknown or retired cover id is resolved */
+function normCover(id){
+  if(COVER_BY_ID[id]) return id;
+  return COVER_RETIRED[id]||DEFAULT_COVER;
+}
+function normMaterial(id){
+  for(var i=0;i<MATERIALS.length;i++) if(MATERIALS[i].id===id) return id;
+  return DEFAULT_MATERIAL;
+}
+function coverIsLight(id){ return !!coverDef(normCover(id)).light; }
+/* class pair every cover surface wears, so the three surfaces can never disagree */
+function coverClasses(colId,matId){
+  colId=normCover(colId);
+  return ' cover-'+colId+' mat-'+normMaterial(matId)+(coverIsLight(colId)?' cover-light':'');
+}
+function coverSwatchCSS(c){ return 'linear-gradient(150deg,'+c.a+','+c.b+')'; }
+
+/* The shelf tile's coil, drawn once as a single ring in a 1.75 x 1 viewBox and
+   tiled down the spine. Keeping it in viewBox units rather than pixels means the
+   wire gauge stays in proportion if COIL_RINGS ever changes, instead of needing
+   to be re-tuned by hand. Gauge is 1.7px at a 150px tile. */
+var COIL_RINGS=28, COIL_RATIO=1.75, COIL_GAUGE=0.240;   /* gauge as a fraction of pitch */
+function coilRingSVG(){
+  var w=COIL_RATIO, h=1, x0=w*0.13, x1=w*0.86, rise=h*0.62, sw=COIL_GAUGE;
+  function p(d,stroke,width){
+    return "<path d='"+d+"' fill='none' stroke='"+stroke+"' stroke-width='"+width.toFixed(3)+
+           "' stroke-linecap='round'/>";
+  }
+  var n=function(v){ return v.toFixed(3); };
+  return "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 "+w+" "+h+"'>"+
+    "<defs><linearGradient id='cw' x1='0' y1='0' x2='0' y2='1'>"+
+    "<stop offset='0' stop-color='%23ffffff'/><stop offset='0.22' stop-color='%23f2f0ec'/>"+
+    "<stop offset='0.55' stop-color='%23b9b6b0'/><stop offset='0.8' stop-color='%238a8781'/>"+
+    "<stop offset='1' stop-color='%23625f5a'/></linearGradient></defs>"+
+    /* shadow side of the wire */
+    p("M "+n(x0)+" "+n(h*0.96)+" C "+n(x0+w*0.04)+" "+n(h*0.96-rise)+" "+
+      n(x1-w*0.14)+" "+n(h*0.96-rise-h*0.05)+" "+n(x1)+" "+n(h*0.84),
+      "%23000000' stroke-opacity='0.40", sw*1.15)+
+    /* the wire itself */
+    p("M "+n(x0-w*0.01)+" "+n(h*0.72)+" C "+n(x0+w*0.03)+" "+n(h*0.72-rise)+" "+
+      n(x1-w*0.16)+" "+n(h*0.72-rise-h*0.05)+" "+n(x1-w*0.015)+" "+n(h*0.60),
+      "url(%23cw)", sw)+
+    /* specular highlight, which is what makes it read as round rather than drawn */
+    p("M "+n(x0+w*0.03)+" "+n(h*0.60)+" C "+n(x0+w*0.07)+" "+n(h*0.60-rise*0.72)+" "+
+      n(x1-w*0.22)+" "+n(h*0.60-rise*0.74)+" "+n(x1-w*0.09)+" "+n(h*0.52),
+      "%23ffffff' stroke-opacity='0.70", sw*0.32)+
+    "</svg>";
+}
+/* One generated stylesheet for everything that varies per cover. Written once at
+   boot; nothing here changes at runtime, so it costs a single style insert. */
+function buildCoverCSS(){
+  var out=[];
+  for(var i=0;i<COVERS.length;i++){
+    var c=COVERS[i], g=coverSwatchCSS(c);
+    out.push('.cover.cover-'+c.id+',.nbcover.cover-'+c.id+
+             ',.frontcover.cover-'+c.id+' .fc-face{background:'+g+'}');
+  }
+  /* a light cover needs dark furniture, or the cream title and gold initials
+     disappear into the paper */
+  out.push('.nbcover.cover-light .nbname{color:#8a6a2a;text-shadow:none}');
+  out.push('.nbcover.cover-light .nbmono{color:#5b5346;text-shadow:none}');
+  out.push('.frontcover.cover-light .nbname{color:#8a6a2a;text-shadow:none}');
+  out.push('.frontcover.cover-light .fc-front::after{background:repeating-linear-gradient('+
+           'rgba(0,0,0,.18) 0 4px,transparent 4px 20px)}');
+  out.push('.nbcoil{background-image:url("data:image/svg+xml,'+coilRingSVG()+'")}');
+  var el=document.createElement('style');
+  el.id='coverStyles';
+  el.textContent=out.join('\n');
+  document.head.appendChild(el);
+}
+/* the title colour a cover wants when the notebook has not chosen one itself */
+var TITLE_DARK='#3b3227', TITLE_LIGHT='#f3ead2';
+function defaultTitleColour(colId){ return coverIsLight(colId)?TITLE_DARK:TITLE_LIGHT; }
+
 var PAPERS=[
   {id:'cream', c:'#f7f0dc', label:'Cream'},
   {id:'white', c:'#fdfdfb', label:'White'},
@@ -858,6 +1032,24 @@ var PAPERS=[
 var canvas=document.getElementById('canvas');
 var nb=document.getElementById('notebook');
 var stage=document.getElementById('stage');
+/* Elements looked up on every frame of a zoom or resize. getElementById is cheap
+   but not free, and these never change identity for the life of the page. */
+var elPage=null, elPageDate=null, elDock=null, elFcBar=null, elZoomBtn=null, elZoomRange=null;
+var elLeaf=null, elFlipzone=null, elLfFront=null, elLfBack=null, elLfClone=null, elSpineShadow=null;
+function cacheElements(){
+  elPage=document.getElementById('page');
+  elPageDate=document.getElementById('pageDate');
+  elDock=document.getElementById('dock');
+  elFcBar=document.getElementById('fcBar');
+  elZoomBtn=document.getElementById('zoomBtn');
+  elZoomRange=document.getElementById('zoomRange');
+  elLeaf=document.getElementById('leaf');
+  elFlipzone=document.getElementById('flipzone');
+  elLfFront=document.getElementById('lfFront');
+  elLfBack=document.getElementById('lfBack');
+  elLfClone=document.getElementById('lfFrontClone');
+  elSpineShadow=document.getElementById('spineShadow');
+}
 var dock=document.getElementById('dock');
 var toast=document.getElementById('toast');
 var modal=document.getElementById('modal');
@@ -867,11 +1059,19 @@ var modal=document.getElementById('modal');
    reads pages/tombs/cover keeps working on the active notebook unchanged. */
 var NB={v:5,notebooks:{},order:[],active:'',nbTomb:{}};
 var pages={}, tombs={}, cur=todayISO(), si=0;
-var selId=null, zTop=1, scale=1, zoom='fit';
+var selId=null, zTop=1, scale=1, zoom='fit', userScale=1;
 var typing=false, typingT=null, composing=false;
 var lastLine=null, animSet={}, animT=null, lastEdit=0, turning=false;
-var holdDate=null, holdSheet=0;   /* page kept visible while a turn runs */
-var holdPaper=null;               /* paper colour to keep during a forward turn */
+/* ---- the page held underneath a turn ----------------------------------
+   While a turn runs, the static page under the moving leaf is NOT always
+   `cur`. Backward, it is the page you are LEAVING, held until the previous
+   page lands on top of it. Every surface of that page - its date, its paper
+   colour and its CONTENT - must come from the same source or they disagree
+   on screen. These four are captured as VALUES before commit() runs, because
+   commit() prunes empty pages and a later lookup by date would miss them. */
+var holdDate=null;                /* page kept visible while a turn runs */
+var holdPaper=null;               /* its paper colour */
+var holdBlocks=null;              /* its blocks, so the content matches the date */
 var dropPoint={x:40,y:40};
 
 /* ================= helpers ================= */
@@ -961,9 +1161,11 @@ function bindActive(){
   if(!nb){
     /* empty shelf: nothing to bind to. Keep safe empty structures so any stray
        read does not throw; the shelf is shown until a notebook is created. */
-    pages={}; tombs={}; cover='cardboard'; return;
+    pages={}; tombs={}; cover=DEFAULT_COVER; material=DEFAULT_MATERIAL; return;
   }
-  pages=nb.pages; tombs=nb.tomb; cover=nb.cover||'cardboard';
+  pages=nb.pages; tombs=nb.tomb;
+  cover=normCover(nb.cover); material=normMaterial(nb.material);
+  nb.cover=cover; nb.material=material;
 }
 function docObj(){
   var nb=activeNB();
@@ -1035,8 +1237,8 @@ function asV5(raw){
     pages4=out;
   }
   var id='default';
-  var legacyCover='cardboard';
-  try{ legacyCover=localStorage.getItem(K_COVER)||'cardboard'; }catch(e){}
+  var legacyCover=DEFAULT_COVER;
+  try{ legacyCover=localStorage.getItem(K_COVER)||DEFAULT_COVER; }catch(e){}
   var doc={v:5,notebooks:{},order:[id],active:id,nbTomb:{}};
   doc.notebooks[id]={title:'My Notebook',cover:legacyCover,pages:pages4||{},tomb:tomb4,u:Date.now()};
   return doc;
@@ -1048,20 +1250,21 @@ function load(){
   if(fresh){
     var id='default';
     NB={v:5,notebooks:{},order:[id],active:id,nbTomb:{}};
-    NB.notebooks[id]={title:'My Notebook',cover:'cardboard',pages:{},tomb:{},u:Date.now()};
+    NB.notebooks[id]={title:'My Notebook',cover:DEFAULT_COVER,material:DEFAULT_MATERIAL,
+                      pages:{},tomb:{},u:Date.now()};
     bindActive(); return;
   }
   var wasOld=(raw.v!==5);
   NB=asV5(raw);
   if(!NB.notebooks[NB.active]) NB.active=NB.order[0]||Object.keys(NB.notebooks)[0]||'';
   bindActive(); normaliseAll();
-  if(wasOld||pointsMigrated) writeLocal();
+  if(wasOld||pointsMigrated||coversMigrated) writeLocal();
 }
 function normaliseAll(){
   for(var id in NB.notebooks) normaliseNB(NB.notebooks[id]);
   migratePoints();
 }
-var pointsMigrated=false;
+var pointsMigrated=false, coversMigrated=false;
 /* one-time: convert every saved size from the old apparent-pixel scale to points,
    preserving how the text actually looks, then flag it so it never re-runs */
 function migratePoints(){
@@ -1083,6 +1286,13 @@ function migratePoints(){
 function normalise(){ normaliseNB(activeNB()); }
 function normaliseNB(nb){
   if(!nb) return;
+  /* Covers and materials are resolved for EVERY notebook here, not just the
+     active one, so a notebook saved on a retired cover is moved to its nearest
+     survivor the moment it loads rather than the first time it is opened. */
+  var fixedCover=normCover(nb.cover), fixedMat=normMaterial(nb.material);
+  if(nb.cover!==fixedCover||nb.material!==fixedMat){
+    nb.cover=fixedCover; nb.material=fixedMat; coversMigrated=true;
+  }
   var now=Date.now(), P=nb.pages, T=nb.tomb||(nb.tomb={});
   for(var d in P){
     var p=P[d];
@@ -1116,7 +1326,8 @@ function normaliseNB(nb){
 var NB_MAX=12;
 function createNotebook(title,cov){
   var id=uid();
-  NB.notebooks[id]={title:title||'Untitled',cover:cov||'cardboard',pages:{},tomb:{},u:Date.now()};
+  NB.notebooks[id]={title:title||'Untitled',cover:normCover(cov),material:DEFAULT_MATERIAL,
+                    pages:{},tomb:{},u:Date.now()};
   NB.order.push(id);
   return id;
 }
@@ -1327,12 +1538,22 @@ function paperColor(id){
   for(var i=0;i<PAPERS.length;i++) if(PAPERS[i].id===id) return PAPERS[i].c;
   return PAPERS[0].c;
 }
-var cover='cardboard';
+var cover=DEFAULT_COVER, material=DEFAULT_MATERIAL;
 function applyCover(){
   var el=document.getElementById('cover');
-  el.className='cover'+(cover==='cardboard'?'':' cover-'+cover);
+  el.className='cover'+coverClasses(cover,material);
+  ensureTexture(el);
   var bn=document.getElementById('shelfBtnName');
   if(bn){ bn.textContent='Notebooks'; }
+}
+/* every cover surface carries exactly one texture layer, added on demand so the
+   markup does not have to repeat it in three places */
+function ensureTexture(el){
+  if(!el||el.querySelector(':scope>.covtex')) return;
+  var t=document.createElement('div');
+  t.className='covtex';
+  t.setAttribute('aria-hidden','true');
+  el.insertBefore(t,el.firstChild);
 }
 /* ================= front cover ================= */
 var coverClosed=false;
@@ -1363,11 +1584,13 @@ function applyTitleStyle(nb,t){
 function paintFrontCover(){
   var nb=activeNB(), fc=document.getElementById('frontCover');
   if(!nb||!fc) return;
-  fc.className='frontcover'+((nb.cover&&nb.cover!=='cardboard')?(' cover-'+nb.cover):'');
+  fc.className='frontcover'+coverClasses(nb.cover,nb.material);
+  var faces=fc.querySelectorAll('.fc-face');
+  for(var i=0;i<faces.length;i++) ensureTexture(faces[i]);
   var t=document.getElementById('fcTitle');
   t.textContent=nb.title||'My Notebook';
   t.className='fc-title';
-  t.style.color=nb.titleColor||'#f3ead2';
+  t.style.color=nb.titleColor||defaultTitleColour(nb.cover);
   applyTitleStyle(nb,t);
   paintNbName();
   syncCoverBar();
@@ -1522,23 +1745,48 @@ function setupCover(){
       if(pop.classList.contains('on')&&!e.target.closest('.inkwrap')) pop.classList.remove('on');
     });
   })();
-  bar.querySelectorAll('.fcmat').forEach(function(btn){
-    btn.addEventListener('mousedown',function(e){
+  buildCoverPicker();
+}
+/* colour swatches and the material list, both generated from the registry so the
+   picker can never offer a cover that no longer exists */
+function buildCoverPicker(){
+  var box=document.getElementById('fcMats');
+  if(box){
+    var h='';
+    for(var i=0;i<COVERS.length;i++){
+      var c=COVERS[i];
+      h+='<button class="fcmat" type="button" data-cov="'+c.id+'" title="'+c.label+
+         '" aria-label="'+c.label+' cover" style="background:'+coverSwatchCSS(c)+'"></button>';
+    }
+    box.innerHTML=h;
+    box.addEventListener('mousedown',function(e){
+      var b=e.target.closest('.fcmat'); if(!b) return;
       e.preventDefault();
-      setCover(this.dataset.mat);
+      setCover(b.dataset.cov,null);
     });
-  });
+  }
+  var sel=document.getElementById('fcMaterial');
+  if(sel){
+    var o='';
+    for(var m=0;m<MATERIALS.length;m++)
+      o+='<option value="'+MATERIALS[m].id+'">'+MATERIALS[m].label+'</option>';
+    sel.innerHTML=o;
+    sel.onchange=function(){ setCover(null,this.value); };
+  }
+  invalidateBars();     /* the cover bar just changed width */
 }
 function syncCoverBar(){
   var nb=activeNB(); if(!nb) return;
-  var f=nb.titleFont||'hand', c=(nb.titleColor||'#f3ead2'), mat=nb.cover||'cardboard';
+  var f=nb.titleFont||'hand', col=normCover(nb.cover), mat=normMaterial(nb.material);
+  var c=(nb.titleColor||defaultTitleColour(col));
   var sel=document.getElementById('fcFont'); if(sel) sel.value=normFont(f);
   var sz=document.getElementById('fcSize'); if(sz) sz.textContent=titleSizePt(nb);
   var b=document.getElementById('fcB'); if(b) b.classList.toggle('act',!!nb.titleBold);
   var it=document.getElementById('fcI'); if(it) it.classList.toggle('act',!!nb.titleItalic);
   var u=document.getElementById('fcU'); if(u) u.classList.toggle('act',!!nb.titleUnderline);
   var dot=document.getElementById('fcDot'); if(dot) dot.style.background=c;
-  document.querySelectorAll('.fcmat').forEach(function(el){ el.classList.toggle('on',el.dataset.mat===mat); });
+  document.querySelectorAll('.fcmat').forEach(function(el){ el.classList.toggle('on',el.dataset.cov===col); });
+  var ms=document.getElementById('fcMaterial'); if(ms) ms.value=mat;
   document.querySelectorAll('#fcPop .inkopt').forEach(function(el){
     el.classList.toggle('on',(el.getAttribute('data-col')||'').toLowerCase()===c.toLowerCase());
   });
@@ -1556,9 +1804,12 @@ function buildShelf(){
   document.getElementById('coverBtn').onclick=function(){ if(!coverClosed&&activeNB()) closeCover(); };
   refreshShelf();
 }
-/* a clean spiral coil for the shelf tiles: one silver wire loop repeated down the
-   left edge, at a fixed size so it never stretches or curls into hooks */
-function tileCoil(){ return '<div class="nbcoil" aria-hidden="true"></div>'; }
+/* The coil sits OUTSIDE the cover, over a wrapper, so it can hang past the spine
+   instead of being sliced flat by the cover's overflow clip. */
+function tileCoil(){
+  return '<div class="nbspine" aria-hidden="true"></div>'+
+         '<div class="nbcoil" aria-hidden="true"></div>';
+}
 function refreshShelf(){
   var grid=document.getElementById('shelfGrid'); if(!grid) return;
   var stEl=document.getElementById('shelfTitle');
@@ -1566,13 +1817,15 @@ function refreshShelf(){
   var h='';
   for(var i=0;i<NB.order.length;i++){
     var id=NB.order[i], nb=NB.notebooks[id]; if(!nb) continue;
-    var cc=(nb.cover&&nb.cover!=='cardboard')?(' cover-'+nb.cover):'';
     h+='<div class="nbtile" data-id="'+id+'" role="button" tabindex="0">'+
-         '<div class="nbcover'+cc+'">'+
+         '<div class="nbcoverwrap">'+
+           '<div class="nbcover'+coverClasses(nb.cover,nb.material)+'">'+
+             '<div class="covtex" aria-hidden="true"></div>'+
+             '<span class="nbname">'+esc(OWNER_INITIALS)+'</span>'+
+             '<span class="cornerzone" aria-hidden="true"></span>'+
+             '<button class="nbdel" data-del="'+id+'" title="Delete notebook">&times;</button>'+
+           '</div>'+
            tileCoil()+
-           '<span class="nbname">'+esc(OWNER_INITIALS)+'</span>'+
-           '<span class="cornerzone" aria-hidden="true"></span>'+
-           '<button class="nbdel" data-del="'+id+'" title="Delete notebook">&times;</button>'+
          '</div>'+
          '<div class="nbmeta">'+
            '<div class="nbtitle" data-title="'+id+'">'+esc(nb.title||'Untitled')+'</div>'+
@@ -1581,7 +1834,7 @@ function refreshShelf(){
   }
   if(NB.order.length<NB_MAX){
     h+='<div class="nbtile nbadd" id="nbAddTile" role="button" tabindex="0">'+
-         '<div class="nbcover"><span class="nbmono">+</span></div>'+
+         '<div class="nbcoverwrap"><div class="nbcover"><span class="nbmono">+</span></div></div>'+
          '<div class="nbmeta"><div class="nbtitle">New Notebook</div></div>'+
        '</div>';
   }
@@ -1655,7 +1908,7 @@ document.addEventListener('click',function(e){
   if(titleEl){ e.stopPropagation(); startRenameTile(titleEl); return; }
   if(e.target.closest&&e.target.closest('#nbAddTile')){
     e.stopPropagation();
-    var newId=createNotebook('New Notebook','cardboard');
+    var newId=createNotebook('New Notebook',DEFAULT_COVER);
     writeLocal();
     closeShelf(newId);
     return;
@@ -1691,7 +1944,7 @@ function shownPaper(){
 }
 function applyPaper(){
   var id=shownPaper();
-  document.getElementById('page').style.background=paperColor(id);
+  if(elPage) elPage.style.background=paperColor(id);
   var cid=curPaper();
   var sw=document.querySelectorAll('.sw');
   for(var k=0;k<sw.length;k++) sw[k].classList.toggle('on',sw[k].dataset.p===cid);
@@ -1712,51 +1965,152 @@ function buildSwatches(){
     save(); applyPaper();
   });
 }
+/* the largest scale at which the whole page still fits the window. Reserve an
+   equal band above and below the page so it sits centred in the stage, the lower
+   band giving the cover's drop shadow room to fall without the stage's overflow
+   slicing it into a hard line across the bottom. */
+function fitScale(){
+  var MARGIN=84;
+  var availH=window.innerHeight-48-62-MARGIN*2;
+  var availW=window.innerWidth-30;
+  return clamp(Math.min(availH/NB_H,availW/NB_W),ZOOM_MIN,1);
+}
 function fit(){
   var stageEl=document.getElementById('stage');
-  if(zoom==='full'){
-    scale=1;
+  scale=(zoom==='custom')?clamp(userScale,ZOOM_MIN,ZOOM_MAX):fitScale();
+  if(scale===1){
     nb.style.transform='';
-    nb.style.marginBottom='';
-    stageEl.style.overflowY='auto';
+    nb.style.marginBottom=''; nb.style.marginLeft=''; nb.style.marginRight='';
   } else {
-    /* Reserve an equal band above and below the page so it sits centred in the
-       stage, the lower band giving the cover's drop shadow room to fall without the
-       stage's overflow slicing it into a hard line across the bottom. */
-    var MARGIN=84;
-    var availH=window.innerHeight-48-62-MARGIN*2;
-    var availW=window.innerWidth-30;
-    scale=clamp(Math.min(availH/NB_H,availW/NB_W),0.30,1);
     nb.style.transform='scale('+scale+')';
-    /* collapse the empty layout height the scale leaves below (origin is top
-       center) so flex centring centres the visible page, not the full-size box */
+    /* The transform does not change the layout box, so the scrollable area would
+       not grow with the page. Shrinking: collapse the empty height the scale
+       leaves below (origin is top center) so flex centring centres the visible
+       page. Growing: add back the height and the two side margins the scaled page
+       now covers, so every part of it can actually be scrolled to. */
     nb.style.marginBottom=(-(NB_H*(1-scale))).toFixed(1)+'px';
-    stageEl.style.overflowY='visible';  /* let the soft shadow fade out past the
-                                           page rather than the clip slicing it into
-                                           a hard line; the page is sized to fit so
-                                           nothing scrolls anyway */
+    var side=Math.max(0,NB_W*(scale-1)/2).toFixed(1)+'px';
+    nb.style.marginLeft=side; nb.style.marginRight=side;
   }
-  stageEl.style.overflowX=(zoom==='full')?'hidden':'visible';
+  if(scale>1||(zoom==='custom'&&scale>fitScale()+0.001)){
+    stageEl.style.overflowX='auto'; stageEl.style.overflowY='auto';
+  } else {
+    /* let the soft shadow fade out past the page rather than the clip slicing it
+       into a hard line; the page is sized to fit so nothing scrolls anyway */
+    stageEl.style.overflowX='visible'; stageEl.style.overflowY='visible';
+  }
+  if(elZoomBtn) elZoomBtn.textContent=(zoom==='custom')?(Math.round(scale*100)+'%'):'Fit';
+  syncZoomSlider();
+  scheduleFitTail();
+}
+/* Everything above is pure style writes and costs nothing. Everything below reads
+   layout back, which forces the browser to flush: measuring both bars costs two
+   reflows and re-placing every tick mark costs another. Running that on every
+   wheel notch or every pixel of a window drag measured at 9ms a go, so it is
+   coalesced into one pass per frame no matter how many calls arrive. */
+var fitTailQueued=false;
+function scheduleFitTail(){
+  if(fitTailQueued) return;
+  fitTailQueued=true;
+  requestAnimationFrame(function(){
+    fitTailQueued=false;
+    equalizeBars();
+    centreBars();
+    layoutMarks();
+  });
+}
+/* Centre the bars on the page itself, which sits a little right of window centre
+   because of the spine inset. Read the page's real position so it stays aligned
+   at any zoom rather than centring on the window. */
+function centreBars(){
+  var cx=null;
+  if(elPage){ var pr=elPage.getBoundingClientRect(); if(pr.width>0) cx=pr.left+pr.width/2; }
+  if(cx==null) cx=window.innerWidth/2;
+  /* zoomed in, the page centre can sit well outside the window; keep the bars
+     where they can still be reached */
+  var half=Math.min(window.innerWidth,760)/2+12;
+  cx=clamp(cx,half,window.innerWidth-half);
+  if(elDock) elDock.style.left=cx.toFixed(1)+'px';
+  if(elFcBar) elFcBar.style.left=cx.toFixed(1)+'px';
   /* Both bottom bars must be the SAME length, so the bar never resizes when you go
      from the cover to a page. They hold different controls, so measure each one's
      natural width (off-screen, since only one is visible at a time) and set both to
      the wider. Left-aligned, so the font dropdown and format controls stay in the
      exact same spot on both; only the trailing edge differs. */
-  equalizeBars();
-  /* Centre the bars on the page itself, which sits a little right of window centre
-     because of the spine inset. Read the page's real position so it stays aligned
-     at any zoom rather than centring on the window. */
-  (function(){
-    var pgEl=document.getElementById('page'), cx=null;
-    if(pgEl){ var pr=pgEl.getBoundingClientRect(); if(pr.width>0) cx=pr.left+pr.width/2; }
-    if(cx==null) cx=window.innerWidth/2;
-    var dk=document.getElementById('dock'), fb=document.getElementById('fcBar');
-    if(dk) dk.style.left=cx.toFixed(1)+'px';
-    if(fb) fb.style.left=cx.toFixed(1)+'px';
-  })();
-  document.getElementById('zoomBtn').textContent=(zoom==='full')?'A4':'Fit';
-  layoutMarks();
 }
+/* The slider is logarithmic: equal travel gives equal proportional change, so the
+   low end is not a dead zone and the high end is not a cliff. */
+function scaleToSlider(s){
+  return Math.round(1000*Math.log(clamp(s,ZOOM_MIN,ZOOM_MAX)/ZOOM_MIN)/Math.log(ZOOM_MAX/ZOOM_MIN));
+}
+function sliderToScale(v){
+  return ZOOM_MIN*Math.pow(ZOOM_MAX/ZOOM_MIN,clamp(v,0,1000)/1000);
+}
+function syncZoomSlider(){
+  if(elZoomRange&&!zoomDragging) elZoomRange.value=String(scaleToSlider(scale));
+}
+/* Turn the glide off for the duration of a continuous gesture, back on after. */
+var zoomDragging=false, glideOffT=null;
+function suppressGlide(ms){
+  nb.classList.add('nozoomanim');
+  clearTimeout(glideOffT);
+  glideOffT=setTimeout(function(){ nb.classList.remove('nozoomanim'); },ms||140);
+}
+/* Zoom to a new scale while holding the point under the pointer still, so the
+   page grows around what you are looking at instead of around its top edge. */
+function zoomAt(next,clientX,clientY){
+  next=clamp(next,ZOOM_MIN,ZOOM_MAX);
+  /* Two landmarks are worth catching on the way past: true A4 size, and the level
+     that fits the window. The snap window is wider than one wheel step, so it only
+     applies when arriving from OUTSIDE the landmark. Without that guard a landmark
+     becomes a wall: every further step lands back inside the window and re-snaps,
+     and you can never zoom out through 100% again. */
+  var fs=fitScale(), TOL=0.025;
+  if(scale!==1&&Math.abs(next-1)<TOL) next=1;
+  else if(zoom!=='fit'&&Math.abs(next-fs)<TOL){
+    zoom='fit'; persistZoom(); fit();
+    return;
+  }
+  if(Math.abs(next-scale)<0.001&&zoom==='custom') return;
+  var stageEl=document.getElementById('stage');
+  var r=nb.getBoundingClientRect(), was=scale;
+  var ax=(clientX-r.left)/was, ay=(clientY-r.top)/was;   /* anchor, in page units */
+  zoom='custom'; userScale=next; fit();
+  var r2=nb.getBoundingClientRect();
+  stageEl.scrollLeft+=(r2.left+ax*next)-clientX;
+  stageEl.scrollTop +=(r2.top +ay*next)-clientY;
+  persistZoom();
+}
+function persistZoom(){
+  try{ localStorage.setItem(K_ZOOM,(zoom==='custom')?('c'+scale.toFixed(3)):zoom); }catch(e){}
+}
+/* ctrl/cmd + wheel is also what a trackpad pinch sends, so one handler covers both */
+(function(){
+  var st=document.getElementById('stage'); if(!st) return;
+  st.addEventListener('wheel',function(e){
+    if(!(e.ctrlKey||e.metaKey)) return;
+    e.preventDefault();
+    suppressGlide(180);
+    zoomAt(scale*Math.exp(-e.deltaY*0.0016),e.clientX,e.clientY);
+  },{passive:false});
+  /* two-finger pinch on a touch screen */
+  var d0=0, s0=1, mx=0, my=0;
+  function spread(t){ var dx=t[0].clientX-t[1].clientX, dy=t[0].clientY-t[1].clientY;
+    return Math.sqrt(dx*dx+dy*dy); }
+  st.addEventListener('touchstart',function(e){
+    if(e.touches.length!==2) return;
+    d0=spread(e.touches); s0=scale;
+    mx=(e.touches[0].clientX+e.touches[1].clientX)/2;
+    my=(e.touches[0].clientY+e.touches[1].clientY)/2;
+  },{passive:true});
+  st.addEventListener('touchmove',function(e){
+    if(e.touches.length!==2||!d0) return;
+    e.preventDefault();
+    suppressGlide(180);
+    zoomAt(s0*spread(e.touches)/d0,mx,my);
+  },{passive:false});
+  st.addEventListener('touchend',function(){ d0=0; },{passive:true});
+})();
 /* natural (content) width of a bar, measured even while it is hidden by cloning its
    layout off-screen so nothing flashes */
 function barNaturalWidth(el){
@@ -1766,11 +2120,19 @@ function barNaturalWidth(el){
   el.style.display=d; el.style.visibility=v; el.style.width=w; el.style.left=l; el.style.position=po;
   return n;
 }
+/* Measuring a bar means cloning its layout off-screen and reading it back, which
+   is two forced reflows. The answer only changes when the window resizes or the
+   bars gain and lose controls, never when the page is zoomed, so it is memoised
+   against exactly those two things. */
+var barsKey='';
+function invalidateBars(){ barsKey=''; }
 function equalizeBars(){
-  var dock=document.getElementById('dock'), fcb=document.getElementById('fcBar');
-  if(!dock||!fcb) return;
-  var w=Math.max(barNaturalWidth(dock), barNaturalWidth(fcb));
-  dock.style.width=w+'px'; fcb.style.width=w+'px';
+  if(!elDock||!elFcBar) return;
+  var key=window.innerWidth+'|'+elDock.childElementCount+'|'+elFcBar.childElementCount;
+  if(key===barsKey) return;
+  barsKey=key;
+  var w=Math.max(barNaturalWidth(elDock), barNaturalWidth(elFcBar));
+  elDock.style.width=w+'px'; elFcBar.style.width=w+'px';
 }
 
 /* ================= pen marks ================= */
@@ -2065,12 +2427,16 @@ function render(keepFocus){
   applyPaper();
   /* while a turn runs the visible static page is NOT `cur`, so let the turn own
      the label via holdDate instead of stamping the destination date here */
-  var pd=document.getElementById('pageDate');
-  if(pd) pd.textContent=fmtLong(holdDate||cur);
+  if(elPageDate) elPageDate.textContent=fmtLong(holdDate||cur);
   paintNbName();
-  var frag=document.createDocumentFragment(), bl=blocks();
+  /* the content must come from the same page as the date and the paper above:
+     the held (leaving) page while a backward turn runs, `cur` otherwise */
+  var frag=document.createDocumentFragment(), bl=holdBlocks||blocks();
   for(var i=0;i<bl.length;i++) frag.appendChild(renderBlock(bl[i]));
   canvas.innerHTML=''; canvas.appendChild(frag);
+  /* a held page belongs to the day you are leaving, so it must not be clickable
+     or editable: a stray click during the turn would edit the wrong day */
+  canvas.classList.toggle('holding',!!holdBlocks);
   if(f) focusLine(f.bid,f.lid,f.pos);
   layoutMarks(); relayoutSoon(); updateDock();
 }
@@ -2304,21 +2670,52 @@ canvas.addEventListener('click',function(e){
   if(consumedByDeselect){ consumedByDeselect=false; return; }  /* that click just deselected */
   if(e.detail>1){ cancelPageTurnClick(); return; }
   cancelPageTurnClick();
-  /* left quarter of the sheet goes BACK, the rest goes forward, like thumbing a
-     real notebook from either edge */
-  var back=(e.offsetX < canvas.clientWidth*0.25);
-  pageTurnTimer=setTimeout(function(){ pageTurnTimer=null; turnByClick(back); },260);
+  armPageTurn(turnZoneAt(e.clientX));
 });
+/* Which turn zone a point falls in, measured against the PAGE rather than the
+   writing canvas. The canvas is inset from the paper - 48px on the left for the
+   spiral and a small margin on the right - so bands measured on it do not line up
+   with the paper edge you are actually aiming at: the left zone came out wider
+   than asked for, the right zone narrower, and the outermost strip of paper on the
+   right was dead altogether. Measuring on the page makes both bands exactly
+   TURN_BAND of the visible sheet and live right to its edge. */
+function turnZoneAt(clientX){
+  if(!elPage) return null;
+  var r=elPage.getBoundingClientRect();
+  if(r.width<=0) return null;
+  var f=(clientX-r.left)/r.width;
+  if(f<TURN_BAND) return 'back';
+  if(f>1-TURN_BAND) return 'fwd';
+  return null;                       /* dead centre: reading and writing space */
+}
+/* Held briefly so a second click can cancel it and create a text box instead. */
+function armPageTurn(zone){
+  if(!zone) return;
+  pageTurnTimer=setTimeout(function(){ pageTurnTimer=null; turnByClick(zone==='back'); },260);
+}
 (function(){
+  /* The sheet's own margins - the spiral gutter on the left and the thin strip of
+     paper to the right of the canvas - are part of the page and follow the same
+     two bands, so the zones run edge to edge with no dead strip at the extremes. */
+  var pageEl=document.getElementById('page');
+  if(pageEl) pageEl.addEventListener('click',function(e){
+    if(e.target!==pageEl) return;          /* the bare margin, not the canvas */
+    if(turning||coverClosed) return;
+    if(selId||blockSel) return;
+    if(e.detail>1){ cancelPageTurnClick(); return; }
+    cancelPageTurnClick();
+    armPageTurn(turnZoneAt(e.clientX));
+  });
   var g=document.getElementById('gutter');
   if(g) g.addEventListener('click',function(e){
     if(turning||coverClosed) return;
     if(e.detail>1) return;
-    turnByClick(true);
+    armPageTurn(turnZoneAt(e.clientX));
   });
-  /* The empty desk to the LEFT of the notebook goes back a page, and keeps going
-     back until the notebook is closed on its cover. The desk to the RIGHT goes
-     forward, so the whole window works like thumbing a real pad. */
+  /* The empty desk beside the notebook only ever goes BACK, and keeps going back
+     until the notebook is closed on its cover. Going forward is something you do
+     to a page, so it needs a click on the page itself; the bare desk to the right
+     deliberately does nothing. */
   var stage=document.getElementById('stage');
   if(!stage) return;
   stage.addEventListener('click',function(e){
@@ -2332,11 +2729,7 @@ canvas.addEventListener('click',function(e){
       if(!leftSide) openCover();          /* closed: the right side opens it */
       return;
     }
-    if(leftSide){
-      turnByClick(true);        /* one page back, same as clicking the left edge */
-    } else {
-      turnByClick(false);
-    }
+    if(leftSide) turnByClick(true);       /* one page back, same as the left edge */
   });
 })();
 /* one place that decides where a page-edge click takes you */
@@ -2975,22 +3368,33 @@ function snapshotInto(faceEl,cloneEl,sh,dateISO){
 var DUR=820, turnTimer=null;
 function turnTo(dir,commit){
   if(turning) return;
-  var leaf=document.getElementById('leaf');
+  var leaf=elLeaf;
   if(reduced()||!leaf.animate){ commit(); afterNav(); return; }
-  var zone=document.getElementById('flipzone');
-  var lfFront=document.getElementById('lfFront');
-  var frontClone=document.getElementById('lfFrontClone');
-  var spine=document.getElementById('spineShadow');
+  var zone=elFlipzone, lfFront=elLfFront, frontClone=elLfClone;
+  var spine=elSpineShadow, backEl=elLfBack;
   var sheen=lfFront.querySelector('.sheen');
-  var backEl=document.getElementById('lfBack');
 
+  /* Everything the leaving page owns is captured as a VALUE here, before commit()
+     runs. commit() prunes empty pages, so any later lookup by date would miss a
+     page that has just been deleted and silently fall back to the destination's
+     values. That was the "blank page turns the next page's colour mid-flip" bug,
+     and the same trap applies to its content. */
   var fromSheet=sheet();
   var fromDate=cur;                   /* the date the leaving page is labelled with */
-  var fromSi=si;                      /* and which sheet of it was showing */
+  var fromPaper=(fromSheet&&fromSheet.paper)||'cream';
+  var fromBlocks=(fromSheet&&fromSheet.blocks)||[];
   turning=true;
   commit();
   var toSheet=sheet();
-  afterNav();
+  /* The static page UNDERNEATH is the reverse of the leaf: the destination on a
+     forward turn (revealed as the leaf lifts away) and the LEAVING page on a
+     backward turn (held until the previous-page leaf lands on top of it).
+     Date, paper and blocks are set together, BEFORE the first paint, so a single
+     render draws one coherent page rather than three surfaces disagreeing. */
+  holdDate  =(dir>0)?null:fromDate;
+  holdPaper =(dir>0)?null:fromPaper;
+  holdBlocks=(dir>0)?null:fromBlocks;
+  afterNav();                         /* paints the held page, or the destination */
   /* Natural notebook motion: the page that physically MOVES differs by direction.
      Forward, the page you are LEAVING lifts and swings away, revealing the next
      page underneath. Backward, the PREVIOUS page swings back in from the spine and
@@ -2998,23 +3402,6 @@ function turnTo(dir,commit){
      forward, and the destination (previous) page going backward. Its date label
      follows the page it actually is: fromDate forward, the arriving date backward. */
   var shownDate=(dir>0)?fromDate:cur;
-  /* The static page UNDERNEATH is the reverse of the leaf: the destination on a
-     forward turn (revealed as the leaf lifts away) and the LEAVING page on a
-     backward turn (held until the previous-page leaf lands on top of it).
-     holdDate/holdSheet/holdPaper carry that page so its label and colour move
-     together and never disagree. */
-  holdDate=(dir>0)?null:fromDate;
-  holdSheet=(dir>0)?0:fromSi;
-  /* The colour of the page held underneath a backward turn, captured as a VALUE
-     here rather than looked up by date later. commit() prunes the empty leaving
-     page moments after this runs, so a later by-date lookup would miss it and fall
-     back to the destination's colour, painting the leaving date in the wrong colour.
-     That was the "blank page turns the next page's colour mid-flip" bug. Forward
-     turns reveal the destination underneath, so there is nothing to hold. */
-  holdPaper=(dir>0)?null:((fromSheet&&fromSheet.paper)||'cream');
-  applyPaper();                       /* underneath: destination fwd, leaving back */
-  var pdStatic=document.getElementById('pageDate');
-  if(pdStatic) pdStatic.textContent=fmtLong(holdDate||cur);
 
   /* The moving leaf carries the LEAVING page forward and the DESTINATION (previous)
      page backward, matching shownDate above and the underneath hold below. It hinges
@@ -3034,48 +3421,122 @@ function turnTo(dir,commit){
   backEl.style.background=leafPaper;
   zone.classList.add('on');
 
+  /* ---- how the page actually moves ----------------------------------------
+     Measured frame by frame, the old curve crossed edge-on at 22% of the
+     duration and then spent the remaining 78% creeping from -111 to -180 with
+     nothing visible happening. That is what made a turn read as a snap followed
+     by a pause. Paper does not move like that: you lift the edge slowly, it
+     accelerates as it goes over, and it settles as it lands.
+
+     So the angle is shaped here rather than left to a CSS easing, and the
+     animation runs LINEAR over these keyframes. That makes the motion explicit,
+     and testable: the tests assert where edge-on falls. */
   var from=(dir>0)?0:-180, to=(dir>0)?-180:0;
-  var frames=[], N=24;
+  /* smoothstep: zero speed at both ends, fastest in the middle. Compressed into
+     the first ROT_SPAN of the duration so the page has finished travelling well
+     before the turn ends, instead of trailing an invisible tail. */
+  function ease(t){ return t*t*(3-2*t); }   /* edge-on lands exactly at halfway */
+  /* What happens to the page after it goes over.
+     On real paper you watch the whole arc: the sheet lifts, stands up, falls past
+     the spine and settles face down on the far side. There is no left-hand board
+     drawn here for it to settle onto, so it has to leave the picture somehow, and
+     the honest reading is that a turned page on a spiral pad folds around BEHIND
+     the pad. So past edge-on the sheet does three things at once, all keyed to the
+     angle rather than the clock: it darkens, as it passes into the pad's shadow;
+     it dips away from you, behind the plane of the page; and only in the last
+     thirty degrees, while it is still moving quickly, does it fade out.
+     That keeps the full turn on screen. Keying all of it to the angle means the
+     backward turn is the exact mirror for free: the returning sheet rises out of
+     the shadow behind the spine rather than popping onto the desk. */
+  /* The last stretch of the arc is the part with nowhere to go: the sheet is lying
+     almost flat on the far side, as a slab as wide as the pad, over bare desk. So
+     it stays fully visible through the satisfying part of the turn - lifting,
+     standing, going over, reading like the blank left page of an open book - and
+     leaves during the final quarter while it is still moving. */
+  var FADE_FROM=128, FADE_TO=172;
+  function leafOpacity(ang){
+    var a=Math.abs(ang);
+    if(a<=FADE_FROM) return 1;
+    if(a>=FADE_TO) return 0;
+    return 1-(a-FADE_FROM)/(FADE_TO-FADE_FROM);
+  }
+  /* how deep into the pad's shadow the reverse has gone: nothing at edge-on,
+     full by the time it is lying flat behind */
+  function leafShade(ang){ return Math.max(0,(Math.abs(ang)-90)/90)*0.55; }
+  /* Which face you see. backface-visibility is set on both faces, but Chromium
+     does not honour it on these elements, so past edge-on the page went on showing
+     its written side foreshortened instead of turning over to its blank back. The
+     faces are therefore driven explicitly: front while the page still faces you,
+     back once it has gone over. The swap lands exactly at edge-on, where the sheet
+     has no width on screen, so it cannot be seen happening. */
+  var frames=[], fFrames=[], bFrames=[], sFrames=[], N=36, edgeOnAt=null, doneAt=1;
   for(var i=0;i<=N;i++){
-    var t=i/N, ang=from+(to-from)*t;
+    var t=i/N, ang=from+(to-from)*ease(t), op=leafOpacity(ang);
+    var facing=(Math.abs(ang)<90)?1:0;
+    fFrames.push({opacity:facing,offset:t});
+    bFrames.push({opacity:1-facing,offset:t});
+    sFrames.push({opacity:leafShade(ang).toFixed(3),offset:t});
     var a=Math.abs(ang)/180;            /* 0 flat .. 1 flat-on-the-other-side */
-    var lift=Math.sin(a*Math.PI)*26;    /* rises off the pad at the midpoint */
+    /* rises off the pad as it stands up, then dips away behind the page plane as
+       it goes over, which is what selling "it went behind the pad" rests on */
+    var lift=Math.sin(a*Math.PI)*26-Math.max(0,(Math.abs(ang)-90)/90)*14;
+    if(edgeOnAt===null&&Math.abs(ang)>=90) edgeOnAt=t;
+    /* When the turn is actually OVER, as opposed to when the keyframes run out.
+       Forward, that is the moment the page has faded behind the spine: everything
+       after it is an invisible tail that would only keep the notebook locked.
+       Backward, it is the moment the page lies flat, because the page underneath
+       swaps to the destination at that point and must not do so while a tilted
+       page is still on screen. */
+    if(dir>0){ if(op>0) doneAt=t; }
+    else     { if(Math.abs(ang)>0.5) doneAt=t; }
     frames.push({transform:'translateZ('+lift.toFixed(1)+'px) rotateY('+ang.toFixed(1)+'deg)',
+                 opacity:op.toFixed(3),
                  offset:t});
   }
-  /* Start lifting promptly. The old easing stayed near-flat for the first ~200ms,
-     so the page you were leaving covered the whole sheet and the new colour only
-     appeared right at the end, reading as a snap. */
-  var ease=(dir>0)?'cubic-bezier(.22,.42,.32,1)':'cubic-bezier(.24,.4,.34,1)';
-  var leafAnim=leaf.animate(frames,{duration:DUR,easing:ease,fill:'forwards'});
+  doneAt=Math.min(1,doneAt+1/N);
+  var leafAnim=leaf.animate(frames,{duration:DUR,easing:'linear',fill:'forwards'});
+  lfFront.animate(fFrames,{duration:DUR,easing:'linear',fill:'forwards'});
+  backEl.animate(bFrames,{duration:DUR,easing:'linear',fill:'forwards'});
+  var shadeEl=document.getElementById('lfShade');
+  if(shadeEl) shadeEl.animate(sFrames,{duration:DUR,easing:'linear',fill:'forwards'});
 
-  /* a highlight rides across the face as it tips, and a shadow deepens toward
-     the spine while the page stands up, both peaking at the edge-on midpoint */
-  sheen.animate([{opacity:0},{opacity:.5,offset:.5},{opacity:0}],
+  /* The highlight and the spine shadow belong to the moment the page stands up,
+     so they peak at edge-on rather than at the halfway point of the clock. They
+     used to peak at 50% while the page was already at -158 and out of sight. */
+  var peak=Math.max(0.05,Math.min(0.95,edgeOnAt||0.5));
+  sheen.animate([{opacity:0},{opacity:.5,offset:peak},{opacity:0}],
     {duration:DUR,easing:'ease-in-out',fill:'forwards'});
-  spine.animate([{opacity:0},{opacity:.4,offset:.5},{opacity:0}],
+  spine.animate([{opacity:0},{opacity:.4,offset:peak},{opacity:0}],
     {duration:DUR,easing:'ease-in-out',fill:'forwards'});
 
-  leafAnim.onfinish=endTurn;
+  /* End on the motion, not on the clock. leafAnim keeps its full timeline so the
+     keyframes stay simple; the turn itself finishes the moment there is nothing
+     left to see, which is what keeps input locked no longer than necessary. */
   clearTimeout(turnTimer);
-  turnTimer=setTimeout(function(){ if(turning) endTurn(); },DUR+160);
+  turnTimer=setTimeout(function(){ if(turning) endTurn(); },Math.round(DUR*doneAt));
 }
 function endTurn(){
   clearTimeout(turnTimer);
-  var z=document.getElementById('flipzone');
-  z.classList.remove('on');
-  document.getElementById('lfFrontClone').innerHTML='';
-  document.getElementById('lfFront').style.background='';
-  document.getElementById('lfBack').style.background='';
-  document.getElementById('spineShadow').style.opacity='0';
-  var leaf=document.getElementById('leaf');
-  try{ leaf.getAnimations().forEach(function(a){a.cancel();}); }catch(e){}
-  leaf.style.transform='';
+  elFlipzone.classList.remove('on');
+  elLfClone.innerHTML='';
+  elLfFront.style.background='';
+  elLfBack.style.background='';
+  elSpineShadow.style.opacity='0';
+  try{
+    elLeaf.getAnimations().forEach(function(a){a.cancel();});
+    elLfFront.getAnimations().forEach(function(a){a.cancel();});
+    elLfBack.getAnimations().forEach(function(a){a.cancel();});
+    var sh=document.getElementById('lfShade');
+    if(sh){ sh.getAnimations().forEach(function(a){a.cancel();}); sh.style.opacity=''; }
+  }catch(e){}
+  elLeaf.style.transform=''; elLeaf.style.opacity='';
+  elLfFront.style.opacity=''; elLfBack.style.opacity='';
   turning=false;
-  holdDate=null; holdSheet=0; holdPaper=null;
-  applyPaper();
-  var pd=document.getElementById('pageDate');
-  if(pd){ pd.textContent=fmtLong(cur); pd.style.visibility=''; }
+  holdDate=null; holdPaper=null; holdBlocks=null;
+  /* the hold is gone, so repaint the whole page from `cur`: paper, date AND the
+     content, which was showing the leaving day while the leaf was in the air */
+  render(false);
+  if(elPageDate) elPageDate.style.visibility='';
 }
 function afterNav(){
   selId=null; lastLine=null; clearBlockSel();
@@ -3370,14 +3831,39 @@ function tearPage(after){
 }
 document.getElementById('undoBtn').onclick=undo;
 document.getElementById('redoBtn').onclick=redo;
-document.getElementById('zoomBtn').onclick=function(){  zoom=(zoom==='fit')?'full':'fit';
-  try{ localStorage.setItem(K_ZOOM,zoom); }catch(e){}
-  fit(); if(zoom==='full') stage.scrollTop=0;
+/* the label is the reset: whatever the level, one click fits the page again */
+document.getElementById('zoomBtn').onclick=function(){
+  zoom='fit'; persistZoom(); fit(); stage.scrollTop=0;
 };
+(function(){
+  var r=document.getElementById('zoomRange');
+  if(!r) return;
+  function apply(){
+    var sr=document.getElementById('stage').getBoundingClientRect();
+    zoomAt(sliderToScale(+r.value),sr.left+sr.width/2,sr.top+sr.height/2);
+  }
+  /* dragging is continuous, so the glide stays off until the thumb is released */
+  r.addEventListener('pointerdown',function(){ zoomDragging=true; nb.classList.add('nozoomanim'); });
+  r.addEventListener('input',apply);
+  function release(){
+    if(!zoomDragging) return;
+    zoomDragging=false; suppressGlide(0); syncZoomSlider();
+  }
+  r.addEventListener('pointerup',release);
+  r.addEventListener('pointercancel',release);
+  window.addEventListener('pointerup',release);
+  /* keyboard on the slider itself still steps smoothly */
+  r.addEventListener('keydown',function(){ suppressGlide(200); });
+})();
 /* single place to change a notebook's cover, so every control stays in sync */
-function setCover(val){
-  cover=val;
-  var nb=activeNB(); if(nb){ nb.cover=cover; nb.u=Date.now(); }
+/* One entry point for both cover axes, so no caller can change a colour without
+   the tile, the board, the front cover and the picker all following. Pass null to
+   leave an axis alone. */
+function setCover(colId,matId){
+  var nb=activeNB();
+  if(colId!=null) cover=normCover(colId);
+  if(matId!=null) material=normMaterial(matId);
+  if(nb){ nb.cover=cover; nb.material=material; nb.u=Date.now(); }
   writeLocal(); applyCover(); paintFrontCover(); syncCoverBar(); refreshShelf();
 }
 
@@ -3552,6 +4038,15 @@ function mergeDayPages(t,lp,rp){
   return changed;
 }
 /* Merge a whole remote document (all notebooks) into NB. */
+/* Settings that belong to the notebook itself rather than to its pages. Listed
+   once, because the sync merge, the export and any future copy all need the same
+   set: a field added to the model but missed in one of them is a setting that
+   silently fails to travel between devices. */
+var NB_SETTINGS=['title','cover','material','titleFont','titleColor','titleSize',
+                 'titleBold','titleItalic','titleUnderline'];
+function copyNBSettings(from,to){
+  for(var i=0;i<NB_SETTINGS.length;i++) to[NB_SETTINGS[i]]=from[NB_SETTINGS[i]];
+}
 function mergeDoc(remoteRaw){
   var remote=asV5(remoteRaw);
   var changedActive=false, localNewer=false;
@@ -3580,11 +4075,7 @@ function mergeDoc(remoteRaw){
     if(!lnb.tomb) lnb.tomb={};
     var r=mergeNotebookPages(lnb.pages,lnb.tomb,rnb.pages,rnb.tomb||{},id===NB.active);
     if(r.curTouched) changedActive=true;
-    if((rnb.u||0)>(lnb.u||0)){
-      lnb.title=rnb.title; lnb.cover=rnb.cover;
-      lnb.titleFont=rnb.titleFont; lnb.titleColor=rnb.titleColor; lnb.titleSize=rnb.titleSize;
-      lnb.titleBold=rnb.titleBold; lnb.titleItalic=rnb.titleItalic; lnb.titleUnderline=rnb.titleUnderline;
-    }
+    if((rnb.u||0)>(lnb.u||0)) copyNBSettings(rnb,lnb);
     if((lnb.u||0)>(rnb.u||0)) localNewer=true;
     lnb.u=Math.max(lnb.u||0,rnb.u||0);
   }
@@ -3614,8 +4105,16 @@ function pull(quiet){
     bindActive(); normaliseAll(); writeLocal();
     setStatus('ok','Synced','In sync with the cloud');
     refreshShelf();
+    /* A cover or material changed on another device touches no page, so it never
+       sets changedActive. Repaint the cover surfaces unconditionally, or the
+       shelf tile would show the new cover while the open notebook kept the old
+       one. Skipped mid-title-edit, where repainting would clobber what is being
+       typed. */
+    applyCover();
+    var fcEl=document.getElementById('frontCover');
+    if(!fcEl||!fcEl.classList.contains('editing')) paintFrontCover();
     if(res.changedActive&&!turning){
-      invalidateHistory(cur); updateDateUI(); applyCover(); render(false);
+      invalidateHistory(cur); updateDateUI(); render(false);
       if(!quiet) say('Updated from your other device.');
     }
     if(res.localNewer) pushSoon();
@@ -3729,6 +4228,16 @@ document.addEventListener('keydown',function(e){
     }
     if((e.key==='Delete'||e.key==='Backspace')){ e.preventDefault(); pushUndo(); deleteBlock(blockSel); clearBlockSel(); return; }
   }
+  /* zoom: ctrl/cmd with + - 0, taking over the browser's own shortcuts, which do
+     nothing useful here because the page is laid out to the window */
+  if(mod&&!e.altKey&&(e.key==='='||e.key==='+'||e.key==='-'||e.key==='_'||e.key==='0')){
+    e.preventDefault();
+    if(e.key==='0'){ zoom='fit'; persistZoom(); fit(); return; }
+    var sr=document.getElementById('stage').getBoundingClientRect();
+    var step=(e.key==='-'||e.key==='_')?(1/1.15):1.15;
+    zoomAt(scale*step,sr.left+sr.width/2,sr.top+sr.height/2);
+    return;
+  }
   if(mod&&e.key.toLowerCase()==='z'){ e.preventDefault(); if(e.shiftKey) redo(); else undo(); return; }
   if(mod&&e.key.toLowerCase()==='y'){ e.preventDefault(); redo(); return; }
   if(e.altKey&&e.key==='ArrowLeft'){ e.preventDefault(); goPrevDay(); return; }
@@ -3757,9 +4266,16 @@ window.addEventListener('beforeunload',function(){ prune(); writeLocal(); });
 
 /* ================= boot ================= */
 try{ document.execCommand('styleWithCSS',false,false); }catch(e){}
-buildFurniture(); buildSwatches();
+cacheElements(); buildCoverCSS(); buildFurniture(); buildSwatches();
 load();
-try{ zoom=localStorage.getItem(K_ZOOM)==='full'?'full':'fit'; }catch(e){}
+try{
+  var _z=localStorage.getItem(K_ZOOM)||'';
+  if(_z.charAt(0)==='c'){
+    var _v=parseFloat(_z.slice(1));
+    if(_v>0){ zoom='custom'; userScale=clamp(_v,ZOOM_MIN,ZOOM_MAX); }
+  } else if(_z==='full'){ zoom='custom'; userScale=1; }   /* the retired A4 mode */
+  else zoom='fit';
+}catch(e){}
 applyCover();
 /* one-time: a previous version stored a single paper colour for the whole notebook.
    Seed any colourless sheet with it, then forget the global. */
