@@ -127,6 +127,11 @@ body{
 /* the glide. Suppressed while a gesture is actually in flight, where a transition
    would lag behind the pointer instead of smoothing anything. */
 .notebook{transition:transform .13s cubic-bezier(.25,.8,.35,1)}
+/* Panning. Only ever shown when there is somewhere to pan to, so the desk does
+   not advertise a drag on a page that already fits. */
+.stage.canpan{cursor:grab}
+.stage.panning,.stage.panning *{cursor:grabbing !important}
+.stage.panning{user-select:none}
 .notebook.nozoomanim{transition:none}
 .bar option{background:var(--chrome);color:var(--ctl-text)}
 .nav{padding:6px 10px !important;font-size:15px !important}
@@ -738,7 +743,7 @@ body.hasbanner .stage{top:86px}
   <span class="spacer"></span>
   <button id="themeBtn" title="Switch between light and dark" aria-label="Switch theme"></button>
   <span class="zoomctl" id="zoomCtl" title="Drag to zoom. Ctrl/Cmd + scroll or pinch also works, and Ctrl/Cmd with + - 0. Snaps at 100% and at fit; click the label to fit to the window">
-    <input type="range" id="zoomRange" min="0" max="1000" value="0" step="1" aria-label="Zoom">
+    <input type="range" id="zoomRange" min="0" max="27" value="0" step="1" aria-label="Zoom">
     <button id="zoomBtn" aria-label="Fit the page to the window">Fit</button>
   </span>
   <button id="syncBtn" title="Cloud sync"><span class="sdot" id="sdot"></span><span id="slabel">Sync off</span></button>
@@ -907,6 +912,17 @@ var NB_W=818, NB_H=1123;
 var TURN_BAND_BACK=0.15, TURN_BAND_FWD=0.20;
 /* zoom limits for ctrl/cmd + wheel, pinch and the keyboard shortcuts */
 var ZOOM_MIN=0.30, ZOOM_MAX=3.00;
+/* The clear space kept around the notebook once it is larger than the window.
+   PAN_GUTTER is the breathing room; the SHADOW_* figures are how far the
+   notebook's own shadows actually spread past its box, in unscaled page units:
+   the cover's ambient shadow reaches 52px down with a 96px blur, and the contact
+   shadow on the desk adds its own. Those shadows scale with the page, so the
+   scrollable area has to grow with them. Without this the scroll clip slices
+   straight through the soft shadow and leaves a hard line right across the
+   desk - which is the seam that appeared the moment you zoomed in. */
+var PAN_GUTTER=56;
+var SHADOW_DOWN=175, SHADOW_UP=70, SHADOW_SIDE=125;
+var panAvailable=false;
 var FONTS={hand:"'Caveat',cursive",sans:"'Inter',system-ui,sans-serif",serif:"'Lora',Georgia,serif",
   caveat:"'Caveat',cursive",inter:"'Inter',system-ui,sans-serif",lora:"'Lora',Georgia,serif",
   arimo:"'Arimo',Arial,sans-serif",carlito:"'Carlito','Calibri',sans-serif",gelasio:"'Gelasio',Georgia,serif",
@@ -2009,22 +2025,52 @@ function fitScale(){
 function fit(){
   var stageEl=document.getElementById('stage');
   scale=(zoom==='custom')?clamp(userScale,ZOOM_MIN,ZOOM_MAX):fitScale();
-  if(scale===1){
-    nb.style.transform='';
-    nb.style.marginBottom=''; nb.style.marginLeft=''; nb.style.marginRight='';
-  } else {
-    nb.style.transform='scale('+scale+')';
-    /* The transform does not change the layout box, so the scrollable area would
-       not grow with the page. Shrinking: collapse the empty height the scale
-       leaves below (origin is top center) so flex centring centres the visible
-       page. Growing: add back the height and the two side margins the scaled page
-       now covers, so every part of it can actually be scrolled to. */
-    nb.style.marginBottom=(-(NB_H*(1-scale))).toFixed(1)+'px';
-    var side=Math.max(0,NB_W*(scale-1)/2).toFixed(1)+'px';
-    nb.style.marginLeft=side; nb.style.marginRight=side;
-  }
-  if(scale>1||(zoom==='custom'&&scale>fitScale()+0.001)){
-    stageEl.style.overflowX='auto'; stageEl.style.overflowY='auto';
+
+  /* Past the fitting size the page is larger than the window and has to scroll.
+     Note this is worked out ONCE and used for the margins, the overflow and the
+     pan cursor alike, so the three can never disagree. */
+  var over=scale>fitScale()+0.001, gut=over?PAN_GUTTER:0;
+  /* Horizontally, though, "bigger than the window" is a separate question: at
+     160% on a wide screen the page still fits across even though it no longer
+     fits down. Asking it separately is what stops a horizontal scrollbar turning
+     up with nothing to scroll to.
+     The measure is the PAGE's width, not the page plus its shadow. The shadow
+     does not have to be reachable, only uncut, and when it runs off the side of
+     the window it is cut at the window's own edge, where there is nothing to see
+     anyway. Counting it made a scrollbar appear a whole step early. */
+  var needX=over&&(NB_W*scale>stageEl.clientWidth+2);
+
+  /* transform: scale(1) is left off deliberately, so the page is not needlessly
+     promoted to its own layer at true size. The MARGINS are still set the same
+     way at any scale: they used to be skipped in this branch, which is why the
+     top of the page sat flat against the toolbar at exactly 100% and nowhere
+     else. */
+  nb.style.transform=(scale===1)?'':('scale('+scale+')');
+
+  /* The transform does not change the layout box, so the scrollable area would
+     not grow with the page. Shrinking: collapse the empty height the scale leaves
+     below (the origin is top center) so flex centring centres the visible page.
+     Growing: add the height back. Past the fitting size a gutter goes round it as
+     well, plus room for the shadows, which are drawn in page units and therefore
+     scale with the page: without that room the scroll clip slices through the
+     soft shadow and leaves a hard line across the desk. */
+  nb.style.marginTop=(over?gut+SHADOW_UP*scale:0).toFixed(1)+'px';
+  nb.style.marginBottom=
+    (-(NB_H*(1-scale))+(over?gut+SHADOW_DOWN*scale:0)).toFixed(1)+'px';
+  /* Side margins exist to make a page WIDER than the window scrollable. When it
+     already fits across, they would only invent something to scroll to. */
+  var side=needX?(Math.max(0,NB_W*(scale-1)/2)+gut+SHADOW_SIDE*scale):0;
+  nb.style.marginLeft=side.toFixed(1)+'px';
+  nb.style.marginRight=side.toFixed(1)+'px';
+
+  panAvailable=over;
+  if(over){
+    /* overflow cannot be mixed: visible on one axis is coerced to auto by the
+       other, so when the page scrolls down it must be clipped across too. Hidden
+       rather than auto when it fits, which clips nothing visible - the shadow has
+       room inside the stage - and shows no scrollbar. */
+    stageEl.style.overflowY='auto';
+    stageEl.style.overflowX=needX?'auto':'hidden';
   } else {
     /* let the soft shadow fade out past the page rather than the clip slicing it
        into a hard line; the page is sized to fit so nothing scrolls anyway */
@@ -2048,6 +2094,7 @@ function scheduleFitTail(){
     equalizeBars();
     centreBars();
     layoutMarks();
+    if(window.panRefreshCursor) window.panRefreshCursor();
   });
 }
 /* Centre the bars on the page itself, which sits a little right of window centre
@@ -2069,16 +2116,38 @@ function centreBars(){
      the wider. Left-aligned, so the font dropdown and format controls stay in the
      exact same spot on both; only the trailing edge differs. */
 }
-/* The slider is logarithmic: equal travel gives equal proportional change, so the
-   low end is not a dead zone and the high end is not a cliff. */
-function scaleToSlider(s){
-  return Math.round(1000*Math.log(clamp(s,ZOOM_MIN,ZOOM_MAX)/ZOOM_MIN)/Math.log(ZOOM_MAX/ZOOM_MIN));
+/* Zoom moves between named stops rather than anywhere on a continuum: every ten
+   per cent from 30 to 300, plus the size that fits the window, which sits in the
+   ladder wherever it happens to fall. Landing on 137% tells you nothing; landing
+   on 140%, or on Fit, tells you exactly where you are. A ladder rung is dropped
+   if it is within a few per cent of Fit, so the two never sit on top of each
+   other as separate detents. */
+var ZOOM_LADDER=[];
+(function(){ for(var z=30; z<=300; z+=10) ZOOM_LADDER.push(z/100); })();
+function zoomStops(){
+  var fs=clamp(fitScale(),ZOOM_MIN,ZOOM_MAX), out=[];
+  for(var i=0;i<ZOOM_LADDER.length;i++){
+    if(Math.abs(ZOOM_LADDER[i]-fs)<0.035) continue;
+    out.push({v:ZOOM_LADDER[i],fit:false});
+  }
+  out.push({v:fs,fit:true});
+  out.sort(function(a,b){ return a.v-b.v; });
+  return out;
 }
-function sliderToScale(v){
-  return ZOOM_MIN*Math.pow(ZOOM_MAX/ZOOM_MIN,clamp(v,0,1000)/1000);
+function nearestStop(stops,v){
+  var best=0, bd=Infinity;
+  for(var i=0;i<stops.length;i++){
+    var d=Math.abs(stops[i].v-v);
+    if(d<bd){ bd=d; best=i; }
+  }
+  return best;
 }
 function syncZoomSlider(){
-  if(elZoomRange&&!zoomDragging) elZoomRange.value=String(scaleToSlider(scale));
+  if(!elZoomRange||zoomDragging) return;
+  var stops=zoomStops();
+  elZoomRange.max=String(stops.length-1);
+  elZoomRange.value=String(zoom==='fit'?nearestStop(stops,fitScale())
+                                       :nearestStop(stops,scale));
 }
 /* Turn the glide off for the duration of a continuous gesture, back on after. */
 var zoomDragging=false, glideOffT=null;
@@ -2089,40 +2158,120 @@ function suppressGlide(ms){
 }
 /* Zoom to a new scale while holding the point under the pointer still, so the
    page grows around what you are looking at instead of around its top edge. */
-function zoomAt(next,clientX,clientY){
-  next=clamp(next,ZOOM_MIN,ZOOM_MAX);
-  /* Two landmarks are worth catching on the way past: true A4 size, and the level
-     that fits the window. The snap window is wider than one wheel step, so it only
-     applies when arriving from OUTSIDE the landmark. Without that guard a landmark
-     becomes a wall: every further step lands back inside the window and re-snaps,
-     and you can never zoom out through 100% again. */
-  var fs=fitScale(), TOL=0.025;
-  if(scale!==1&&Math.abs(next-1)<TOL) next=1;
-  else if(zoom!=='fit'&&Math.abs(next-fs)<TOL){
-    zoom='fit'; persistZoom(); fit();
-    return;
-  }
-  if(Math.abs(next-scale)<0.001&&zoom==='custom') return;
+/* Move to a stop, holding the point under the pointer still so the page grows
+   around what you are looking at rather than around its top edge. */
+function applyStop(stop,clientX,clientY){
+  if(!stop) return;
+  if(stop.fit&&zoom==='fit') return;
+  if(!stop.fit&&zoom==='custom'&&Math.abs(stop.v-scale)<0.0005) return;
   var stageEl=document.getElementById('stage');
   var r=nb.getBoundingClientRect(), was=scale;
   var ax=(clientX-r.left)/was, ay=(clientY-r.top)/was;   /* anchor, in page units */
-  zoom='custom'; userScale=next; fit();
+  if(stop.fit){ zoom='fit'; } else { zoom='custom'; userScale=stop.v; }
+  fit();
   var r2=nb.getBoundingClientRect();
-  stageEl.scrollLeft+=(r2.left+ax*next)-clientX;
-  stageEl.scrollTop +=(r2.top +ay*next)-clientY;
+  stageEl.scrollLeft+=(r2.left+ax*scale)-clientX;
+  stageEl.scrollTop +=(r2.top +ay*scale)-clientY;
   persistZoom();
+}
+/* one rung up or down the ladder */
+function stepZoom(dir,clientX,clientY){
+  var stops=zoomStops();
+  var i=nearestStop(stops,zoom==='fit'?fitScale():scale)+dir;
+  applyStop(stops[clamp(i,0,stops.length-1)],clientX,clientY);
+}
+function zoomAt(next,clientX,clientY){
+  var stops=zoomStops();
+  applyStop(stops[nearestStop(stops,clamp(next,ZOOM_MIN,ZOOM_MAX))],clientX,clientY);
 }
 function persistZoom(){
   try{ localStorage.setItem(K_ZOOM,(zoom==='custom')?('c'+scale.toFixed(3)):zoom); }catch(e){}
 }
+/* ---- moving the notebook around -------------------------------------------
+   Zoomed in, the page is bigger than the window. Scrolling reaches all of it, but
+   nobody moves a notebook on a desk by scrolling, and with the page filling the
+   view there is often no desk left to grab. So there are three ways to drag it,
+   and the cursor only offers one when there is somewhere to go:
+     the bare desk, with the left button, when any of it is showing
+     the middle button, anywhere
+     space held down, anywhere, the way every drawing program does it
+   A drag that actually moved swallows the click that follows it, so dragging the
+   desk pans instead of also turning a page. */
+var panSuppressClick=false;
+(function(){
+  var st=document.getElementById('stage'); if(!st) return;
+  var panning=false, spaceDown=false, sx=0, sy=0, l0=0, t0=0, moved=0;
+  function canPan(){
+    return panAvailable &&
+      (st.scrollWidth>st.clientWidth+1 || st.scrollHeight>st.clientHeight+1);
+  }
+  function refreshCursor(){ st.classList.toggle('canpan',canPan()&&!panning); }
+  window.panRefreshCursor=refreshCursor;
+  st.addEventListener('pointerdown',function(e){
+    if(shelfOpen||!canPan()) return;
+    var middle=(e.button===1);
+    var onDesk=(e.target===st&&e.button===0);
+    if(!(middle||spaceDown||onDesk)) return;
+    if(middle||spaceDown) e.preventDefault();      /* no autoscroll, no text drag */
+    panning=true; moved=0;
+    sx=e.clientX; sy=e.clientY; l0=st.scrollLeft; t0=st.scrollTop;
+    st.classList.add('panning'); st.classList.remove('canpan');
+    try{ st.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  st.addEventListener('pointermove',function(e){
+    if(!panning) return;
+    var dx=e.clientX-sx, dy=e.clientY-sy;
+    if(Math.abs(dx)+Math.abs(dy)>moved) moved=Math.abs(dx)+Math.abs(dy);
+    st.scrollLeft=l0-dx; st.scrollTop=t0-dy;
+  });
+  function endPan(e){
+    if(!panning) return;
+    panning=false;
+    st.classList.remove('panning');
+    try{ st.releasePointerCapture(e.pointerId); }catch(err){}
+    /* a real drag eats the click, a press that never moved does not */
+    if(moved>4) panSuppressClick=true;
+    refreshCursor();
+  }
+  st.addEventListener('pointerup',endPan);
+  st.addEventListener('pointercancel',endPan);
+  window.addEventListener('keydown',function(e){
+    if(e.code!=='Space'||spaceDown) return;
+    if(focusedTx()||document.activeElement&&document.activeElement.isContentEditable) return;
+    if(!canPan()) return;
+    spaceDown=true; e.preventDefault(); refreshCursor();
+  });
+  window.addEventListener('keyup',function(e){ if(e.code==='Space') spaceDown=false; });
+  window.addEventListener('blur',function(){ spaceDown=false; });
+  st.addEventListener('scroll',refreshCursor,{passive:true});
+  window.addEventListener('resize',refreshCursor);
+})();
+
 /* ctrl/cmd + wheel is also what a trackpad pinch sends, so one handler covers both */
 (function(){
   var st=document.getElementById('stage'); if(!st) return;
+  /* A trackpad sends a stream of small deltas and a mouse sends a few large ones,
+     so the two are put on the same footing by accumulating until a rung's worth of
+     travel has gone by, then stepping once. That is what makes it click from stop
+     to stop instead of sliding through numbers nobody asked for. */
+  var wheelAcc=0, wheelAt=0;
   st.addEventListener('wheel',function(e){
     if(!(e.ctrlKey||e.metaKey)) return;
     e.preventDefault();
-    suppressGlide(180);
-    zoomAt(scale*Math.exp(-e.deltaY*0.0016),e.clientX,e.clientY);
+    var now=Date.now();
+    if(now-wheelAt>320) wheelAcc=0;        /* a fresh gesture starts from zero */
+    wheelAt=now;
+    wheelAcc+=e.deltaY;
+    var STEP=90;
+    /* at most ONE rung per event: a mouse notch is a single step, and a trackpad's
+       stream of small deltas adds up to one. Stepping more than once per event is
+       how a flick used to shoot from Fit to 30% in a single move. */
+    if(Math.abs(wheelAcc)>=STEP){
+      suppressGlide(200);
+      stepZoom(wheelAcc<0?1:-1,e.clientX,e.clientY);
+      wheelAcc-=(wheelAcc<0?-STEP:STEP);
+      if(Math.abs(wheelAcc)>STEP) wheelAcc=(wheelAcc<0?-STEP:STEP);
+    }
   },{passive:false});
   /* two-finger pinch on a touch screen */
   var d0=0, s0=1, mx=0, my=0;
@@ -2316,6 +2465,17 @@ function spaceWidth(el){
 }
 /* getClientRects returns a box per inline run, so several per visual line once
    bold or italic is used. Merge anything sharing a baseline. */
+/* The scale the notebook is ACTUALLY drawn at right now, read off the element
+   rather than taken from the `scale` variable. The two can disagree: at boot the
+   variable already holds the fitting scale while the transform has not been
+   applied yet, and a click-to-place or a strike measured in that window comes out
+   wrong by the whole scale factor. Every conversion between screen pixels and page
+   units goes through this, so it can never be measuring against a scale the page
+   is not wearing. */
+function liveScale(){
+  var w=nb?nb.getBoundingClientRect().width:0;
+  return (w>1)?(w/NB_W):(scale||1);
+}
 function lineRects(tx,base){
   if(!tx.textContent) return [];
   var rng=document.createRange(); rng.selectNodeContents(tx);
@@ -2332,10 +2492,11 @@ function lineRects(tx,base){
     } else groups.push({left:r.left,right:r.right,top:r.top,height:r.height});
   }
   groups.sort(function(a,b){ return a.top-b.top; });
-  var out=[];
-  for(var k=0;k<groups.length;k++)
-    out.push({x1:(groups[k].left-base.left)/scale,x2:(groups[k].right-base.left)/scale,
-              y:(groups[k].top-base.top)/scale,h:groups[k].height/scale});
+  var out=[], sc=liveScale();
+  for(var k=0;k<groups.length;k++){
+    out.push({x1:(groups[k].left-base.left)/sc,x2:(groups[k].right-base.left)/sc,
+              y:(groups[k].top-base.top)/sc,h:groups[k].height/sc});
+  }
   return out;
 }
 /* Marks are painted by default: strokeDashoffset resolves to 0 with no JS timing.
@@ -2915,6 +3076,7 @@ function armPageTurn(zone){
   var stage=document.getElementById('stage');
   if(!stage) return;
   stage.addEventListener('click',function(e){
+    if(panSuppressClick){ panSuppressClick=false; return; }   /* that was a drag */
     if(e.target!==stage) return;          /* only the bare desk, never the notebook */
     if(turning||shelfOpen) return;
     if(e.detail>1) return;
@@ -2967,7 +3129,7 @@ canvas.addEventListener('dblclick',function(e){
                   (e.target.classList.contains('mv')||e.target.classList.contains('frame'));
   if(onImgChrome){
     var cr=canvas.getBoundingClientRect();
-    addBlock((e.clientX-cr.left)/scale,(e.clientY-cr.top)/scale);
+    addBlock((e.clientX-cr.left)/liveScale(),(e.clientY-cr.top)/liveScale());
   }
 });
 canvas.addEventListener('mousedown',function(e){
@@ -3051,7 +3213,8 @@ function dragLoop(e,onMove){
   gesturing=true;
   function mv(ev){
     if(!moved){ pushUndo(); moved=true; }
-    onMove((ev.clientX-sx)/scale,(ev.clientY-sy)/scale);
+    var dsc=liveScale();
+    onMove((ev.clientX-sx)/dsc,(ev.clientY-sy)/dsc);
   }
   function up(){
     document.removeEventListener('mousemove',mv);
@@ -4083,7 +4246,9 @@ document.getElementById('zoomBtn').onclick=function(){
   if(!r) return;
   function apply(){
     var sr=document.getElementById('stage').getBoundingClientRect();
-    zoomAt(sliderToScale(+r.value),sr.left+sr.width/2,sr.top+sr.height/2);
+    var stops=zoomStops();
+    applyStop(stops[clamp(+r.value,0,stops.length-1)],
+              sr.left+sr.width/2,sr.top+sr.height/2);
   }
   /* dragging is continuous, so the glide stays off until the thumb is released */
   r.addEventListener('pointerdown',function(){ zoomDragging=true; nb.classList.add('nozoomanim'); });
@@ -4479,8 +4644,7 @@ document.addEventListener('keydown',function(e){
     e.preventDefault();
     if(e.key==='0'){ zoom='fit'; persistZoom(); fit(); return; }
     var sr=document.getElementById('stage').getBoundingClientRect();
-    var step=(e.key==='-'||e.key==='_')?(1/1.15):1.15;
-    zoomAt(scale*step,sr.left+sr.width/2,sr.top+sr.height/2);
+    stepZoom((e.key==='-'||e.key==='_')?-1:1,sr.left+sr.width/2,sr.top+sr.height/2);
     return;
   }
   if(mod&&e.key.toLowerCase()==='z'){ e.preventDefault(); if(e.shiftKey) redo(); else undo(); return; }
