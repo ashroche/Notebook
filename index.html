@@ -222,7 +222,7 @@ body.oncover .dock{display:none}
 .notebook{position:relative;width:818px;height:1123px;flex:none;transform-origin:top center;
   perspective:2400px;perspective-origin:2% 50%}
 
-.cover{position:absolute;z-index:1;left:12px;top:-13px;width:826px;height:1151px;border-radius:3px 9px 9px 3px;
+.cover{position:absolute;z-index:1;left:12px;top:-13px;width:826px;height:1153px;border-radius:3px 9px 9px 3px;
   background:linear-gradient(160deg,#413a30,#26211b);
   box-shadow:0 10px 24px rgba(0,0,0,.12),
              0 26px 54px rgba(0,0,0,.11),
@@ -318,13 +318,18 @@ body.oncover .dock{display:none}
 
 /* the front cover: a real surface that sits over the page when the notebook is
    closed and swings open on the spine to reveal the last page written on */
-.frontcover{position:absolute;z-index:5;left:12px;top:-13px;width:826px;height:1151px;
+.frontcover{position:absolute;z-index:5;left:12px;top:-13px;width:826px;height:1141px;
   border-radius:3px 9px 9px 3px;cursor:pointer;transform-origin:left center;
   transform-style:preserve-3d;display:none}
 .fc-face{position:absolute;inset:0;border-radius:inherit;backface-visibility:hidden;overflow:hidden}
 /* both faces are the SAME cover material: the back of a real notebook cover is
    just the reverse of the same plastic-coated board, not a pale liner */
 .fc-face{background:linear-gradient(150deg,#4a4234,#2b241c)}
+/* fine paper-fibre grain over whatever material the cover uses, so the surface
+   reads as matte board rather than a smooth digital gradient */
+.fc-face::before,.cover::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size:150px 150px;opacity:.16;mix-blend-mode:overlay}
 .frontcover.cover-kraft .fc-face{background:linear-gradient(150deg,#cdb185,#a88a5c)}
 .frontcover.cover-black .fc-face{background:linear-gradient(145deg,#2c2e31,#111214)}
 .frontcover.cover-navy .fc-face{background:linear-gradient(145deg,#28374f,#141b28)}
@@ -361,9 +366,12 @@ body.oncover .dock{display:none}
   box-shadow:var(--shadow-dock);white-space:nowrap}
 body.oncover .fc-bar{display:flex}
 .sheet{position:absolute;z-index:2;width:794px;height:1123px;border-radius:1px 3px 3px 1px}
-.s1{left:35px;top:12px;background:#c8c2b3}
-.s2{left:32px;top:8px;background:#ded9cc}
-.s3{left:29px;top:4px;background:#efebe0}
+.s1{left:34px;top:13px;background:#d7d0bd}
+.s2{left:33px;top:11px;background:#ddd6c4}
+.s3{left:31px;top:9px;background:#e3dccb}
+.s4{left:30px;top:7px;background:#e9e2d2}
+.s5{left:28px;top:5px;background:#efe9db}
+.s6{left:27px;top:3px;background:#f4efe3}
 
 .page{position:absolute;z-index:3;left:26px;top:0;width:794px;height:1123px;background:var(--paper);
   border-radius:1px 3px 3px 1px;box-shadow:0 2px 5px rgba(0,0,0,.35);overflow:hidden}
@@ -656,7 +664,7 @@ body.hasbanner .stage{top:86px}
 <div class="stage" id="stage">
   <div class="notebook" id="notebook">
     <div class="cover" id="cover"></div>
-    <div class="sheet s1"></div><div class="sheet s2"></div><div class="sheet s3"></div>
+    <div class="sheet s1"></div><div class="sheet s2"></div><div class="sheet s3"></div><div class="sheet s4"></div><div class="sheet s5"></div><div class="sheet s6"></div>
     <div class="page" id="page">
       <div class="gutter" id="gutter" title="Previous page"></div>
       <div class="topfade"></div>
@@ -689,16 +697,16 @@ body.hasbanner .stage{top:86px}
 
 <div class="fc-bar" id="fcBar">
   <select id="fcFont" aria-label="Title font">
-    <option value="caveat">Caveat</option>
-    <option value="inter">Inter</option>
-    <option value="lora">Lora</option>
-    <option value="arimo">Arimo</option>
-    <option value="carlito">Carlito</option>
-    <option value="gelasio">Gelasio</option>
-    <option value="tinos">Tinos</option>
-    <option value="poppins">Poppins</option>
-    <option value="playfair">Playfair Display</option>
-    <option value="merriweather">Merriweather</option>
+    <option value="caveat" style="font-family:'Caveat',cursive">Caveat</option>
+    <option value="inter" style="font-family:'Inter',sans-serif">Inter</option>
+    <option value="lora" style="font-family:'Lora',serif">Lora</option>
+    <option value="arimo" style="font-family:'Arimo',sans-serif">Arimo</option>
+    <option value="carlito" style="font-family:'Carlito',sans-serif">Carlito</option>
+    <option value="gelasio" style="font-family:'Gelasio',serif">Gelasio</option>
+    <option value="tinos" style="font-family:'Tinos',serif">Tinos</option>
+    <option value="poppins" style="font-family:'Poppins',sans-serif">Poppins</option>
+    <option value="playfair" style="font-family:'Playfair Display',serif">Playfair Display</option>
+    <option value="merriweather" style="font-family:'Merriweather',serif">Merriweather</option>
   </select>
   <span class="sep"></span>
   <button id="fcMinus" aria-label="Smaller title">&minus;</button>
@@ -731,16 +739,16 @@ body.hasbanner .stage{top:86px}
 </div>
 <div class="dock" id="dock">
   <select id="tbFont" aria-label="Font">
-    <option value="caveat">Caveat</option>
-    <option value="inter">Inter</option>
-    <option value="lora">Lora</option>
-    <option value="arimo">Arimo</option>
-    <option value="carlito">Carlito</option>
-    <option value="gelasio">Gelasio</option>
-    <option value="tinos">Tinos</option>
-    <option value="poppins">Poppins</option>
-    <option value="playfair">Playfair Display</option>
-    <option value="merriweather">Merriweather</option>
+    <option value="caveat" style="font-family:'Caveat',cursive">Caveat</option>
+    <option value="inter" style="font-family:'Inter',sans-serif">Inter</option>
+    <option value="lora" style="font-family:'Lora',serif">Lora</option>
+    <option value="arimo" style="font-family:'Arimo',sans-serif">Arimo</option>
+    <option value="carlito" style="font-family:'Carlito',sans-serif">Carlito</option>
+    <option value="gelasio" style="font-family:'Gelasio',serif">Gelasio</option>
+    <option value="tinos" style="font-family:'Tinos',serif">Tinos</option>
+    <option value="poppins" style="font-family:'Poppins',sans-serif">Poppins</option>
+    <option value="playfair" style="font-family:'Playfair Display',serif">Playfair Display</option>
+    <option value="merriweather" style="font-family:'Merriweather',serif">Merriweather</option>
   </select>
   <span class="sep"></span>
   <button id="tbMinus" aria-label="Smaller">&minus;</button>
@@ -819,8 +827,13 @@ var FONTS={hand:"'Caveat',cursive",sans:"'Inter',system-ui,sans-serif",serif:"'L
 function normFont(f){ return f==='hand'?'caveat':(f==='sans'?'inter':(f==='serif'?'lora':(f||'caveat'))); }
 /* Caveat has a small x-height, so it needs ~1.55x the px size of Inter to look the same
    size on the page. Sizes in the dock are apparent size, not raw CSS px. */
-var FSCALE={hand:1.55,sans:1,serif:1};
-var DEF_SIZE=17, MIN_SIZE=11, MAX_SIZE=40;
+var OLD_FSCALE={hand:1.55,sans:1,serif:1};   /* only to migrate old apparent sizes to points */
+var DEF_SIZE=11, MIN_SIZE=8, MAX_SIZE=72;   /* points, Word-style */
+var SIZES=[8,9,10,11,12,14,16,18,20,24,28,32,36,40,44,48,54,60,66,72];
+function stepSize(cur,d){
+  if(d>0){ for(var i=0;i<SIZES.length;i++) if(SIZES[i]>cur) return SIZES[i]; return SIZES[SIZES.length-1]; }
+  for(var j=SIZES.length-1;j>=0;j--) if(SIZES[j]<cur) return SIZES[j]; return SIZES[0];
+}
 var MIN_W=90, MIN_H=26, DEF_W=300;
 var KEY='notebook-v1-pages';
 var K_APIKEY='checklist-apikey';   /* shared with the checklist apps on this origin */
@@ -885,7 +898,7 @@ function sheet(){ var s=sheets(); si=clamp(si,0,s.length-1); return s[si]; }
 function blocks(){ return sheet().blocks; }
 function findBlock(id){ var b=blocks(); for(var i=0;i<b.length;i++) if(b[i].id===id) return b[i]; return null; }
 function lineIndex(b,lid){ for(var i=0;i<b.lines.length;i++) if(b.lines[i].id===lid) return i; return -1; }
-function px(b){ return b.size*(FSCALE[b.font]||1); }
+function px(b){ return Math.round((b.size||DEF_SIZE)*4/3); }   /* size is points; A4 @96dpi => 1pt = 4/3 px */
 
 /* ---- inline markup: only b / i / u survive ---- */
 var ALLOW={B:1,I:1,U:1,SPAN:1};
@@ -1008,7 +1021,7 @@ function asV5(raw){
       if(!p||!Array.isArray(p.blocks)) continue;
       for(var i=0;i<p.blocks.length;i++){
         var b=p.blocks[i];
-        if(raw.v!==2 && b.font==='hand' && b.size>=20) b.size=Math.round(b.size/FSCALE.hand);
+        if(raw.v!==2 && b.font==='hand' && b.size>=20) b.size=Math.round(b.size/OLD_FSCALE.hand);
         b.size=clamp(b.size||DEF_SIZE,MIN_SIZE,MAX_SIZE);
         b.kind='text';
         for(var j=0;j<(b.lines||[]).length;j++){
@@ -1042,10 +1055,30 @@ function load(){
   NB=asV5(raw);
   if(!NB.notebooks[NB.active]) NB.active=NB.order[0]||Object.keys(NB.notebooks)[0]||'';
   bindActive(); normaliseAll();
-  if(wasOld) writeLocal();
+  if(wasOld||pointsMigrated) writeLocal();
 }
 function normaliseAll(){
   for(var id in NB.notebooks) normaliseNB(NB.notebooks[id]);
+  migratePoints();
+}
+var pointsMigrated=false;
+/* one-time: convert every saved size from the old apparent-pixel scale to points,
+   preserving how the text actually looks, then flag it so it never re-runs */
+function migratePoints(){
+  if(NB.psv>=1) return;
+  for(var id in NB.notebooks){
+    var nb=NB.notebooks[id]; if(!nb) continue;
+    var appliedPx=oldTitleBase(nb.titleFont||'hand')+(nb.titleSize||0);
+    nb.titleSize=clamp(Math.round(appliedPx*3/4),8,96);
+    var P=nb.pages||{};
+    for(var d in P){ var p=P[d]; if(!p||!p.sheets) continue;
+      for(var s=0;s<p.sheets.length;s++){ var bl=p.sheets[s].blocks||[];
+        for(var i=0;i<bl.length;i++){ var b=bl[i];
+          var bf=(OLD_FSCALE[b.font]!==undefined)?b.font:'sans';
+          b.size=clamp(Math.round((b.size||17)*(OLD_FSCALE[bf]||1)*3/4),8,72);
+        } } }
+  }
+  NB.psv=1; pointsMigrated=true;
 }
 function normalise(){ normaliseNB(activeNB()); }
 function normaliseNB(nb){
@@ -1312,13 +1345,14 @@ function paintNbName(){
   if(a) a.textContent=OWNER_INITIALS;
   if(b) b.textContent=OWNER_INITIALS;
 }
-function titleBaseSize(font){
+function oldTitleBase(font){
   font=normFont(font);
   if(font==='caveat') return 64;
   if(font==='inter'||font==='arimo'||font==='carlito'||font==='poppins') return 52;
-  return 54;   /* serifs: lora, gelasio, tinos, playfair, merriweather */
+  return 54;
 }
-function titleSizePx(nb){ return clamp(titleBaseSize(nb.titleFont||'hand')+(nb.titleSize||0),30,96); }
+function titleSizePt(nb){ return clamp(nb.titleSize||40,8,96); }   /* absolute points */
+function titleSizePx(nb){ return Math.round(titleSizePt(nb)*4/3); }
 function applyTitleStyle(nb,t){
   t.style.fontFamily=FONTS[normFont(nb.titleFont)]||FONTS.caveat;
   t.style.fontSize=titleSizePx(nb)+'px';
@@ -1384,10 +1418,10 @@ function openCover(){
   document.body.classList.remove('oncover');
   var fc=document.getElementById('frontCover');
   document.getElementById('fcTitle').blur();
-  /* opening a notebook always lands on TODAY, which is where you write by
-     default. Use the date controls to go anywhere else. */
-  cur=todayISO();
-  si=lastWrittenSheet(cur);
+  /* Open to page 1: the first day anything was written, the way you'd open a real
+     notebook to its first page. A brand-new, empty notebook opens to today. */
+  cur=firstWrittenISO()||todayISO();
+  si=0;
   updateDateUI(); render(false);
   function done(){ coverClosed=false; fc.style.display='none'; fc.classList.remove('opening'); fc.style.transform=''; }
   if(reduced()||!fc.animate){ done(); return; }
@@ -1422,22 +1456,18 @@ function setupCover(){
     if(e.target!==fc) return;                 /* never react to keys typed in the title */
     if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openCover(); }
   });
-  /* The title used to swallow single clicks, so clicking the middle of the cover
-     did nothing. Now it is only editable after a double-click; a single click
-     anywhere on the cover, title included, opens the notebook. */
+  /* A single click on the title renames it (the text cursor invites exactly that),
+     and clicking anywhere else on the cover opens the notebook. */
   t.setAttribute('contenteditable','false');
   var titleJustEdited=0;
-  /* A single click opens the notebook; a double click renames. Because the first
-     mousedown of a double click looks identical to a single click, hold the open
-     briefly and cancel it if a second click arrives. */
   var titleTimer=null;
   t.addEventListener('mousedown',function(e){
     if(t.getAttribute('contenteditable')==='true') return;   /* already renaming */
-    if(Date.now()-titleJustEdited<400) return;               /* just finished a rename */
-    e.preventDefault();
-    if(e.detail>1){ clearTimeout(titleTimer); titleTimer=null; return; }
-    clearTimeout(titleTimer);
-    titleTimer=setTimeout(function(){ titleTimer=null; openCover(); },260);
+    if(Date.now()-titleJustEdited<300) return;               /* just blurred */
+    e.stopPropagation();                                      /* don't open the cover */
+    t.setAttribute('contenteditable','true');
+    /* no preventDefault, so the browser focuses the title and drops the caret
+       where you clicked */
   });
   t.addEventListener('dblclick',function(e){
     e.preventDefault(); e.stopPropagation();
@@ -1464,9 +1494,7 @@ function setupCover(){
   });
   function stepTitle(d){
     var nb=activeNB(); if(!nb) return;
-    var base=titleBaseSize(nb.titleFont||'hand');
-    var applied=clamp(base+(nb.titleSize||0)+d*4,30,96);
-    nb.titleSize=applied-base; nb.u=Date.now();
+    nb.titleSize=stepSize(titleSizePt(nb),d); nb.u=Date.now();
     paintFrontCover(); writeLocal();
   }
   document.getElementById('fcMinus').onclick=function(){ stepTitle(-1); };
@@ -1505,7 +1533,7 @@ function syncCoverBar(){
   var nb=activeNB(); if(!nb) return;
   var f=nb.titleFont||'hand', c=(nb.titleColor||'#f3ead2'), mat=nb.cover||'cardboard';
   var sel=document.getElementById('fcFont'); if(sel) sel.value=normFont(f);
-  var sz=document.getElementById('fcSize'); if(sz) sz.textContent=titleSizePx(nb);
+  var sz=document.getElementById('fcSize'); if(sz) sz.textContent=titleSizePt(nb);
   var b=document.getElementById('fcB'); if(b) b.classList.toggle('act',!!nb.titleBold);
   var it=document.getElementById('fcI'); if(it) it.classList.toggle('act',!!nb.titleItalic);
   var u=document.getElementById('fcU'); if(u) u.classList.toggle('act',!!nb.titleUnderline);
@@ -2867,7 +2895,7 @@ document.getElementById('tbFont').addEventListener('change',function(){
 });
 function bump(d){
   var b=findBlock(selId); if(!b||b.kind!=='text') return;
-  pushUndo(); b.size=clamp(b.size+d,MIN_SIZE,MAX_SIZE); save(); render(); updateDock();
+  pushUndo(); b.size=stepSize(b.size,d); save(); render(); updateDock();
 }
 document.getElementById('tbMinus').onclick=function(){ bump(-1); };
 document.getElementById('tbPlus').onclick=function(){ bump(1); };
