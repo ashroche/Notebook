@@ -529,9 +529,23 @@ body.oncover .fc-bar{display:flex}
 .row:not(.done) .tick:hover{opacity:.65}
 .row.done .tick{opacity:1}
 
-.bul{position:absolute;pointer-events:none}
-.bul svg{display:block;overflow:visible}
-.bul path{fill:var(--ink);opacity:.85}
+/* the marker column: a real flex child, so the text after it starts at the same
+   place on every line of the box whatever the marker happens to be */
+.mark{flex:0 0 auto;pointer-events:none;user-select:none;color:var(--ink);
+  align-self:flex-start;box-sizing:border-box;
+  /* Every marker - dot, dash, number, letter - is right-aligned in the column and
+     centred on the FIRST line of the row, so a wrapped line keeps its marker up
+     beside the text it belongs to rather than drifting to the middle. */
+  display:flex;align-items:center;justify-content:flex-end;padding-right:.30em;
+  opacity:.85}
+.mark svg{display:block;overflow:visible}
+.mark path{fill:var(--ink)}
+.mark-dash path{fill:none}
+.mark-num{font-variant-numeric:tabular-nums}
+/* a category: bold and underlined, set by its kind rather than by formatting, so
+   bold and underline stay available as ordinary emphasis on ordinary lines */
+.row.head .tx{font-weight:700;text-decoration:underline;text-underline-offset:3px;
+  text-decoration-thickness:1.5px}
 
 .tx{flex:1;min-height:1.3em;outline:none;white-space:pre-wrap;overflow-wrap:break-word;
   line-height:1.3;padding-right:2px}
@@ -572,8 +586,14 @@ body.oncover .fc-bar{display:flex}
 .block.sel .frame{border-color:rgba(0,0,0,.42)}
 /* Word-style: the TEXT is highlighted so it's obvious typing will replace it */
 .block.blocksel .frame{border-color:rgba(45,95,200,.55)}
-.block.blocksel .tx{background:rgba(70,120,220,.22);border-radius:2px}
-.block.blocksel .bul path{fill:var(--ink)}
+/* The whole-box selection used to be a background on .tx, and .tx is a flex
+   child that fills the box, so a three-word line lit up as a full-width band.
+   The highlight is drawn instead as one rectangle per wrapped line, measured
+   from the text itself, so it hugs the words the way a real selection does. */
+.selhl{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;
+  overflow:visible;z-index:0}
+.selhl rect{fill:rgba(70,120,220,.26)}
+.block.blocksel .mark path{fill:var(--ink)}
 .mv{position:absolute;display:none;cursor:move}
 .block:hover .mv,.block.sel .mv{display:block}
 .mv-t{left:-9px;right:-9px;top:-15px;height:14px}
@@ -818,6 +838,8 @@ body.hasbanner .stage{top:86px}
   <button id="tbI" title="Italic (Ctrl+I)"><i>I</i></button>
   <button id="tbU" title="Underline (Ctrl+U)"><u>U</u></button>
   <button id="tbL" title="Bullet list (Ctrl+Shift+8)" aria-label="Bullet list"><svg width="14" height="12" viewBox="0 0 14 12" aria-hidden="true"><circle cx="2" cy="2" r="1.5" fill="currentColor"/><circle cx="2" cy="6" r="1.5" fill="currentColor"/><circle cx="2" cy="10" r="1.5" fill="currentColor"/><rect x="6" y="1.2" width="8" height="1.6" rx=".8" fill="currentColor"/><rect x="6" y="5.2" width="8" height="1.6" rx=".8" fill="currentColor"/><rect x="6" y="9.2" width="8" height="1.6" rx=".8" fill="currentColor"/></svg></button>
+  <button id="tbN" title="Numbered list (Ctrl+Shift+7). Tab indents to a, b, c" aria-label="Numbered list"><svg width="14" height="12" viewBox="0 0 14 12" aria-hidden="true"><text x="0" y="3.6" font-size="4.4" font-family="Inter,sans-serif" fill="currentColor">1</text><text x="0" y="7.9" font-size="4.4" font-family="Inter,sans-serif" fill="currentColor">2</text><text x="0" y="12" font-size="4.4" font-family="Inter,sans-serif" fill="currentColor">3</text><rect x="6" y="1.2" width="8" height="1.6" rx=".8" fill="currentColor"/><rect x="6" y="5.2" width="8" height="1.6" rx=".8" fill="currentColor"/><rect x="6" y="9.2" width="8" height="1.6" rx=".8" fill="currentColor"/></svg></button>
+  <button id="tbH" title="Category: a heading, no tick" aria-label="Category"><svg width="14" height="12" viewBox="0 0 14 12" aria-hidden="true"><rect x="0" y="1.0" width="11" height="2.1" rx="1" fill="currentColor"/><rect x="0" y="4.2" width="11" height="1" rx=".5" fill="currentColor" opacity=".6"/><rect x="0" y="7.2" width="8" height="1.2" rx=".6" fill="currentColor" opacity=".35"/><rect x="0" y="10" width="8" height="1.2" rx=".6" fill="currentColor" opacity=".35"/></svg></button>
   <span class="inkwrap">
     <button id="tbInk" title="Text colour" aria-label="Text colour"><span class="inkdot" id="inkDot"></span></button>
     <span class="inkpop" id="inkPop">
@@ -877,10 +899,12 @@ body.hasbanner .stage{top:86px}
 
 /* ================= constants ================= */
 var NB_W=818, NB_H=1123;
-/* how much of the sheet's width, at each edge, is a page-turn zone. The middle is
-   inert. Left band = back, right band = forward; swap the two in the canvas click
-   handler if you ever want the opposite. */
-var TURN_BAND=0.15;
+/* How much of the sheet's width, at each edge, is a page-turn zone; the middle is
+   inert. Left band goes back, right band goes forward. The forward band is the
+   wider of the two on purpose: going forward is the common move, and the back band
+   has the whole spiral gutter backing it up while the forward band has only the
+   paper's edge. */
+var TURN_BAND_BACK=0.15, TURN_BAND_FWD=0.20;
 /* zoom limits for ctrl/cmd + wheel, pinch and the keyboard shortcuts */
 var ZOOM_MIN=0.30, ZOOM_MAX=3.00;
 var FONTS={hand:"'Caveat',cursive",sans:"'Inter',system-ui,sans-serif",serif:"'Lora',Georgia,serif",
@@ -1258,13 +1282,13 @@ function load(){
   NB=asV5(raw);
   if(!NB.notebooks[NB.active]) NB.active=NB.order[0]||Object.keys(NB.notebooks)[0]||'';
   bindActive(); normaliseAll();
-  if(wasOld||pointsMigrated||coversMigrated) writeLocal();
+  if(wasOld||pointsMigrated||coversMigrated||shapeMigrated) writeLocal();
 }
 function normaliseAll(){
   for(var id in NB.notebooks) normaliseNB(NB.notebooks[id]);
   migratePoints();
 }
-var pointsMigrated=false, coversMigrated=false;
+var pointsMigrated=false, coversMigrated=false, shapeMigrated=false;
 /* one-time: convert every saved size from the old apparent-pixel scale to points,
    preserving how the text actually looks, then flag it so it never re-runs */
 function migratePoints(){
@@ -1310,6 +1334,13 @@ function normaliseNB(nb){
           var l=b.lines[j];
           if(l.html===undefined) l.html=esc(l.text||''), delete l.text;
           if(l.bul===undefined) l.bul=false;
+          /* a line's shape used to be one boolean; carry it into the kind model
+             and keep the boolean mirrored so an older client still sees bullets */
+          if(LINE_KINDS.indexOf(l.k)<0){ l.k=l.bul?'b':'p'; shapeMigrated=true; }
+          if(l.i!==1&&l.i!==0){ l.i=0; shapeMigrated=true; }
+          if(l.i===undefined){ l.i=0; shapeMigrated=true; }
+          if(l.k==='h'&&(l.done||l.i)){ l.done=false; l.i=0; shapeMigrated=true; }
+          if(l.bul!==(l.k==='b')){ l.bul=(l.k==='b'); shapeMigrated=true; }
         }
       }
     }
@@ -2157,6 +2188,80 @@ function tickSVG(seed){
     '<path d="'+down+'" style="stroke-width:'+w+'"/>'+
     '<path d="'+up+'" style="stroke-width:'+w+'"/></svg>';
 }
+/* ================= line kinds =================
+   A line is one of four kinds and sits at one of two indent levels. The kind
+   decides what marker it carries and whether it can be struck off; the level
+   decides how far in it sits and, for numbers, whether it counts in digits or
+   letters. Kept as two small fields rather than a pile of booleans so a line
+   can never be a bullet and a heading at once.
+     p  plain      no marker
+     b  bullet     a hand-drawn dot, or a dash when indented
+     n  number     1. 2. 3. at level 0, a. b. c. underneath
+     h  heading    a category: bold and underlined, no marker, and no tick,
+                   because a category is not a thing you tick off
+   `bul` is still written alongside for anything reading the old shape. */
+var LINE_KINDS=['p','b','n','h'];
+function lineKind(l){
+  if(!l) return 'p';
+  if(LINE_KINDS.indexOf(l.k)>=0) return l.k;
+  return l.bul?'b':'p';            /* the old boolean */
+}
+function lineIndent(l){ return (l&&l.i===1)?1:0; }
+function setLineKind(l,k){
+  l.k=k; l.bul=(k==='b');
+  if(k==='h'){ l.done=false; l.i=0; }   /* a heading is never struck off or indented */
+  if(k==='p'&&l.i) l.i=0;
+}
+function setLineIndent(l,lvl){
+  if(lineKind(l)==='h'){ l.i=0; return; }
+  l.i=(lvl===1)?1:0;
+}
+function canTick(l){ return lineKind(l)!=='h'; }
+/* a..z, then aa, ab, for the rare long sub-list */
+function letterFor(n){
+  var out='';
+  n=n-1;
+  do{ out=String.fromCharCode(97+(n%26))+out; n=Math.floor(n/26)-1; }while(n>=0);
+  return out;
+}
+/* Every marker in a block, worked out in one pass so inserting or deleting a
+   line renumbers the rest for free. Numbering restarts whenever the run is
+   broken by anything that is not a number at the same level, which is what
+   makes a category act as the start of a fresh list beneath it. */
+function markersFor(b){
+  var out=[], num=0, sub=0, prevTopNum=false, prevSubNum=false;
+  for(var i=0;i<b.lines.length;i++){
+    var l=b.lines[i], k=lineKind(l), lvl=lineIndent(l), m='';
+    if(k==='n'&&lvl===0){
+      if(!prevTopNum) num=0;
+      num++; sub=0; m=num+'.';
+      prevTopNum=true; prevSubNum=false;
+    } else if(k==='n'&&lvl===1){
+      if(!prevSubNum) sub=0;
+      sub++; m=letterFor(sub)+'.';
+      prevSubNum=true;
+    } else {
+      if(lvl===0){ num=0; prevTopNum=false; }
+      sub=0; prevSubNum=false;
+      if(k==='b') m=(lvl===1)?'dash':'dot';
+    }
+    out.push(m);
+  }
+  return out;
+}
+/* a hand-drawn dash for an indented bullet, in the same wobbly hand as the dot */
+function dashSVG(seed,size){
+  var r=hash(seed+'d');
+  function n(i,a){ return ((((r>>(i*4))&15)/15)-0.5)*2*a; }
+  var w=size*0.34, th=Math.max(1.4,size*0.075), rot=n(2,5);
+  var d='M 0 0 C '+(w*0.34).toFixed(2)+' '+(n(0,th*0.5)).toFixed(2)+' '+
+        (w*0.66).toFixed(2)+' '+(n(1,th*0.5)).toFixed(2)+' '+w.toFixed(2)+' 0';
+  return '<svg width="'+(w+2).toFixed(1)+'" height="'+(th*3).toFixed(1)+'" '+
+    'viewBox="'+(-1)+' '+(-th*1.5)+' '+(w+2)+' '+(th*3)+'" '+
+    'style="transform:rotate('+rot.toFixed(0)+'deg)">'+
+    '<path d="'+d+'" fill="none" stroke="currentColor" stroke-width="'+th.toFixed(2)+
+    '" stroke-linecap="round"/></svg>';
+}
 function bulletSVG(seed,size){
   var r=hash(seed+'b');
   function n(i,a){ return ((((r>>(i*4))&15)/15)-0.5)*2*a; }
@@ -2289,6 +2394,7 @@ function layoutMarks(only,settleOnly){
     /* settleOnly is the deferred re-measure pass: skip rows that are mid-animation
        so we never snap an in-flight tick, only correct settled ones */
     if(settleOnly && row.classList.contains('anim')) continue;
+    var oldHl=row.querySelector('.selhl'); if(oldHl) oldHl.parentNode.removeChild(oldHl);
     var old=row.querySelector('.strike'); if(old) old.parentNode.removeChild(old);
     var tick=row.querySelector('.tick');
     var tx=row.querySelector('.tx');
@@ -2309,6 +2415,21 @@ function layoutMarks(only,settleOnly){
         for(var q=0;q<sp.length;q++){ sd.push((+sp[q].getAttribute('data-ln')||0)*0.085); sdur.push(0.30); }
         paintAnim(sp,sd,sdur);
       } else paintNow(sp);
+    }
+
+    /* whole-box selection: one rectangle per wrapped line of real text */
+    if(rs.length&&row.closest('.block.blocksel')){
+      var hl=document.createElementNS('http://www.w3.org/2000/svg','svg');
+      hl.setAttribute('class','selhl');
+      var rh='';
+      for(var z=0;z<rs.length;z++){
+        if(rs[z].x2-rs[z].x1<0.5) continue;
+        rh+='<rect x="'+(rs[z].x1-1).toFixed(1)+'" y="'+(rs[z].y-fs*0.12).toFixed(1)+
+            '" width="'+(rs[z].x2-rs[z].x1+2).toFixed(1)+
+            '" height="'+(rs[z].h+fs*0.20).toFixed(1)+'" rx="2"/>';
+      }
+      hl.innerHTML=rh;
+      row.insertBefore(hl,row.firstChild);
     }
 
     if(tick&&rs.length){
@@ -2359,12 +2480,21 @@ function frameParts(){
     '<div class="hd hd-se" data-d="se"></div><div class="hd hd-s" data-d="s"></div>'+
     '<div class="hd hd-sw" data-d="sw"></div><div class="hd hd-w" data-d="w"></div>';
 }
-function renderLine(b,l){
+function renderLine(b,l,marker,colw){
   var size=px(b);
+  var kind=lineKind(l), lvl=lineIndent(l);
+  if(marker===undefined){ var ms=markersFor(b); marker=ms[b.lines.indexOf(l)]||''; }
+  if(colw===undefined) colw=markerColumn(b,size);
   var row=document.createElement('div');
-  row.className='row'+(l.done?' done':'')+(animSet[l.id]?' anim':'');
+  row.className='row'+(l.done?' done':'')+(animSet[l.id]?' anim':'')+
+    (kind==='h'?' head':'');
   row.dataset.lid=l.id;
+  row.dataset.k=kind;
+  row.dataset.i=lvl;
 
+  /* A category is a label, not a task, so it gets no tick at all rather than a
+     hidden one: nothing to click, nothing for Ctrl+Enter to find. */
+  if(canTick(l)){
   var tick=document.createElement('button');
   tick.className='tick';
   tick.type='button';
@@ -2375,23 +2505,54 @@ function renderLine(b,l){
   tick.title=l.done?'Click to undo':'Click to strike off';
   tick.innerHTML=tickSVG(l.id);
   row.appendChild(tick);
+  }
 
-  if(l.bul){
-    var bl=document.createElement('div');
-    bl.className='bul';
-    bl.style.left=(size*0.16)+'px';
-    bl.style.top=(size*1.3/2-size*0.1725)+'px';
-    bl.innerHTML=bulletSVG(l.id,size);
-    row.appendChild(bl);
+  /* The marker column belongs to list lines only. Every bullet and number in the
+     box shares one width, so a bullet, a "1." and a "10." all leave their text on
+     the same vertical. A category or a plain line gets no column at all and stays
+     at the left margin, the way an unlisted paragraph does in Word: putting a
+     bullet on an item must not shove the heading above it sideways. */
+  if(marker){
+  var mk=document.createElement('div');
+  mk.className='mark';
+  mk.style.width=colw+'px';
+  mk.style.marginLeft=(lvl*size*1.05)+'px';
+  mk.style.height=(size*1.3)+'px';      /* one line, so it centres on the first */
+  mk.style.lineHeight=(size*1.3)+'px';
+  if(marker==='dot'){
+    mk.classList.add('mark-dot');
+    mk.innerHTML=bulletSVG(l.id,size);
+  } else if(marker==='dash'){
+    mk.classList.add('mark-dash');
+    mk.innerHTML=dashSVG(l.id,size);
+  } else if(marker){
+    mk.classList.add('mark-num');
+    mk.textContent=marker;
+  }
+  row.appendChild(mk);
   }
 
   var tx=document.createElement('div');
   tx.className='tx'; tx.contentEditable='true'; tx.spellcheck=false;
   tx.setAttribute('draggable','false');
   tx.innerHTML=l.html||'';
-  if(l.bul) tx.style.paddingLeft=(size*0.62)+'px';
   row.appendChild(tx);
   return row;
+}
+/* One column width per box, wide enough for its widest marker, so every line in
+   the box lines up. Estimated from the marker's character count rather than
+   measured, because measuring would mean a layout flush per line on every draw. */
+function markerColumn(b,size){
+  var ms=markersFor(b), longest=0, hasAny=false;
+  for(var i=0;i<ms.length;i++){
+    if(!ms[i]) continue;
+    hasAny=true;
+    if(ms[i]==='dot'||ms[i]==='dash') continue;
+    if(ms[i].length>longest) longest=ms[i].length;
+  }
+  if(!hasAny) return 0;
+  if(!longest) return size*0.62;                 /* bullets only, as before */
+  return size*(0.34+0.30*longest);               /* "1." ~0.94em, "10." ~1.24em */
 }
 function renderBlock(b){
   var el=document.createElement('div');
@@ -2409,7 +2570,8 @@ function renderBlock(b){
     el.style.fontFamily=FONTS[b.font]||FONTS.hand;
     el.style.fontSize=px(b)+'px';
     var lines=document.createElement('div'); lines.className='lines';
-    for(var i=0;i<b.lines.length;i++) lines.appendChild(renderLine(b,b.lines[i]));
+    var ms=markersFor(b), colw=markerColumn(b,px(b));
+    for(var i=0;i<b.lines.length;i++) lines.appendChild(renderLine(b,b.lines[i],ms[i],colw));
     el.appendChild(lines);
   }
   el.insertAdjacentHTML('beforeend',frameParts());
@@ -2556,24 +2718,36 @@ function selectWholeBlock(id){
     if(txs.length){
       var lastTx=txs[txs.length-1];
       lastTx.focus();
-      var r=document.createRange(); r.selectNodeContents(lastTx);
+      /* The caret goes to the end of the last line and the native selection is
+         collapsed on purpose. Typing over, Delete and paste are all intercepted
+         from blockSel before the browser sees them, so a native selection would
+         add nothing except a second, differently coloured highlight on one line. */
+      var r=document.createRange(); r.selectNodeContents(lastTx); r.collapse(false);
       var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
     }
   }
   settingBlockSel=false;
+  layoutMarks();
   updateDock();
 }
 /* Replace every line of the selected box with one empty line, keeping the box.
    Shared by typing-over and Delete. */
 function clearBlockText(b,keepChar){
-  var first={id:uid(),html:keepChar?esc(keepChar):'',bul:b.lines[0]?b.lines[0].bul:false,done:false};
+  var src=b.lines[0];
+  var first={id:uid(),html:keepChar?esc(keepChar):'',done:false,
+             k:src?lineKind(src):'p', i:src?lineIndent(src):0};
+  first.bul=(first.k==='b');
   b.lines=[first];
   return first;
 }
 function clearBlockSel(){
   if(!blockSel) return;
   var el=canvas.querySelector('.block[data-id="'+blockSel+'"]');
-  if(el) el.classList.remove('blocksel');
+  if(el){
+    el.classList.remove('blocksel');
+    var hls=el.querySelectorAll('.selhl');
+    for(var i=0;i<hls.length;i++) hls[i].parentNode.removeChild(hls[i]);
+  }
   blockSel=null;
 }
 /* Is every character of this line already inside <tag>? Walks the text nodes and
@@ -2610,15 +2784,17 @@ function stripTag(html,tag){
   })(d);
   return d.innerHTML;
 }
-function toggleAllBullets(b){
+function toggleAllKind(b,kind){
   var all=true;
-  for(var i=0;i<b.lines.length;i++) if(!b.lines[i].bul){ all=false; break; }
-  for(var j=0;j<b.lines.length;j++) b.lines[j].bul=!all;
+  for(var i=0;i<b.lines.length;i++) if(lineKind(b.lines[i])!==kind){ all=false; break; }
+  for(var j=0;j<b.lines.length;j++) setLineKind(b.lines[j],all?'p':kind);
 }
 function blockFormat(prop){
   var b=findBlock(blockSel||selId); if(!b||b.kind!=='text') return;
   pushUndo();
-  if(prop==='bul'){ toggleAllBullets(b); } else {
+  if(prop==='bul'||prop==='num'||prop==='head'){
+    toggleAllKind(b,prop==='bul'?'b':(prop==='num'?'n':'h'));
+  } else {
     var tag=(prop==='b')?'b':(prop==='i')?'i':'u';
     var everyWrapped=true;
     for(var k=0;k<b.lines.length;k++){
@@ -2641,7 +2817,7 @@ function blockFormat(prop){
 function updateDock(){
   var b=findBlock(selId);
   var isText=!!(b&&b.kind==='text');
-  var ids=['tbFont','tbMinus','tbPlus','tbB','tbI','tbU','tbL'];
+  var ids=['tbFont','tbMinus','tbPlus','tbB','tbI','tbU','tbL','tbN','tbH'];
   for(var i=0;i<ids.length;i++) document.getElementById(ids[i]).disabled=!isText;
   if(isText){
     document.getElementById('tbFont').value=normFont(b.font);
@@ -2653,7 +2829,10 @@ function updateDock(){
   document.getElementById('tbI').classList.toggle('act',on('italic'));
   document.getElementById('tbU').classList.toggle('act',on('underline'));
   var l=currentLine();
-  document.getElementById('tbL').classList.toggle('act',!!(l&&l.bul));
+  var lk=l?lineKind(l):null;
+  document.getElementById('tbL').classList.toggle('act',lk==='b');
+  document.getElementById('tbN').classList.toggle('act',lk==='n');
+  document.getElementById('tbH').classList.toggle('act',lk==='h');
 }
 
 /* ================= mouse ================= */
@@ -2678,14 +2857,18 @@ canvas.addEventListener('click',function(e){
    with the paper edge you are actually aiming at: the left zone came out wider
    than asked for, the right zone narrower, and the outermost strip of paper on the
    right was dead altogether. Measuring on the page makes both bands exactly
-   TURN_BAND of the visible sheet and live right to its edge. */
+   its own band of the visible sheet and live right to its edge. */
 function turnZoneAt(clientX){
   if(!elPage) return null;
   var r=elPage.getBoundingClientRect();
   if(r.width<=0) return null;
   var f=(clientX-r.left)/r.width;
-  if(f<TURN_BAND) return 'back';
-  if(f>1-TURN_BAND) return 'fwd';
+  /* Deliberately unbounded at both ends: a point OUTSIDE the paper still resolves
+     to the band it is nearest. That is what lets the exposed board and the edge of
+     the sheet stack - the strip of notebook you can see past the paper - turn the
+     page too, instead of being a dead border you keep clicking into. */
+  if(f<TURN_BAND_BACK) return 'back';
+  if(f>1-TURN_BAND_FWD) return 'fwd';
   return null;                       /* dead centre: reading and writing space */
 }
 /* Held briefly so a second click can cancel it and create a text box instead. */
@@ -2712,6 +2895,19 @@ function armPageTurn(zone){
     if(e.detail>1) return;
     armPageTurn(turnZoneAt(e.clientX));
   });
+  /* The board and the edge of the sheet stack show past the paper on both sides.
+     They look like part of the notebook because they are, so clicking them turns
+     the page rather than doing nothing, which is what made the right-hand edge
+     feel unreliable. */
+  if(nb) nb.addEventListener('click',function(e){
+    var t=e.target;
+    if(!t||!t.classList) return;
+    if(!t.classList.contains('cover')&&!t.classList.contains('sheet')) return;
+    if(turning||coverClosed||shelfOpen) return;
+    if(e.detail>1){ cancelPageTurnClick(); return; }
+    cancelPageTurnClick();
+    armPageTurn(turnZoneAt(e.clientX));
+  });
   /* The empty desk beside the notebook only ever goes BACK, and keeps going back
      until the notebook is closed on its cover. Going forward is something you do
      to a page, so it needs a click on the page itself; the bare desk to the right
@@ -2725,10 +2921,11 @@ function armPageTurn(zone){
     var nbEl=document.getElementById('notebook');
     var r=nbEl.getBoundingClientRect();
     var leftSide=(e.clientX<r.left+r.width/2);
-    if(coverClosed){
-      if(!leftSide) openCover();          /* closed: the right side opens it */
-      return;
-    }
+    /* Closed, the desk does nothing at all. Opening a notebook is something you do
+       TO the notebook, so it takes a click on the cover itself; the bare desk
+       beside it used to open it, which meant a stray click anywhere to the right
+       flipped it open. */
+    if(coverClosed) return;
     if(leftSide) turnByClick(true);       /* one page back, same as the left edge */
   });
 })();
@@ -2807,6 +3004,12 @@ canvas.addEventListener('mousedown',function(e){
   if(e.target.classList.contains('mv')||e.altKey){
     e.preventDefault(); var fxm=focusedTx(); if(fxm) fxm.blur(); selectBlock(b.id); startDrag(e,b); return;
   }
+  /* Past the handles and the move bands, this click is placing a caret, which
+     ends a whole-box selection. It cannot be left to focusin: clicking the line
+     that already holds the caret fires no focus event at all, and clicking the
+     box's own padding never reaches a line, so in both cases the highlight used
+     to stay up with nothing selected. */
+  if(blockSel) clearBlockSel();
   var tickEl=e.target.closest('.tick');
   if(tickEl){
     e.preventDefault();
@@ -3022,6 +3225,16 @@ canvas.addEventListener('keydown',function(e){
     layoutMarks(row); save(); updateDock(); return;
   }
   if(e.key==='Enter'){
+    /* Word's way out of a list. Enter on an EMPTY list line does not make another
+       one, it steps that line back a level: an indented item comes out flush, a
+       flush item loses its marker and becomes ordinary text. Without this the only
+       way out of a list you have finished is Backspace, which feels like undoing a
+       mistake rather than finishing a thought. */
+    if(lineText(l.html).trim()===''&&(lineIndent(l)||lineKind(l)!=='p')){
+      e.preventDefault(); pushUndo(); typing=false;
+      if(lineIndent(l)) setLineIndent(l,0); else setLineKind(l,'p');
+      save(); render(false); focusLine(b.id,l.id,0); return;
+    }
     e.preventDefault(); pushUndo(); typing=false;
     var s=window.getSelection(), tail=document.createRange();
     if(s&&s.rangeCount){
@@ -3031,14 +3244,20 @@ canvas.addEventListener('keydown',function(e){
     } else tail.setStart(tx,tx.childNodes.length), tail.setEnd(tx,tx.childNodes.length);
     var tmp=document.createElement('div');
     tmp.appendChild(tail.extractContents());
-    var nl={id:uid(),html:sanitize(tmp.innerHTML),bul:l.bul,done:false};
+    var nl={id:uid(),html:sanitize(tmp.innerHTML),done:false,
+            k:(lineKind(l)==='h'?'p':lineKind(l)), i:lineIndent(l)};
+    nl.bul=(nl.k==='b');
     l.html=sanitize(tx.innerHTML);
     b.lines.splice(idx+1,0,nl);
     save(); render(false); focusLine(b.id,nl.id,0); return;
   }
   if(e.key==='Backspace'&&pos===0&&collapsed()){
-    if(l.bul&&idx>=0){ e.preventDefault(); pushUndo(); l.bul=false;
-      replaceRow(b,l,row,0); save(); return; }
+    /* Backspace at the start of a line steps back out of its shape before it
+       merges lines: indented item to flush item, then list item to plain. */
+    if(lineIndent(l)&&idx>=0){ e.preventDefault(); pushUndo(); setLineIndent(l,0);
+      save(); render(false); focusLine(b.id,l.id,0); return; }
+    if(lineKind(l)!=='p'&&idx>=0){ e.preventDefault(); pushUndo(); setLineKind(l,'p');
+      save(); render(false); focusLine(b.id,l.id,0); return; }
     if(idx===0){
       if(b.lines.length===1&&txt===''){ e.preventDefault(); pushUndo(); deleteBlock(b.id); }
       return;
@@ -3061,6 +3280,21 @@ canvas.addEventListener('keydown',function(e){
   if(e.key==='ArrowDown'&&idx<b.lines.length-1&&atEdgeRow(tx,false)){
     e.preventDefault(); focusLine(b.id,b.lines[idx+1].id,0); return;
   }
+  if(e.key==='Tab'&&!mod&&!e.altKey){
+    /* Word's indent, and the only one: a single level, because a list you can
+       nest forever is a list you lose track of. A category never indents. */
+    e.preventDefault(); e.stopPropagation();
+    if(lineKind(l)==='h') return;
+    var want=e.shiftKey?0:1;
+    if(lineIndent(l)===want) return;
+    pushUndo(); setLineIndent(l,want);
+    save(); render(false); focusLine(b.id,l.id,pos); return;
+  }
+  if(mod&&e.shiftKey&&(e.key==='&'||e.key==='7')){
+    e.preventDefault(); e.stopPropagation(); pushUndo();
+    setLineKind(l,lineKind(l)==='n'?'p':'n');
+    save(); render(false); focusLine(b.id,l.id,pos); return;
+  }
   if(mod&&e.key.toLowerCase()==='a'){
     /* Word behaviour: one press selects everything in the box. Typing replaces
        it, Delete clears it, and the box itself stays. Triple-click still
@@ -3070,8 +3304,9 @@ canvas.addEventListener('keydown',function(e){
     return;
   }
   if(mod&&e.shiftKey&&(e.key==='*'||e.key==='8')){
-    e.preventDefault(); e.stopPropagation(); pushUndo(); l.bul=!l.bul;
-    replaceRow(b,l,row,pos); save(); return;
+    e.preventDefault(); e.stopPropagation(); pushUndo();
+    setLineKind(l,lineKind(l)==='b'?'p':'b');
+    save(); render(false); focusLine(b.id,l.id,pos); return;
   }
   if(mod&&!e.altKey&&!e.shiftKey){
     var k=e.key.toLowerCase();
@@ -3194,8 +3429,8 @@ document.addEventListener('paste',function(e){
   if(blockSel===b.id){
     b.lines=[];
     for(var pp=0;pp<parts.length;pp++)
-      b.lines.push({id:uid(),html:esc(parts[pp]),bul:false,done:false});
-    if(!b.lines.length) b.lines=[{id:uid(),html:'',bul:false,done:false}];
+      b.lines.push({id:uid(),html:esc(parts[pp]),k:'p',i:0,bul:false,done:false});
+    if(!b.lines.length) b.lines=[{id:uid(),html:'',k:'p',i:0,bul:false,done:false}];
     var lastL=b.lines[b.lines.length-1];
     clearBlockSel(); save(); render(false);
     focusLine(b.id,lastL.id,lineText(lastL.html).length);
@@ -3221,7 +3456,9 @@ document.addEventListener('paste',function(e){
     var add=[],lastId=l.id,lastPos=lineText(l.html).length;
     for(var p=1;p<parts.length;p++){
       var h=esc(parts[p]);
-      var nl={id:uid(),html:h,bul:l.bul,done:false};
+      var nl={id:uid(),html:h,done:false,
+              k:(lineKind(l)==='h'?'p':lineKind(l)), i:lineIndent(l)};
+      nl.bul=(nl.k==='b');
       if(p===parts.length-1){ nl.html=sanitize(h+afterHtml); lastId=nl.id; lastPos=parts[p].length; }
       add.push(nl);
     }
@@ -3295,15 +3532,20 @@ document.getElementById('tbPlus').onclick=function(){ bump(1); };
 document.getElementById('tbB').onclick=function(){ applyFmt('bold'); };
 document.getElementById('tbI').onclick=function(){ applyFmt('italic'); };
 document.getElementById('tbU').onclick=function(){ applyFmt('underline'); };
-document.getElementById('tbL').onclick=function(){
-  var b=findBlock(selId); if(!b||b.kind!=='text') return;
-  if(blockSel===b.id){ blockFormat('bul'); return; }
+/* One path for bullet, number and category, so the three buttons cannot drift
+   apart: on the caret's line if there is one, otherwise the whole box. */
+function toggleLineKind(kind){
+  var b=findBlock(blockSel||selId); if(!b||b.kind!=='text') return;
+  if(blockSel===b.id){ blockFormat(kind==='b'?'bul':(kind==='n'?'num':'head')); return; }
   pushUndo();
   var l=currentLine();
-  if(l&&lastLine&&lastLine.bid===b.id) l.bul=!l.bul;
-  else toggleAllBullets(b);
+  if(l&&lastLine&&lastLine.bid===b.id) setLineKind(l,lineKind(l)===kind?'p':kind);
+  else toggleAllKind(b,kind);
   save(); render(); updateDock();
-};
+}
+document.getElementById('tbL').onclick=function(){ toggleLineKind('b'); };
+document.getElementById('tbN').onclick=function(){ toggleLineKind('n'); };
+document.getElementById('tbH').onclick=function(){ toggleLineKind('h'); };
 /* ink colour: a small popover of swatches; a mousedown-based apply so the text
    selection is not lost to a focus change before we read it */
 (function(){
@@ -3890,7 +4132,8 @@ document.getElementById('carry').onclick=function(){
       for(var j=0;j<b.lines.length;j++){
         var l=b.lines[j];
         if(!l.done&&lineText(l.html).trim()!==''){
-          keep.push({id:uid(),html:l.html,bul:l.bul,done:false}); count++;
+          keep.push({id:uid(),html:l.html,done:false,k:lineKind(l),i:lineIndent(l),
+                     bul:lineKind(l)==='b'}); count++;
         }
       }
       if(keep.length) carried.push({id:uid(),kind:'text',m:Date.now(),x:b.x,y:b.y,w:b.w,h:b.h,
@@ -4222,6 +4465,7 @@ document.addEventListener('keydown',function(e){
   if(blockSel&&!focusedTx()){
     if(e.key==='Escape'){ e.preventDefault(); clearBlockSel(); updateDock(); return; }
     if(mod&&e.shiftKey&&(e.key==='*'||e.key==='8')){ e.preventDefault(); blockFormat('bul'); return; }
+    if(mod&&e.shiftKey&&(e.key==='&'||e.key==='7')){ e.preventDefault(); blockFormat('num'); return; }
     if(mod&&!e.altKey&&!e.shiftKey){
       var kk=e.key.toLowerCase();
       if(kk==='b'||kk==='i'||kk==='u'){ e.preventDefault(); blockFormat(kk); return; }
