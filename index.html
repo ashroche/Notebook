@@ -127,9 +127,16 @@ body{
 /* the glide. Suppressed while a gesture is actually in flight, where a transition
    would lag behind the pointer instead of smoothing anything. */
 .notebook{transition:transform .13s cubic-bezier(.25,.8,.35,1)}
-/* Panning. Only ever shown when there is somewhere to pan to, so the desk does
-   not advertise a drag on a page that already fits. */
+/* Panning cursors. The grab hand belongs to the bare DESK, which is the thing you
+   drag. It used to be set on the stage alone, and cursor inherits, so the moment
+   the page was big enough to pan the whole notebook wore a grab hand: no I-beam
+   over text, no sense of where you could write. The notebook takes its cursor
+   back, and the text takes an I-beam. */
 .stage.canpan{cursor:grab}
+.stage.canpan #notebook{cursor:default}
+/* holding space is an explicit "I am moving the page" mode, so there it applies
+   to everything, which is exactly what a drawing program does */
+.stage.spacepan,.stage.spacepan *{cursor:grab !important}
 .stage.panning,.stage.panning *{cursor:grabbing !important}
 .stage.panning{user-select:none}
 .notebook.nozoomanim{transition:none}
@@ -296,6 +303,16 @@ body.oncover .dock{display:none}
   background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='26' height='6.2'><defs><linearGradient id='w' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23ffffff'/><stop offset='0.22' stop-color='%23f2f0ec'/><stop offset='0.55' stop-color='%23b9b6b0'/><stop offset='0.8' stop-color='%238a8781'/><stop offset='1' stop-color='%23625f5a'/></linearGradient></defs><path d='M3.4 5.9 C4.4 2.3 19 2.0 22.4 5.2' fill='none' stroke='%23000000' stroke-opacity='0.42' stroke-width='2.5' stroke-linecap='round'/><path d='M3.2 4.5 C4.2 0.9 18.6 0.6 22 3.8' fill='none' stroke='url(%23w)' stroke-width='2.2' stroke-linecap='round'/><path d='M4.0 3.7 C5.0 1.5 17.6 1.2 20.6 3.2' fill='none' stroke='%23ffffff' stroke-opacity='0.75' stroke-width='0.7' stroke-linecap='round'/></svg>")}
 .nbmono{font-family:'Caveat',cursive;font-size:58px;font-weight:700;color:#fff;opacity:.9;
   text-shadow:0 1px 3px rgba(0,0,0,.4);user-select:none}
+/* the title on the shelf cover: centred, a couple of lines at most, and clipped
+   with an ellipsis rather than pushed out of the cover */
+.nbcovertitle{position:absolute;z-index:3;left:14%;right:8%;top:50%;
+  transform:translateY(-50%);text-align:center;pointer-events:none;user-select:none;
+  font-size:clamp(12px,11.5%,21px);line-height:1.2;
+  text-shadow:0 1px 3px rgba(0,0,0,.35);
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  overflow-wrap:break-word}
+/* on a pale cover the shadow behind the words is wrong, and the ink is dark anyway */
+.nbcover.cover-light .nbcovertitle{text-shadow:none}
 /* every delete X in the app follows the same rule: hidden by default, revealed
    only when the pointer is in that thing's top-right CORNER, evenly inset. */
 .nbdel{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;
@@ -553,7 +570,7 @@ body.oncover .fc-bar{display:flex}
   text-decoration-thickness:1.5px}
 
 .tx{flex:1;min-height:1.3em;outline:none;white-space:pre-wrap;overflow-wrap:break-word;
-  line-height:1.3;padding-right:2px}
+  line-height:1.3;padding-right:2px;cursor:text}
 .tx b{font-weight:700}
 .tx i{font-style:italic}
 .tx u{text-decoration:underline}
@@ -1794,6 +1811,20 @@ function setupCover(){
   })();
   buildCoverPicker();
 }
+/* The title, written on the shelf cover the same way it is written on the real
+   one: same hand, same ink the notebook chose, just small. It reads as a label on
+   the cover rather than a caption under it, and the name underneath still carries
+   the full text for anything too long to fit. */
+function tileTitleStyle(nb){
+  var col=normCover(nb.cover);
+  var c=nb.titleColor||defaultTitleColour(col);
+  var f=nb.titleFont||'hand';
+  var fam=(f==='sans')?"'Inter',sans-serif":(f==='serif')?"'Lora',serif":"'Caveat',cursive";
+  var w=(f==='hand')?'700':'600';
+  return 'color:'+c+';font-family:'+fam+';font-weight:'+w+
+         (nb.titleItalic?';font-style:italic':'')+
+         (nb.titleUnderline?';text-decoration:underline':'');
+}
 /* colour swatches and the material list, both generated from the registry so the
    picker can never offer a cover that no longer exists */
 function buildCoverPicker(){
@@ -1868,6 +1899,8 @@ function refreshShelf(){
          '<div class="nbcoverwrap">'+
            '<div class="nbcover'+coverClasses(nb.cover,nb.material)+'">'+
              '<div class="covtex" aria-hidden="true"></div>'+
+             '<div class="nbcovertitle" style="'+tileTitleStyle(nb)+'">'+
+               esc(nb.title||'Untitled')+'</div>'+
              '<span class="nbname">'+esc(OWNER_INITIALS)+'</span>'+
              '<span class="cornerzone" aria-hidden="true"></span>'+
              '<button class="nbdel" data-del="'+id+'" title="Delete notebook">&times;</button>'+
@@ -2239,10 +2272,15 @@ var panSuppressClick=false;
     if(e.code!=='Space'||spaceDown) return;
     if(focusedTx()||document.activeElement&&document.activeElement.isContentEditable) return;
     if(!canPan()) return;
-    spaceDown=true; e.preventDefault(); refreshCursor();
+    spaceDown=true; e.preventDefault();
+    st.classList.add('spacepan'); refreshCursor();
   });
-  window.addEventListener('keyup',function(e){ if(e.code==='Space') spaceDown=false; });
-  window.addEventListener('blur',function(){ spaceDown=false; });
+  window.addEventListener('keyup',function(e){
+    if(e.code==='Space'){ spaceDown=false; st.classList.remove('spacepan'); }
+  });
+  window.addEventListener('blur',function(){
+    spaceDown=false; st.classList.remove('spacepan');
+  });
   st.addEventListener('scroll',refreshCursor,{passive:true});
   window.addEventListener('resize',refreshCursor);
 })();
@@ -3032,10 +3070,12 @@ function turnZoneAt(clientX){
   if(f>1-TURN_BAND_FWD) return 'fwd';
   return null;                       /* dead centre: reading and writing space */
 }
-/* Held briefly so a second click can cancel it and create a text box instead. */
+/* Straight away. The turn bands no longer double as somewhere to create a text
+   box, so there is no second click to wait for, and the quarter-second pause that
+   used to sit between the click and the page moving is gone. */
 function armPageTurn(zone){
   if(!zone) return;
-  pageTurnTimer=setTimeout(function(){ pageTurnTimer=null; turnByClick(zone==='back'); },260);
+  turnByClick(zone==='back');
 }
 (function(){
   /* The sheet's own margins - the spiral gutter on the left and the thin strip of
@@ -3121,9 +3161,12 @@ function turnByClick(back){
 }
 canvas.addEventListener('dblclick',function(e){
   cancelPageTurnClick();
-  /* create a text box on bare canvas, and also when the double-click lands on the
-     hover frame/bands of an IMAGE (you can't type into an image, so the intent is
-     clearly to start text near it) */
+  /* Not in the turn bands. Those are the edges you take hold of to turn the sheet,
+     not somewhere you start writing, and keeping them clear is what lets a click
+     there turn the page at once instead of waiting to find out whether a second
+     click is coming. To write at the very edge, start the box in the middle and
+     drag it over. */
+  if(turnZoneAt(e.clientX)) return;
   if(e.target===canvas){ addBlock(e.offsetX,e.offsetY); return; }
   var onImgChrome=e.target.closest&&e.target.closest('.block[data-kind=image]')&&
                   (e.target.classList.contains('mv')||e.target.classList.contains('frame'));
