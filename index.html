@@ -3043,12 +3043,21 @@ function cancelPageTurnClick(){ if(pageTurnTimer){ clearTimeout(pageTurnTimer); 
 canvas.addEventListener('click',function(e){
   if(e.target!==canvas) return;            /* only bare paper, never a block */
   if(turning||coverClosed) return;
-  if(selId||blockSel){ return; }           /* something still selected */
-  if(focusedTx()) return;                  /* leaving a text box: don't also turn */
-  if(consumedByDeselect){ consumedByDeselect=false; return; }  /* that click just deselected */
+  /* The turn bands act on the first click whatever else is going on: the mousedown
+     has already dropped the selection and blurred the box, and making the edge
+     wait for a second click made it feel dead. The middle of the page keeps the
+     old behaviour, where the first click only puts the pen down. */
+  var zone=turnZoneAt(e.clientX);
+  if(!zone){
+    if(selId||blockSel) return;            /* something still selected */
+    if(focusedTx()) return;                /* leaving a text box: don't also turn */
+    if(consumedByDeselect){ consumedByDeselect=false; return; }
+    return;                                /* bare middle: nothing to do */
+  }
+  consumedByDeselect=false;
   if(e.detail>1){ cancelPageTurnClick(); return; }
   cancelPageTurnClick();
-  armPageTurn(turnZoneAt(e.clientX));
+  armPageTurn(zone);
 });
 /* Which turn zone a point falls in, measured against the PAGE rather than the
    writing canvas. The canvas is inset from the paper - 48px on the left for the
@@ -3085,9 +3094,11 @@ function armPageTurn(zone){
   if(pageEl) pageEl.addEventListener('click',function(e){
     if(e.target!==pageEl) return;          /* the bare margin, not the canvas */
     if(turning||coverClosed) return;
-    if(selId||blockSel) return;
     if(e.detail>1){ cancelPageTurnClick(); return; }
     cancelPageTurnClick();
+    /* the margin is part of the same bands, so it acts on the first click too
+       rather than being swallowed by whatever happened to be selected */
+    consumedByDeselect=false;
     armPageTurn(turnZoneAt(e.clientX));
   });
   var g=document.getElementById('gutter');
@@ -3194,9 +3205,13 @@ canvas.addEventListener('mousedown',function(e){
       var fx=focusedTx(); if(fx) fx.blur();   /* clean frame-select, so Delete removes the box */
       selectBlock(near.id); return;
     }
-    /* note whether this click actually cleared a selection or an editing box: the
-       following click event must then only deselect, not also turn the page */
-    consumedByDeselect=!!(selId||blockSel||focusedTx());
+    /* Note whether this click cleared a selection or an editing box, so the click
+       event that follows only deselects rather than also acting. That guard does
+       NOT apply in the turn bands: those are a control, and a control you click
+       while a box happens to be selected should still do its job. Otherwise every
+       page turn after typing needed two clicks, the first of which appeared to do
+       nothing at all. */
+    consumedByDeselect=!!(selId||blockSel||focusedTx())&&!turnZoneAt(e.clientX);
     dropPoint={x:e.offsetX,y:e.offsetY}; deselect(); return;
   }
   var blk=e.target.closest?e.target.closest('.block'):null;
