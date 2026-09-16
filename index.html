@@ -3996,10 +3996,16 @@ function endTurn(){
   elLeaf.style.transform=''; elLeaf.style.opacity='';
   elLfFront.style.opacity=''; elLfBack.style.opacity='';
   turning=false;
+  /* Repaint only if there WAS something held. A backward turn keeps the leaving
+     page underneath while the leaf flies, so releasing the hold has to redraw from
+     `cur`. A forward turn revealed the destination at the start and has been
+     showing it ever since, so the repaint was rebuilding a page that was already
+     correct: every block destroyed and recreated, every strike redrawn, the whole
+     thing under a finished animation. That is a frame's worth of flicker over a
+     page you have just landed on, and it bought nothing. */
+  var held=!!(holdDate||holdBlocks||holdPaper);
   holdDate=null; holdPaper=null; holdBlocks=null;
-  /* the hold is gone, so repaint the whole page from `cur`: paper, date AND the
-     content, which was showing the leaving day while the leaf was in the air */
-  render(false);
+  if(held) render(false);
   if(elPageDate) elPageDate.style.visibility='';
 }
 function afterNav(){
