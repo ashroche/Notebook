@@ -542,6 +542,9 @@ body.oncover .fc-bar{display:flex}
   box-shadow:0 1px 4px rgba(0,0,0,.22)}
 .row{display:flex;align-items:flex-start;position:relative}
 
+/* above the box's corner hover zone (z-index 1), which otherwise sits over the
+   tick and the x of a first line that runs to the box's right edge */
+.tick,.linedel{z-index:2}
 .tick{position:absolute;display:flex;align-items:center;justify-content:center;cursor:pointer;
   padding:0;margin:0;border:0;background:none;font:inherit;color:inherit;-webkit-appearance:none;appearance:none}
 .tick:focus-visible{outline:2px solid #6f9bdd;outline-offset:2px;border-radius:3px}
@@ -554,6 +557,16 @@ body.oncover .fc-bar{display:flex}
 .row:not(.done):hover .tick{opacity:.30}
 .row:not(.done) .tick:hover{opacity:.65}
 .row.done .tick{opacity:1}
+/* the x that deletes a struck line: there only once a line is ticked, faint until
+   you are over the line, red when you are on it */
+.linedel{position:absolute;display:none;align-items:center;justify-content:center;cursor:pointer;
+  padding:0;margin:0;border:0;border-radius:50%;background:none;color:#8a8170;font-family:Arial,sans-serif;
+  line-height:1;-webkit-appearance:none;appearance:none;opacity:0;transition:opacity .13s,color .13s,background .13s}
+.row.done .linedel{display:flex}
+.row.done:hover .linedel{opacity:.55}
+.row.done .linedel:hover{opacity:1;color:#fff;background:#c0392b}
+@media (hover:none){ .row.done .linedel{opacity:.45} }
+.canvas.holding .linedel{display:none}
 
 /* the marker column: a real flex child, so the text after it starts at the same
    place on every line of the box whatever the marker happens to be */
@@ -704,6 +717,7 @@ body.hasbanner .stage{top:86px}
   .frame,.mv,.hd{display:none !important}
   .tick{opacity:0 !important}
   .row.done .tick{opacity:1 !important}
+  .linedel{display:none !important}
   .strike path,.tick path{stroke:#c0392b !important}
   .tx{color:#000 !important}
 }
@@ -1388,6 +1402,8 @@ function normaliseNB(nb){
           if(l.i!==1&&l.i!==0){ l.i=0; shapeMigrated=true; }
           if(l.i===undefined){ l.i=0; shapeMigrated=true; }
           if(l.k==='h'&&(l.done||l.i)){ l.done=false; l.i=0; shapeMigrated=true; }
+          /* a ticked line with no words left (left behind by the old delete bug) */
+          if(l.done&&lineText(l.html).trim()===''){ l.done=false; shapeMigrated=true; }
           if(l.bul!==(l.k==='b')){ l.bul=(l.k==='b'); shapeMigrated=true; }
         }
       }
@@ -1720,10 +1736,10 @@ function openCover(){
   document.body.classList.remove('oncover');
   var fc=document.getElementById('frontCover');
   document.getElementById('fcTitle').blur();
-  /* Open to page 1: the first day anything was written, the way you'd open a real
-     notebook to its first page. A brand-new, empty notebook opens to today. */
-  cur=firstWrittenISO()||todayISO();
-  si=0;
+  /* Open to today, blank or not. Earlier days are one turn back; the last
+     written page is a click on the previous-entry button away. */
+  cur=todayISO();
+  si=lastWrittenSheet(cur);
   updateDateUI(); render(false);
   function done(){ coverClosed=false; fc.style.display='none'; fc.classList.remove('opening'); fc.style.transform=''; }
   if(reduced()||!fc.animate){ done(); return; }
@@ -2590,6 +2606,13 @@ function placeTick(tick,tx,rs,fs){
   tick.style.width=box+'px'; tick.style.height=box+'px';
   tick.style.left=(last.x2+spaceWidth(tx)+fs*0.20-ink)+'px';
   tick.style.top=(last.y+last.h/2-box/2+fs*0.05)+'px';
+  var ld=tick.parentNode&&tick.parentNode.querySelector('.linedel');
+  if(ld){
+    var dz=fs*0.95;
+    ld.style.width=dz+'px'; ld.style.height=dz+'px'; ld.style.fontSize=(fs*0.80)+'px';
+    ld.style.left=(last.x2+spaceWidth(tx)+fs*0.20-ink+box+fs*0.22)+'px';
+    ld.style.top=(last.y+last.h/2-dz/2+fs*0.05)+'px';
+  }
 }
 function drawStrike(row,rs,fs){
   var paths='';
@@ -2719,6 +2742,12 @@ function renderLine(b,l,marker,colw){
   tick.title=l.done?'Click to undo':'Click to strike off';
   tick.innerHTML=tickSVG(l.id);
   row.appendChild(tick);
+  /* one-click removal of a struck line; only shown once the line is ticked */
+  var ld=document.createElement('button');
+  ld.className='linedel'; ld.type='button'; ld.tabIndex=-1;
+  ld.title='Delete this line'; ld.setAttribute('aria-label','Delete this line');
+  ld.innerHTML='&times;';
+  row.appendChild(ld);
   }
 
   /* The marker column belongs to list lines only. Every bullet and number in the
@@ -3057,10 +3086,29 @@ function updateDock(){
    real notebook. A double click still creates a text box, so the turn is held
    briefly and cancelled the moment a second click arrives. */
 var pageTurnTimer=null, consumedByDeselect=false;
+/* Where the last press went down. A browser 'click' lands on the nearest common
+   ancestor of the press and the release, so selecting text by dragging from a line
+   out onto bare paper, the margin or the desk arrived here as a click on that
+   surface and turned the page. A turn now needs the press and the release on the
+   same surface and practically in the same place. */
+var pressAt=null;
+document.addEventListener('pointerdown',function(e){
+  pressAt={t:e.target,x:e.clientX,y:e.clientY};
+},true);
+function genuineClick(e){
+  if(!pressAt||e.detail===0) return true;  /* synthetic click (keyboard, script) */
+  if(Math.abs(e.clientX-pressAt.x)>6||Math.abs(e.clientY-pressAt.y)>6) return false;
+  var t=pressAt.t;
+  if(t===e.target) return true;
+  /* pressed on a child of this surface (a ring of the gutter) and released a hair
+     away: fine, unless the press was on writing */
+  return !!(t&&t.nodeType===1&&e.target.contains(t)&&!(t.closest&&t.closest('.block')));
+}
 function cancelPageTurnClick(){ if(pageTurnTimer){ clearTimeout(pageTurnTimer); pageTurnTimer=null; } }
 canvas.addEventListener('click',function(e){
   if(e.target!==canvas) return;            /* only bare paper, never a block */
   if(turning||coverClosed) return;
+  if(!genuineClick(e)){ consumedByDeselect=false; return; }   /* end of a drag or selection */
   /* The turn bands act on the first click whatever else is going on: the mousedown
      has already dropped the selection and blurred the box, and making the edge
      wait for a second click made it feel dead. The middle of the page keeps the
@@ -3112,6 +3160,7 @@ function armPageTurn(zone){
   if(pageEl) pageEl.addEventListener('click',function(e){
     if(e.target!==pageEl) return;          /* the bare margin, not the canvas */
     if(turning||coverClosed) return;
+    if(!genuineClick(e)) return;
     if(e.detail>1){ cancelPageTurnClick(); return; }
     cancelPageTurnClick();
     /* the margin is part of the same bands, so it acts on the first click too
@@ -3122,6 +3171,7 @@ function armPageTurn(zone){
   var g=document.getElementById('gutter');
   if(g) g.addEventListener('click',function(e){
     if(turning||coverClosed) return;
+    if(!genuineClick(e)) return;
     if(e.detail>1) return;
     armPageTurn(turnZoneAt(e.clientX));
   });
@@ -3134,6 +3184,7 @@ function armPageTurn(zone){
     if(!t||!t.classList) return;
     if(!t.classList.contains('cover')&&!t.classList.contains('sheet')) return;
     if(turning||coverClosed||shelfOpen) return;
+    if(!genuineClick(e)) return;
     if(e.detail>1){ cancelPageTurnClick(); return; }
     cancelPageTurnClick();
     armPageTurn(turnZoneAt(e.clientX));
@@ -3148,6 +3199,7 @@ function armPageTurn(zone){
     if(panSuppressClick){ panSuppressClick=false; return; }   /* that was a drag */
     if(e.target!==stage) return;          /* only the bare desk, never the notebook */
     if(turning||shelfOpen) return;
+    if(!genuineClick(e)) return;
     if(e.detail>1) return;
     var nbEl=document.getElementById('notebook');
     var r=nbEl.getBoundingClientRect();
@@ -3205,6 +3257,19 @@ canvas.addEventListener('dblclick',function(e){
   }
 });
 canvas.addEventListener('mousedown',function(e){
+  var ldl=e.target.closest?e.target.closest('.linedel'):null;
+  if(ldl){
+    e.preventDefault(); e.stopPropagation();
+    var lrow=ldl.closest('.row'), lblk=ldl.closest('.block');
+    var lb=lblk&&findBlock(lblk.dataset.id); if(!lb||!lrow) return;
+    var li=lineIndex(lb,lrow.dataset.lid); if(li<0) return;
+    var fxl=focusedTx(); if(fxl) fxl.blur();
+    typing=false; pushUndo();
+    if(lb.lines.length===1){ deleteBlock(lb.id); return; }
+    lb.lines.splice(li,1);
+    save(); render(false); updateDock();
+    return;
+  }
   var bd=e.target.closest?e.target.closest('.boxdel'):null;
   if(bd){
     e.preventDefault(); e.stopPropagation();
@@ -3401,6 +3466,19 @@ canvas.addEventListener('beforeinput',function(e){
   if(composing) return;
   if(!typing){ pushUndo(); typing=true; }
   clearTimeout(typingT); typingT=setTimeout(function(){typing=false;},900);
+  /* Writing over the WHOLE of a struck line replaces the item, so the new words
+     start unticked rather than coming out already crossed off. */
+  if(e.inputType&&e.inputType.indexOf('insert')===0){
+    var sel=window.getSelection(), rowB=e.target.closest('.row');
+    if(rowB&&rowB.classList.contains('done')&&sel&&!sel.isCollapsed&&
+       sel.toString().trim()!==''&&sel.toString().trim()===e.target.textContent.trim()){
+      var blkB=e.target.closest('.block'), bB=blkB&&findBlock(blkB.dataset.id);
+      var iB=bB?lineIndex(bB,rowB.dataset.lid):-1;
+      if(iB>=0){ bB.lines[iB].done=false; rowB.classList.remove('done','anim');
+        var tkB=rowB.querySelector('.tick');
+        if(tkB){ tkB.setAttribute('aria-checked','false'); tkB.title='Click to strike off'; } }
+    }
+  }
 });
 canvas.addEventListener('input',function(e){
   if(!e.target.classList.contains('tx')) return;
@@ -3410,6 +3488,13 @@ canvas.addEventListener('input',function(e){
   var b=findBlock(blk.dataset.id); if(!b) return;
   var i=lineIndex(b,row.dataset.lid); if(i<0) return;
   b.lines[i].html=sanitize(e.target.innerHTML);
+  /* A struck line whose words are all rubbed out is a blank line, not a done one.
+     Leaving it ticked meant the next thing written or pulled up into it came out
+     struck through. */
+  if(b.lines[i].done&&lineText(b.lines[i].html).trim()===''){
+    b.lines[i].done=false;
+    row.classList.remove('done','anim');
+  }
   /* keep the tick's screen-reader label in step with the text it refers to */
   var tkl=row.querySelector('.tick');
   if(tkl) tkl.setAttribute('aria-label',
@@ -3491,10 +3576,25 @@ canvas.addEventListener('keydown',function(e){
     } else tail.setStart(tx,tx.childNodes.length), tail.setEnd(tx,tx.childNodes.length);
     var tmp=document.createElement('div');
     tmp.appendChild(tail.extractContents());
-    var nl={id:uid(),html:sanitize(tmp.innerHTML),done:false,
+    var tailHtml=sanitize(tmp.innerHTML), headHtml=sanitize(tx.innerHTML);
+    /* Enter at the very start of a written line opens a blank line ABOVE it, and the
+       line itself moves down whole: same identity, same tick. Splitting it the
+       usual way left the tick on an empty line and sent the words down unticked. */
+    if(lineText(headHtml).trim()===''&&lineText(tailHtml).trim()!==''){
+      var above={id:uid(),html:'',done:false,
+                 k:(lineKind(l)==='h'?'p':lineKind(l)), i:lineIndent(l)};
+      above.bul=(above.k==='b');
+      l.html=tailHtml;
+      b.lines.splice(idx,0,above);
+      save(); render(false); focusLine(b.id,l.id,0); return;
+    }
+    /* splitting a struck line: both written halves stay struck */
+    var nl={id:uid(),html:tailHtml,
+            done:!!(l.done&&lineText(tailHtml).trim()!==''),
             k:(lineKind(l)==='h'?'p':lineKind(l)), i:lineIndent(l)};
     nl.bul=(nl.k==='b');
-    l.html=sanitize(tx.innerHTML);
+    l.html=headHtml;
+    if(l.done&&lineText(headHtml).trim()==='') l.done=false;
     b.lines.splice(idx+1,0,nl);
     save(); render(false); focusLine(b.id,nl.id,0); return;
   }
@@ -3511,13 +3611,32 @@ canvas.addEventListener('keydown',function(e){
     }
     e.preventDefault(); pushUndo(); typing=false;
     var prev=b.lines[idx-1], at=lineText(prev.html).length;
+    /* An empty line above is simply removed: this line moves up whole, keeping its
+       own tick state. Merging INTO the empty line used to hand this line the
+       empty one's identity, so text moving up under a cleared ticked line came
+       out struck off. */
+    if(lineText(prev.html).trim()===''){
+      b.lines.splice(idx-1,1);
+      save(); render(false); focusLine(b.id,l.id,0); return;
+    }
+    /* two written lines joined: struck only if both were. A blank line pulled up
+       into a written one leaves that line's tick alone. */
+    if(lineText(l.html).trim()!=='') prev.done=!!(prev.done&&l.done);
     prev.html=sanitize(prev.html+l.html);
     b.lines.splice(idx,1);
     save(); render(false); focusLine(b.id,prev.id,at); return;
   }
-  if(e.key==='Delete'&&pos===txt.length&&collapsed()&&idx<b.lines.length-1){
+  if(e.key==='Delete'&&(pos===txt.length||txt.trim()==='')&&collapsed()&&idx<b.lines.length-1){
     e.preventDefault(); pushUndo(); typing=false;
-    l.html=sanitize(l.html+b.lines[idx+1].html);
+    var nxt=b.lines[idx+1];
+    /* Delete on an empty line removes it and the line below moves up as itself,
+       with its own tick state, rather than being poured into the empty one */
+    if(txt.trim()===''){
+      b.lines.splice(idx,1);
+      save(); render(false); focusLine(b.id,nxt.id,0); return;
+    }
+    if(lineText(nxt.html).trim()!=='') l.done=!!(l.done&&nxt.done);
+    l.html=sanitize(l.html+nxt.html);
     b.lines.splice(idx+1,1);
     save(); render(false); focusLine(b.id,l.id,pos); return;
   }
@@ -3833,7 +3952,7 @@ function snapshotInto(faceEl,cloneEl,sh,dateISO){
   for(var i=0;i<bl.length;i++){
     var node=renderBlock(bl[i]);
     node.style.pointerEvents='none';
-    var junk=node.querySelectorAll('.frame,.mv,.hd');
+    var junk=node.querySelectorAll('.frame,.mv,.hd,.linedel');
     for(var j=0;j<junk.length;j++) junk[j].remove();
     var tx=node.querySelectorAll('.tx');
     for(var t=0;t<tx.length;t++) tx[t].contentEditable='false';
