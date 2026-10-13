@@ -977,7 +977,14 @@ function normFont(f){ return f==='hand'?'caveat':(f==='sans'?'inter':(f==='serif
 /* Caveat has a small x-height, so it needs ~1.55x the px size of Inter to look the same
    size on the page. Sizes in the dock are apparent size, not raw CSS px. */
 var OLD_FSCALE={hand:1.55,sans:1,serif:1};   /* only to migrate old apparent sizes to points */
-var DEF_SIZE=11, MIN_SIZE=8, MAX_SIZE=72;   /* points, Word-style */
+var DEF_SIZE=11, MIN_SIZE=8, MAX_SIZE=72;   /* points, Word-style; DEF_SIZE only for old boxes with no size */
+/* Starting size for a NEW box, per font. One number for every font made Caveat, with
+   its small lowercase, come out at about half the height of the page's date. Each of
+   these puts the font's lowercase letters at least as tall as the date's (Caveat 27px,
+   about 9.7px of x-height), measured from the fonts themselves. */
+var FONT_DEF_SIZE={caveat:20,inter:14,lora:15,arimo:14,carlito:15,gelasio:15,
+  tinos:16,poppins:14,playfair:14,merriweather:14};
+function defSize(f){ return FONT_DEF_SIZE[normFont(f)]||14; }
 var SIZES=[8,9,10,11,12,14,16,18,20,24,28,32,36,40,44,48,54,60,66,72];
 function stepSize(cur,d){
   if(d>0){ for(var i=0;i<SIZES.length;i++) if(SIZES[i]>cur) return SIZES[i]; return SIZES[SIZES.length-1]; }
@@ -2895,7 +2902,7 @@ function addBlock(x,y){
   pushUndo();
   var b={id:uid(),kind:'text',x:Math.round(clamp(x-6,0,Math.max(0,canvas.clientWidth-DEF_W))),
          y:Math.round(clamp(y-8,0,canvas.clientHeight-40)),w:DEF_W,z:++zTop,
-         font:'hand',size:DEF_SIZE,m:Date.now(),
+         font:'hand',size:defSize('hand'),m:Date.now(),
          lines:[{id:uid(),html:'',bul:false,done:false}]};
   blocks().push(b); selId=b.id;
   save(); render(false); focusLine(b.id,b.lines[0].id,0);
@@ -3913,7 +3920,11 @@ function takeImage(file){
 dock.addEventListener('mousedown',function(e){ if(e.target.tagName!=='SELECT') e.preventDefault(); });
 document.getElementById('tbFont').addEventListener('change',function(){
   var b=findBlock(selId); if(!b||b.kind!=='text') return;
-  pushUndo(); b.font=this.value; save(); render(); updateDock();
+  pushUndo();
+  /* a box still at its font's starting size moves to the new font's starting size,
+     so switching a fresh box from Caveat to Merriweather does not make it huge */
+  if(b.size===defSize(b.font)) b.size=defSize(this.value);
+  b.font=this.value; save(); render(); updateDock();
 });
 function bump(d){
   var b=findBlock(selId); if(!b||b.kind!=='text') return;
