@@ -1691,7 +1691,7 @@ function paintFrontCover(){
   syncCoverBar();
 }
 function showCover(){
-  coverClosed=true;
+  coverClosed=true; coverReturn=null;
   document.body.classList.add('oncover');
   cur=todayISO(); si=lastWrittenSheet(cur);
   updateDateUI(); render(false);
@@ -1707,6 +1707,7 @@ function showCover(){
    reverse of openCover, so the transition reads the same in both directions */
 function closeCover(){
   if(coverClosed) return;
+  coverReturn=null;
   var fc=document.getElementById('frontCover');
   coverClosed=true;
   document.body.classList.add('oncover');
@@ -1733,6 +1734,7 @@ function closeCover(){
 }
 function openCover(){
   if(!coverClosed) return;
+  coverReturn=null;
   document.body.classList.remove('oncover');
   var fc=document.getElementById('frontCover');
   document.getElementById('fcTitle').blur();
@@ -3224,12 +3226,36 @@ function firstWrittenISO(){
 /* A real notebook has a first written page with the cover before it, not an endless
    run of earlier blank days. So going back from page 1 (the first sheet of the
    earliest written day, or today in an empty notebook) closes to the cover. */
+/* Where Next goes from the closed cover. Walk back off page 1 and the cover is
+   just the other side of that page, so Next turns straight back to it. Close the
+   notebook any other way and Next opens it the way the cover itself does: today. */
+var coverReturn=null;
 function goPrevDay(){
   if(coverClosed) return;                  /* on the cover there is nowhere further back */
   if(si>0){ goPage(si-1); return; }        /* an earlier sheet of the same day */
   var first=firstWrittenISO()||todayISO();
-  if(cur<=first){ closeCover(); return; }  /* at or before page 1: close to the cover */
+  if(cur<=first){                          /* at or before page 1: close to the cover */
+    var page1=cur; closeCover(); coverReturn=page1; return;
+  }
   goDate(shiftISO(cur,-1));                 /* otherwise the previous day */
+}
+function goNextDay(){
+  if(turning) return;
+  if(coverClosed){
+    var to=coverReturn||todayISO(); coverReturn=null;
+    openCoverTo(function(){ prune(); writeLocal(); cur=to; si=(to===todayISO())?lastWrittenSheet(to):0; });
+    return;
+  }
+  goDate(shiftISO(cur,1));
+}
+/* Today always means today's page. On the closed cover the date is already set to
+   today behind it, which is why the button used to do nothing there. */
+function goToday(){
+  if(turning) return;
+  var t=todayISO();
+  if(coverClosed){ coverReturn=null;
+    openCoverTo(function(){ prune(); writeLocal(); cur=t; si=lastWrittenSheet(t); }); return; }
+  if(cur!==t) goDate(t);
 }
 function turnByClick(back){
   var s=sheets();
@@ -4206,8 +4232,8 @@ function updateDateUI(){
   document.getElementById('nextWritten').disabled=!adjacentWritten(1);
 }
 document.getElementById('prevDay').onclick=function(){ goPrevDay(); };
-document.getElementById('nextDay').onclick=function(){ goDate(shiftISO(cur,1)); };
-document.getElementById('todayBtn').onclick=function(){ if(cur!==todayISO()) goDate(todayISO()); };
+document.getElementById('nextDay').onclick=function(){ goNextDay(); };
+document.getElementById('todayBtn').onclick=function(){ goToday(); };
 document.getElementById('prevWritten').onclick=function(){
   var d=adjacentWritten(-1); if(d) goDate(d); else say('Nothing written before this day.'); };
 document.getElementById('nextWritten').onclick=function(){
@@ -4383,11 +4409,11 @@ function hideCal(){ document.getElementById('cal').classList.remove('on'); }
   document.getElementById('calNext').onclick=function(e){ e.stopPropagation();
     calMonth=shiftMonth(calMonth||monthStart(cur),1); renderCal(); };
   document.getElementById('calToday').onclick=function(e){ e.stopPropagation();
-    hideCal(); if(cur!==todayISO()) goDate(todayISO()); };
+    hideCal(); goToday(); };
   document.getElementById('calGrid').addEventListener('click',function(e){
     var c=e.target.closest('.cal-cell'); if(!c) return;
     e.stopPropagation(); hideCal();
-    if(c.dataset.d!==cur) goDate(c.dataset.d);
+    if(c.dataset.d!==cur||coverClosed) goDate(c.dataset.d);
   });
   document.addEventListener('mousedown',function(e){
     if(calOpen()&&!e.target.closest('#dateWrap')) hideCal();
@@ -4859,7 +4885,7 @@ document.addEventListener('keydown',function(e){
   if(mod&&e.key.toLowerCase()==='z'){ e.preventDefault(); if(e.shiftKey) redo(); else undo(); return; }
   if(mod&&e.key.toLowerCase()==='y'){ e.preventDefault(); redo(); return; }
   if(e.altKey&&e.key==='ArrowLeft'){ e.preventDefault(); goPrevDay(); return; }
-  if(e.altKey&&e.key==='ArrowRight'){ e.preventDefault(); goDate(shiftISO(cur,1)); return; }
+  if(e.altKey&&e.key==='ArrowRight'){ e.preventDefault(); goNextDay(); return; }
   if(e.key==='PageUp'){ e.preventDefault(); goPage(si-1); return; }
   if(e.key==='PageDown'){ e.preventDefault(); goPage(si+1); return; }
   if((e.key==='Delete'||e.key==='Backspace')&&selId&&!focusedTx()&&!modal.classList.contains('on')){
